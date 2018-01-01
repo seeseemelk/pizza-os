@@ -111,44 +111,53 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named pizzaOs
+# Target rules for targets named kernel.bin
 
 # Build rule for target.
-pizzaOs: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 pizzaOs
-.PHONY : pizzaOs
+kernel.bin: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 kernel.bin
+.PHONY : kernel.bin
 
 # fast build rule for target.
-pizzaOs/fast:
-	$(MAKE) -f CMakeFiles/pizzaOs.dir/build.make CMakeFiles/pizzaOs.dir/build
-.PHONY : pizzaOs/fast
+kernel.bin/fast:
+	$(MAKE) -f CMakeFiles/kernel.bin.dir/build.make CMakeFiles/kernel.bin.dir/build
+.PHONY : kernel.bin/fast
 
-src/main.o: src/main.c.o
+src/kernel/boot.obj: src/kernel/boot.asm.obj
 
-.PHONY : src/main.o
+.PHONY : src/kernel/boot.obj
 
 # target to build an object file
-src/main.c.o:
-	$(MAKE) -f CMakeFiles/pizzaOs.dir/build.make CMakeFiles/pizzaOs.dir/src/main.c.o
-.PHONY : src/main.c.o
+src/kernel/boot.asm.obj:
+	$(MAKE) -f CMakeFiles/kernel.bin.dir/build.make CMakeFiles/kernel.bin.dir/src/kernel/boot.asm.obj
+.PHONY : src/kernel/boot.asm.obj
 
-src/main.i: src/main.c.i
+src/kernel/main.obj: src/kernel/main.c.obj
 
-.PHONY : src/main.i
+.PHONY : src/kernel/main.obj
+
+# target to build an object file
+src/kernel/main.c.obj:
+	$(MAKE) -f CMakeFiles/kernel.bin.dir/build.make CMakeFiles/kernel.bin.dir/src/kernel/main.c.obj
+.PHONY : src/kernel/main.c.obj
+
+src/kernel/main.i: src/kernel/main.c.i
+
+.PHONY : src/kernel/main.i
 
 # target to preprocess a source file
-src/main.c.i:
-	$(MAKE) -f CMakeFiles/pizzaOs.dir/build.make CMakeFiles/pizzaOs.dir/src/main.c.i
-.PHONY : src/main.c.i
+src/kernel/main.c.i:
+	$(MAKE) -f CMakeFiles/kernel.bin.dir/build.make CMakeFiles/kernel.bin.dir/src/kernel/main.c.i
+.PHONY : src/kernel/main.c.i
 
-src/main.s: src/main.c.s
+src/kernel/main.s: src/kernel/main.c.s
 
-.PHONY : src/main.s
+.PHONY : src/kernel/main.s
 
 # target to generate assembly for a file
-src/main.c.s:
-	$(MAKE) -f CMakeFiles/pizzaOs.dir/build.make CMakeFiles/pizzaOs.dir/src/main.c.s
-.PHONY : src/main.c.s
+src/kernel/main.c.s:
+	$(MAKE) -f CMakeFiles/kernel.bin.dir/build.make CMakeFiles/kernel.bin.dir/src/kernel/main.c.s
+.PHONY : src/kernel/main.c.s
 
 # Help Target
 help:
@@ -157,11 +166,12 @@ help:
 	@echo "... clean"
 	@echo "... depend"
 	@echo "... rebuild_cache"
-	@echo "... pizzaOs"
+	@echo "... kernel.bin"
 	@echo "... edit_cache"
-	@echo "... src/main.o"
-	@echo "... src/main.i"
-	@echo "... src/main.s"
+	@echo "... src/kernel/boot.obj"
+	@echo "... src/kernel/main.obj"
+	@echo "... src/kernel/main.i"
+	@echo "... src/kernel/main.s"
 .PHONY : help
 
 

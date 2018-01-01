@@ -1,3 +1,3 @@
 /home/seeseemelk/Eclipse/pizza_os/build/CMakeFiles/rebuild_cache.dir
-/home/seeseemelk/Eclipse/pizza_os/build/CMakeFiles/pizzaOs.dir
+/home/seeseemelk/Eclipse/pizza_os/build/CMakeFiles/kernel.bin.dir
 /home/seeseemelk/Eclipse/pizza_os/build/CMakeFiles/edit_cache.dir

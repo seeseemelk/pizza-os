@@ -1,6 +1,12 @@
-#include <stdio.h>
+#include <stdbool.h>
 
-int main(int argc, char** argv)
+void kernel_main()
 {
-	printf("Hello world\n");
+	char* vga = (char*) 0xB8000;
+	vga[0] = 'P';
+	vga[2] = 'i';
+	vga[4] = 'z';
+	vga[6] = 'z';
+	vga[8] = 'a';
+	while (true) ;
 }
