@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<diagram program="umlet" version="14.2">
+  <zoom_level>10</zoom_level>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>360</x>
+      <y>1010</y>
+      <w>100</w>
+      <h>30</h>
+    </coordinates>
+    <panel_attributes>dev_mgr</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>240</x>
+      <y>700</y>
+      <w>100</w>
+      <h>30</h>
+    </coordinates>
+    <panel_attributes>fat32</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>350</x>
+      <y>700</y>
+      <w>100</w>
+      <h>30</h>
+    </coordinates>
+    <panel_attributes>iso9660</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>470</x>
+      <y>180</y>
+      <w>320</w>
+      <h>180</h>
+    </coordinates>
+    <panel_attributes>vga
+-
+size_t vga_height
+size_t vga_width
+TTY* vga_tty
+-
+char vga_get_char(const int i)
+void vga_set_char(const int i, char c)
+void vga_set_cursor(const int i)
+int vga_get_cursor()
+void vga_scroll(lines)</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>230</x>
+      <y>780</y>
+      <w>100</w>
+      <h>30</h>
+    </coordinates>
+    <panel_attributes>kbd</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>340</x>
+      <y>780</y>
+      <w>100</w>
+      <h>30</h>
+    </coordinates>
+    <panel_attributes>apic</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1160</x>
+      <y>630</y>
+      <w>360</w>
+      <h>140</h>
+    </coordinates>
+    <panel_attributes>// Contains all code relevant to the GDT
+pc_gdt
+-
+// Should setup the initial GDT
+*pc_gdt_init()*
+*pc_gdt_set()*
+*pc_set_gdt_entry(gdt_entry* entry)*</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1160</x>
+      <y>830</y>
+      <w>360</w>
+      <h>160</h>
+    </coordinates>
+    <panel_attributes>list_mem
+-
+*void mem_set_area(void* start, size_t size)*
+-
+void* calloc(size_t num, size_t size)
+void free(void* ptr)
+void* malloc(size_t size)
+void* realloc(void* ptr, size_t size)
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>870</x>
+      <y>1080</y>
+      <w>130</w>
+      <h>30</h>
+    </coordinates>
+    <panel_attributes>// The kernel_main function is the very first function to be exeuted in the kernel.
+// It should start by setting up the CPU in a usable state.
+kernel_main()</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>440</x>
+      <y>410</y>
+      <w>390</w>
+      <h>240</h>
+    </coordinates>
+    <panel_attributes>tty
+-
+TTY* ttys[3]
+-
+void tty_set_tty(const TTY* tty, const int num)
+void tty_select(const int num)
+char tty_get_char(const int x, const int y)
+void tty_set_char(const int x, const iny y, char c)
+void tty_set_cursor(const int x, const int y)
+void tty_print(const char* str)
+void tty_scroll(const char* lines)</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>990</x>
+      <y>410</y>
+      <w>290</w>
+      <h>150</h>
+    </coordinates>
+    <panel_attributes>lw=2
+struct TTY
+-
+const int width
+const int height
+char get(const int i)
+void set(const int i, char c)
+void set_cursor(const int x, const int y)
+int get_cursor()
+void scroll(const int lines)</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>820</x>
+      <y>410</y>
+      <w>190</w>
+      <h>30</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>170.0;10.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>620</x>
+      <y>350</y>
+      <w>30</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;60.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>780</x>
+      <y>330</y>
+      <w>230</w>
+      <h>100</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>210.0;80.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLPackage</id>
+    <coordinates>
+      <x>810</x>
+      <y>750</y>
+      <w>310</w>
+      <h>160</h>
+    </coordinates>
+    <panel_attributes>stdlib.h
+--
+putc(const char c)
+printf(const char* str)
+halign=left</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>710</x>
+      <y>640</y>
+      <w>170</w>
+      <h>130</h>
+    </coordinates>
+    <panel_attributes>lt=.&gt;
+&lt;&lt;access&gt;&gt;</panel_attributes>
+    <additional_attributes>150.0;110.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLHierarchy</id>
+    <coordinates>
+      <x>0</x>
+      <y>180</y>
+      <w>350</w>
+      <h>470</h>
+    </coordinates>
+    <panel_attributes>type=Package
+kernel
+	/main.h/
+	dev
+		/tty.h/
+	arch
+		pc
+			dev
+				/vga.h/
+libc
+	/stdlib.h/</panel_attributes>
+    <additional_attributes/>
+  </element>
+</diagram>
