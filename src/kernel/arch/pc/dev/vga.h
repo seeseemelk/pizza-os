@@ -8,14 +8,16 @@
 #ifndef ARCH_PC_DEV_VGA_H_
 #define ARCH_PC_DEV_VGA_H_
 
-#include "dev/tty.h"
+#include "../../../dev/tty.h"
 
 TTY* vga_tty;
 
-char vga_get_char(const int i);
+/*char vga_get_char(const int i);
 void vga_set_char(const int i, char c);
 void vga_set_cursor(const int i);
 int vga_get_cursor();
-void vga_scroll(lines);
+void vga_scroll(lines);*/
+
+void vga_init();
 
 #endif /* ARCH_PC_DEV_VGA_H_ */

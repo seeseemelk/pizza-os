@@ -21,7 +21,10 @@ enable_language(ASM_NASM)
 set(LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/src/kernel/linker.ld")
 set(CMAKE_EXE_LINKER_FLAGS "-T ${LINKER_SCRIPT} -ffreestanding -std=gnu99 -nostdlib -lgcc")
 
-file(GLOB C_SRCS src/**/*.c)
-file(GLOB ASM_SRCS src/**/*.asm)
+include_directories(${CMAKE_SOURCE_DIR}/kernel)
+include_directories(${CMAKE_SOURCE_DIR}/libc)
+
+file(GLOB_RECURSE C_SRCS src/**/*.c)
+file(GLOB_RECURSE ASM_SRCS src/**/*.asm)
 
 add_executable(kernel.bin ${ASM_SRCS} ${C_SRCS})
