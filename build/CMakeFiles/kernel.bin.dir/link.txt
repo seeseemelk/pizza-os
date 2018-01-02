@@ -1,1 +1,0 @@
-/home/seeseemelk/opt/cross/bin/i686-elf-gcc  -Wall -Werror -ffreestanding -std=gnu99 -nostdlib -lgcc  -T /home/seeseemelk/Eclipse/pizza_os/src/kernel/linker.ld -ffreestanding -std=gnu99 -nostdlib -lgcc CMakeFiles/kernel.bin.dir/src/kernel/boot.asm.obj CMakeFiles/kernel.bin.dir/src/kernel/main.c.obj  -o kernel.bin 
