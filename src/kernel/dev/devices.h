@@ -8,65 +8,74 @@
 #ifndef DEV_DEVICES_H_
 #define DEV_DEVICES_H_
 
-/**
- * Defines the type of module a certain module is.
- */
-typedef enum
-{
-	BLOCK, TERMINAL, FILESYSTEM
-} module_type;
-
-typedef enum
-{
-	UNLOAD, /* General request types */
-	READ, WRITE, FLUSH, GET_SIZE, /* Block request types */
-	GET_CHAR, SET_CHAR, GET_WIDTH, GET_HEIGHT, GET_CURSOR, SET_CURSOR /* Terminal types */
-} request_type;
+typedef enum module_type module_type;
+typedef enum request_type request_type;
+typedef struct module_request module_request;
+typedef struct module module;
+typedef struct device device;
 
 /**
  * The function signature of a module request function.
  */
-typedef void(fn_module_request)(void);
+typedef int(fn_module_request)(struct module_request*);
+
+/**
+ * Defines the type of module a certain module is.
+ */
+enum module_type
+{
+	BLOCK, TERMINAL, FILESYSTEM
+};
+
+/**
+ * Defines the different types of requests that can be made to a module.
+ */
+enum request_type
+{
+	UNLOAD, /* General request types */
+	READ, WRITE, FLUSH, GET_SIZE, /* Block request types */
+	GET_CHAR, SET_CHAR, GET_WIDTH, GET_HEIGHT, GET_CURSOR_X, GET_CURSOR_Y, SET_CURSOR, SCROLL /* Terminal types */
+};
 
 /**
  * A struct containing information about a module.
  */
-typedef struct
+struct module
 {
-	const int major; /**< The major number contains the uniquely identifying number for the module. */
+	int major; /**< The major number contains the uniquely identifying number for the module. */
 	const char* name; /**< The name is a simple string that will be displayed in logs. */
-	const module_type type; /**< The type of module this is. */
-	const fn_module_request* fn_request; /**< A pointer to a function that will handle all the request for the module. */
+	module_type type; /**< The type of module this is. */
+	fn_module_request* fn_request; /**< A pointer to a function that will handle all the request for the module. */
 	int num_devices_loaded;
-} module;
+};
 
 /**
  * A struct containing the information about a specific device.
  */
-typedef struct
+struct device
 {
 	const module* module; /**< A pointer to the module that handles this device. */
-	const int minor; /** The minor number. This number will uniquely specific a specific device. */
-} device;
+	int minor; /** The minor number. This number will uniquely specific a specific device. */
+};
 
 /**
  * Describes a simple request to a module.
  */
-typedef struct
+struct module_request
 {
-	device* device;
+	const device* device;
 	request_type type;
 	int arg1;
 	int arg2;
 	int arg3;
 	int arg4;
-} module_request;
+};
 
 /*
  * Functions for registering modules and devices
  */
 module* module_register(const char* name, module_type type, fn_module_request* fn_request);
-device* device_register(const module* module, const int minor);
+device* device_register(module* module, const int minor);
 
 /*
  * Functions for finding a specific device.

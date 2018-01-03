@@ -7,11 +7,14 @@
 
 #ifndef ARCH_PC_IO_H_
 #define ARCH_PC_IO_H_
-#include <stdint.h>
+#include "cdefs.h"
 
-void outb(int port, uint8_t value);
-void outw(int port, uint16_t value);
-void outq(int port, uint32_t value);
-void outl(int port, uint64_t value);
+void outb(u16 port, u8 value);
+void outw(u16 port, u16 value);
+void outl(u16 port, u32 value);
+
+u8 inb(u16 port);
+u16 inw(u16 port);
+u32 inl(u16 port);
 
 #endif /* ARCH_PC_IO_H_ */
