@@ -51,9 +51,12 @@ static void tty_advance_line()
 	if (cursor_y >= height)
 	{
 		tty_scroll(1);
-		cursor_y = height - 1;
+		tty_set_cursor(0, cursor_y - 1);
 	}
-	tty_set_cursor(0, cursor_y);
+	else
+	{
+		tty_set_cursor(0, cursor_y);
+	}
 }
 
 static void tty_advance_cursor()

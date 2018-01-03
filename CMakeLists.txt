@@ -26,5 +26,5 @@ include_directories("${CMAKE_SOURCE_DIR}/src/kernel" "${CMAKE_SOURCE_DIR}/src/li
 file(GLOB_RECURSE C_SRCS src/*.c)
 file(GLOB_RECURSE ASM_SRCS src/*.asm)
 
-add_executable(kernel.bin ${ASM_SRCS} ${C_SRCS})
-target_link_libraries(kernel.bin gcc)
+add_executable(kernel.elf ${ASM_SRCS} ${C_SRCS})
+target_link_libraries(kernel.elf gcc)

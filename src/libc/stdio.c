@@ -7,6 +7,7 @@
 #include "stdio.h"
 #include "dev/tty.h"
 
+#include <stddef.h>
 #include <stdarg.h>
 #include <stdbool.h>
 
@@ -63,11 +64,9 @@ int puts(const char* str)
 	return 1;
 }
 
-int printf(const char* format, ...)
+int vprintf(const char* format, va_list args)
 {
 	int length = 0;
-	va_list args;
-	va_start(args, format);
 
 	bool formatOption = false;
 	char c;
@@ -86,26 +85,26 @@ int printf(const char* format, ...)
 				length += print_number(va_arg(args, int), 10, false);
 				break;
 			case 'u':
-				length += print_unumber(va_arg(args, int), 10, false);
+				length += print_unumber(va_arg(args, unsigned int), 10, false);
 				break;
 			case 'o':
-				length += print_unumber(va_arg(args, int), 8, false);
+				length += print_unumber(va_arg(args, unsigned int), 8, false);
 				break;
 			case 'x':
-				length += print_unumber(va_arg(args, int), 16, false);
+				length += print_unumber(va_arg(args, unsigned int), 16, false);
 				break;
 			case 'X':
-				length += print_unumber(va_arg(args, int), 16, true);
+				length += print_unumber(va_arg(args, unsigned int), 16, true);
 				break;
 			case 'c':
-				putchar((char) va_arg(args, int));
+				putchar((char) va_arg(args, unsigned int));
 				length++;
 				break;
 			case 's':
 				length += puts(va_arg(args, const char*));
 				break;
 			case 'p':
-				length += print_unumber(va_arg(args, int), 16, true);
+				length += print_unumber(va_arg(args, size_t), 16, true);
 				break;
 			}
 			formatOption = false;
@@ -123,8 +122,33 @@ int printf(const char* format, ...)
 
 		format++;
 	}
-
-	va_end(args);
 	return length;
 }
+
+int printf(const char* format, ...)
+{
+	va_list args;
+	va_start(args, format);
+	int result = vprintf(format, args);
+	va_end(args);
+	return result;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

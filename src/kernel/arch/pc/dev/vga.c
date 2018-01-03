@@ -7,6 +7,8 @@
 #include "arch/pc/dev/vga.h"
 #include "io.h"
 
+#include <string.h>
+
 #define R_ADDR 0x3B4
 #define R_DATA 0x3B5
 
@@ -49,6 +51,18 @@ int vga_request(module_request* request)
 		cursor_x = request->arg1;
 		cursor_y = request->arg2;
 		vga_write_cursor_address();
+		return 0;
+	case SCROLL:
+		//memcpy(vga_memory, vga_memory + (width * request->arg1)*2, width * (height-request->arg1) *2);
+		if (request->arg1 > 0)
+		{
+			int lines = request->arg1;
+			memcpy(vga_memory, vga_memory + (width * 2 * lines), width * (height-lines) * 2);
+			for (int i = 0; i < width * lines; i++) // We can't use memset because it will mess with the colours
+				vga_memory[(width * height - i - lines ) * 2] = vga_memory[(width * height - i) * 2];
+			cursor_y -= lines;
+			vga_write_cursor_address();
+		}
 		return 0;
 	default:
 		return 0;
