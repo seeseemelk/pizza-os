@@ -16,8 +16,12 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-extern size_t kernel_end;
-extern size_t kernel_start;
+extern u8 kernel_end;
+extern u8 kernel_start;
+
+#define KERNEL_START &kernel_start
+#define KERNEL_END &kernel_end
+#define KERNEL_SIZE (size_t)KERNEL_END - (size_t)KERNEL_START
 
 multiboot_info_t* multiboot;
 size_t memory_available = 0;
@@ -84,8 +88,8 @@ unsigned long long lceil4kb(unsigned long long n)
 
 void kernel_init_pmem()
 {
-	pmem_init(&kernel_end, memory_available);
-	pmem_set(&kernel_start, &kernel_end - &kernel_start, PMEM_USED);
+	pmem_init(KERNEL_END, memory_available);
+	pmem_set(KERNEL_START, KERNEL_SIZE, PMEM_USED);
 
 	// First set everything below 1MB to RESERVED
 	pmem_set((void*) NULL, MB(1), PMEM_RESERVED);
@@ -151,6 +155,8 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	tty_clear();
 
 	printf("Starting pizza-os (yum!)...\n");
+	printf("Size: %d\n", (size_t)(&kernel_end - &kernel_start));
+	printf("Size: %d\n", (size_t)&kernel_end - (size_t)&kernel_start);
 	// Detect memory
 	if ((mbd->flags & MULTIBOOT_INFO_MEMORY) > 0)
 	{
@@ -163,31 +169,43 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	else
 		kernel_panic("No memory");
 
-	printf("Minimum location: 0x%p\n", &kernel_end);
+	printf("Kernel range: 0x%p to 0x%p\n", KERNEL_START, KERNEL_END);
 
 	// We need a memory map if we want to correctly do things.
 	if ((mbd->flags & MULTIBOOT_INFO_MEM_MAP) == 0)
 		kernel_panic("No memory map");
 
 	// Initialise the CPU
+	printf("Init CPU... ");
 	cpu_init();
+	printf("DONE\n");
 
 	// Setup the physical memory allocator
+	printf("Init pmem... ");
 	kernel_init_pmem();
+	printf("DONE\n");
 
 	// Initialise the multiboot memory map so that
 	// each entry starts on a 4 KiB boundary.
 	//kernel_init_mmap();
 
 	// Initialise the pager.
+	printf("Init page... ");
 	page_init();
+	printf("DONE\n");
 
 	// ID Map the kernel
+	printf("ID Map kernel... ");
 	page_idmap(&kernel_start, &kernel_end - &kernel_start);
+	printf("DONE\n");
+	printf("Register pmem pages... ");
 	pmem_register_pages();
+	printf("DONE\n");
 
 	// Enable paging
+	printf("Enabling paging... ");
 	page_enable();
+	printf("DONE\n");
 
 	while (1);
 

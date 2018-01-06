@@ -5,6 +5,7 @@
  *      Author: seeseemelk
  */
 #include "string.h"
+#include "stdio.h"
 
 void* memcpy(void* dest, void* src, size_t num)
 {
@@ -28,7 +29,9 @@ void* memset(void* ptr, int value, size_t num)
 {
 	char* c_ptr = (char*) ptr;
 	for (size_t i = 0; i < num; i++)
+	{
 		c_ptr[i] = (char) value;
+	}
 	return ptr;
 }
 

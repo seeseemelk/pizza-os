@@ -5,7 +5,6 @@ global asm_load_cr3_page_dir
 asm_enable_cr0_pepg:
 	mov eax, cr0
 	or eax, 0x80000001
-	jmp asm_enable_cr0_pepg ; So far does not work yet
 	mov cr0, eax
 	ret
 

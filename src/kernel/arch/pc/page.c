@@ -226,6 +226,7 @@ void page_init()
 	// For a page table that will contain mappings the every
 	// page table. This map must be reserved for the pager itself.
 	//page_directory = (page_entry*) kernel_find_next_free_mem(MINIMUM_SIZE);
+	printf("Allocating\n");
 	page_directory = (page_entry*) pmem_alloc(KB(4));
 	page_tbl = (page_entry*) pmem_alloc(KB(4));
 	page_entry* dir_tbl = (page_entry*) pmem_alloc(KB(4));
@@ -237,13 +238,17 @@ void page_init()
 	if (page_tbl == NULL)
 		kernel_panic("Could not allocate meta page table");
 
+	printf("Mem setting\n");
 	memset(page_directory, 0, KB(4));
+	printf("A");
 	memset(page_tbl, 0, KB(4));
+	printf("B");
 	memset(dir_tbl, 0, KB(4));
 
 	// Create the table that corresponds to the directory itself.
 	// This way we can make sure that the directory and the
 	// initial page table are id-mapped.
+	printf("Setting tbl entries\n");
 	page_init_set_tbl_entry(dir_tbl, page_directory);
 	page_init_set_tbl_entry(page_tbl, dir_tbl);
 	page_init_set_tbl_entry(page_tbl, page_tbl);
@@ -251,9 +256,12 @@ void page_init()
 	// And link the table to the directory at the right location.
 	// We can find this location by taking the directory address
 	// and dividing this by 4 megabytes.
+	printf("Setting dir entries\n");
 	page_init_set_dir_entry(page_directory, dir_tbl);
 	page_init_set_dir_entry(page_directory, page_tbl);
 	page_tbl_offset = (void*) (page_tbl - ((size_t)page_tbl % MB(4)));
+
+	printf("Done\n");
 	/*page_entry* dir_entry = (page_entry*) page_directory[(size_t)page_directory / MB(4)];
 	page_set_address(page_directory, dir_entry);
 	page_set_flags(dir_entry, PAGE_PRESENT | PAGE_RW);*/
@@ -268,12 +276,13 @@ void page_enable()
 
 	// Load the address of the page directory into CR3
 	asm_load_cr3_page_dir((size_t) page_directory);
+	printf("Set page");
+	while (1);
 
 	// Set CR0.PG to 1.
 	// This will put the CPU in 32-bit paging mode.
 	// (see Intel Manual Volume 3, 4.1.2)
 	asm_enable_cr0_pepg();
-	while (1);
 
 	printf("Paging enabled\n");
 }

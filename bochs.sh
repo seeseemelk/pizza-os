@@ -1,0 +1,2 @@
+./grub.sh &&
+bochs -q
