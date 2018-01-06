@@ -3,14 +3,13 @@ global asm_enable_cr0_pepg
 global asm_load_cr3_page_dir
 
 asm_enable_cr0_pepg:
-	push eax
 	mov eax, cr0
 	or eax, 0x80000001
+	jmp asm_enable_cr0_pepg ; So far does not work yet
 	mov cr0, eax
-	pop eax
 	ret
 
 asm_load_cr3_page_dir:
-	pop eax
+	mov eax, [esp+4]
 	mov cr3, eax
 	ret

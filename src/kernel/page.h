@@ -14,32 +14,37 @@
 
 #include <stddef.h>
 
+void* page_alloc();
+void* page_map(void* virt, void* phys, size_t length);
+void* page_idmap(void* addr, size_t length);
+void page_free(void* virt);
+
 /**
  * Allocates a single page.
  */
-page* page_alloc();
+//page* page_alloc();
 
 /**
  * Allocates a single page so that the page contains
  * the specified physical address.
  */
-page* page_alloc_phys(void* phys_addr);
+//page* page_alloc_phys(void* phys_addr);
 
 /**
  * Allocates a single page so that the page contains
  * the specified virtual address.
  */
-page* page_alloc_virt(void* virt_addr);
+//page* page_alloc_virt(void* virt_addr);
 
 /**
  * Allocates a single page so that the specified virtual address
  * accesses the specified physical address.
  */
-page* page_alloc_over(void* phys_addr, void* virt_addr);
+//page* page_alloc_over(void* phys_addr, void* virt_addr);
 
 /**
  * Frees a certain page.
  */
-void page_free(page* p);
+//void page_free(page* p);
 
 #endif /* PAGE_H_ */

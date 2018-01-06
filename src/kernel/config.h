@@ -15,7 +15,6 @@
 #define MAX_DEVICES 255
 #define ENABLE_VGA
 
-#define KERNEL_LOCATION MB(2)
-#define MEMORY_LOCATION KERNEL_LOCATION + MB(16)
+#define PMEM_BLOCK_SIZE KB(4)
 
 #endif /* CONFIG_H_ */

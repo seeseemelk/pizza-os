@@ -1,0 +1,138 @@
+/*
+ * page.c
+ *
+ *  Created on: Jan 4, 2018
+ *      Author: seeseemelk
+ */
+
+#include "arch/pc/page.h"
+#include "arch/pc/asmfn.h"
+#include "page.h"
+#include "kernel.h"
+#include "cdefs.h"
+#include "config.h"
+
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+page_entry* directory;
+
+size_t page_get_address(page_entry* entry)
+{
+	return (*entry) & 0xFFFFF000;
+}
+
+void page_set_address(page_entry* entry, void* address)
+{
+	(*entry) = ((*entry) & 0xFFF) | (((size_t) address) & 0xFFFFF000);
+}
+
+int page_get_flags(page_entry* entry)
+{
+	return *entry & 0b111;
+}
+
+void page_set_flags(page_entry* entry, bool present, bool rw, bool user)
+{
+	(*entry) = page_get_address(entry) | ((present) | (rw << 1) | (user << 2));
+}
+
+static bool page_is_present(page_entry* entry)
+{
+	return page_get_flags(entry) & 1;
+}
+
+static page_entry* page_get_dir_entry(size_t entry)
+{
+	return &directory[entry];
+}
+
+static page_entry* page_get_tbl_entry(page_entry* dir, size_t entry)
+{
+	page_entry* tbl = (page_entry*) page_get_address(dir);
+	return &tbl[entry];
+}
+
+static page_entry* page_get_virt(void* virt_addr)
+{
+	page_entry* dir_entry = page_get_dir_entry(((size_t) virt_addr) / MB(4));
+	return page_get_tbl_entry(dir_entry, ((size_t) virt_addr) % MB(4));
+}
+
+void* page_alloc(size_t size)
+{
+	page_entry* first;
+	size_t found = 0;
+
+
+
+	for (size_t dir_index = 0; dir_index < 1024; dir_index++)
+	{
+		page_entry* dir_entry = page_get_dir_entry(dir_index);
+		if (page_is_present(dir_entry))
+		{
+
+		}
+	}
+}
+
+void* page_map(void* virt, void* phys, size_t length)
+{
+	for (size_t offset = 0; offset < length; offset += 4096)
+	{
+		page_entry* entry = page_get_virt(virt + (void*) offset);
+		page_set_address(entry, phys + (void*) offset);
+		page_set_flags(entry, true, true, false);
+	}
+	return virt;
+}
+
+void* page_idmap(void* addr, size_t length)
+{
+	return page_map(addr, addr, length);
+}
+
+void page_free(void* virt, size_t length)
+{
+	for (size_t offset = 0; offset < length; offset += 4096)
+	{
+		page_entry* entry = page_get_virt(virt + (void*) offset);
+		page_set_flags(entry, false, false, false);
+	}
+}
+
+void page_init()
+{
+	directory = mem_alloc(sizeof(page_entry) * 1024);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
