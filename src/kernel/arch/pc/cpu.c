@@ -6,6 +6,8 @@
  */
 #include "arch/pc/cpu.h"
 #include "cdefs.h"
+#include "pmem.h"
+#include "kernel.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -33,7 +35,7 @@ struct __attribute__((packed)) gdt_descriptor
 	u32 address;
 };
 
-gdt_entry gdt_table[3] = {};
+gdt_entry gdt_table[3];
 gdt_descriptor descriptor;
 
 /*
@@ -87,25 +89,25 @@ static void gdt_load(gdt_descriptor* descriptor)
 
 void cpu_init()
 {
-	printf("Initialising GDT\n");
+	/*gdt_table = pmem_alloc(sizeof(gdt_entry) * 3);
+	if (gdt_table == NULL)
+		kernel_panic("Could not allocate GDT table");*/
+
 	gdt_zero_entry(&gdt_table[0]);
 
-	gdt_set_base(&gdt_table[1], 0);
-	gdt_set_limit(&gdt_table[1], 0xFFFFFFFF);
-	gdt_set_flags(&gdt_table[1], 1);
-	gdt_set_access(&gdt_table[1], true, 0, true, false, true);
+	gdt_set_base(gdt_table+1, 0);
+	gdt_set_limit(gdt_table+1, 0xFFFFFFFF);
+	gdt_set_flags(gdt_table+1, 1);
+	gdt_set_access(gdt_table+1, true, 0, true, false, true);
 
-	gdt_set_base(&gdt_table[1], 0);
-	gdt_set_limit(&gdt_table[1], 0xFFFFFFFF);
-	gdt_set_flags(&gdt_table[1], 1);
-	gdt_set_access(&gdt_table[1], true, 0, false, false, true);
+	gdt_set_base(gdt_table+2, 0);
+	gdt_set_limit(gdt_table+2, 0xFFFFFFFF);
+	gdt_set_flags(gdt_table+2, 1);
+	gdt_set_access(gdt_table+2, true, 0, false, false, true);
 
 	descriptor.address = (int) gdt_table;
-	descriptor.limit = (((int) &gdt_table[3]) - 1) - ((int) gdt_table);
+	descriptor.limit = (((int) (gdt_table+3)) - 1) - ((int) gdt_table);
 	gdt_load(&descriptor);
-	printf("GDT Loaded\n");
-
-	//page_init();
 }
 
 

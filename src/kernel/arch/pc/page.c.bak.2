@@ -1,0 +1,409 @@
+/*
+ * page.c
+ *
+ *  Created on: Jan 5, 2018
+ *      Author: seeseemelk
+ */
+#include "arch/pc/page.h"
+#include "arch/pc/asmfn.h"
+#include "pmem.h"
+#include "kernel.h"
+#include "cdefs.h"
+
+#include <string.h>
+#include <stdio.h>
+#include <stdbool.h>
+
+#define MINIMUM_SIZE KB(4*3)
+
+// Contains the page directory.
+page_entry* page_directory;
+size_t entries_left = 0;
+
+// Contains the page table containing all the page tables.
+// It is important to note that in physical memory this table
+// comes 4 KiB after the page directory, but in virtual memory
+// it comes 4 MiB after the page directory.
+page_entry* page_tbl;
+size_t page_tbl_offset; // The virtual address of the page table.
+bool paging_enabled = false;
+
+
+void* page_get_address(page_entry* entry)
+{
+	return (void*) ((*entry) & 0xFFFFF000);
+}
+
+void page_set_address(page_entry* entry, void* address)
+{
+	(*entry) = ((*entry) & 0xFFF) | ((size_t)address & 0xFFFFF000);
+}
+
+void page_set_flags(page_entry* entry, page_flags flags)
+{
+	(*entry) = (size_t)page_get_address(entry) | flags;
+}
+
+page_flags page_get_flags(page_entry* entry)
+{
+	return (*entry) & 0xFFF;
+}
+
+bool page_is_present(page_entry* entry)
+{
+	return (page_get_flags(entry) & PAGE_PRESENT) != 0;
+}
+
+/**
+ * Creates a page table and makes sure the dir_entry points towards it.
+ */
+static page_entry* page_create_table(page_entry* dir_entry)
+{
+	// First we allocate a block of memory to store the new page table.
+	page_entry* tbl_phys = (page_entry*) pmem_alloc(KB(4));
+	page_entry* tbl_virt;
+
+	// We must then find a slot in the metatable to store it.
+	for (size_t i = 0; i < 1024; i++)
+	{
+		page_entry* entry = page_tbl + i;
+		if (page_is_present(entry))
+		{
+			page_set_address(entry, tbl_phys);
+			page_set_flags(entry, PAGE_PRESENT | PAGE_RW);
+
+			// If paging is enabled we must convert tbl from it's physical address
+			// to a virtual one so that we can memset it to zero.
+			if (paging_enabled)
+			{
+				tbl_virt = (page_entry*) page_tbl_offset + KB(4) * i;
+				memset(tbl_virt, 0, KB(4));
+			}
+
+			break;
+		}
+	}
+
+	// Now we must link the new page table to the directory entry that was passed on to us.
+	page_set_address(dir_entry, tbl_phys);
+	page_set_flags(dir_entry, PAGE_PRESENT | PAGE_RW);
+
+	// An we return a valid pointer to the table.
+	if (paging_enabled)
+		return tbl_virt;
+	else
+		return tbl_phys;
+}
+
+/**
+ * Converts a pointer to a virtual address
+ * into a pointer to a physical address.
+ */
+void* page_phys_to_virt(void* phys)
+{
+	// We start of by finding which physical page that address resides on.
+	size_t offset = (size_t)phys % KB(4);
+	size_t phys_page = (size_t)phys - offset;
+
+	// If we paging is not yet enabled we have to
+	// loop over every entry trying to find it.
+	if (!paging_enabled)
+	{
+		for (size_t dir_i = 0; dir_i < 1024; dir_i++)
+		{
+			page_entry* dir_entry = page_directory + dir_i;
+			if (page_is_present(dir_entry))
+			{
+				page_entry* tbl = (page_entry*) page_get_address(dir_entry);
+
+				// Now loop over everything in here
+				for (size_t tbl_i = 0; tbl_i < 1024; tbl_i++)
+				{
+					page_entry* tbl_entry = tbl + tbl_i;
+					if (page_is_present(tbl_entry))
+					{
+						size_t addr = (size_t) page_get_address(tbl_entry);
+						if (addr == phys_page)
+						{
+							// We found the correct page, let's return it.
+							return (void*) (addr + offset);
+						}
+					}
+				}
+
+			}
+		}
+	}
+	else
+	{
+		// Paging is enabled, but we now that every page table should be in the last 4 megabytes.
+		// We can just loop over them.
+		for (size_t i = 0; i < 1024*1024; i++)
+		{
+			page_entry* entry = (page_entry*)page_tbl_offset + i;
+			if (page_is_present(entry))
+			{
+				size_t addr = (size_t) page_get_address(entry);
+				if (addr == phys_page)
+				{
+					// We found the correct page, let's return it.
+					return (void*) (addr + offset);
+				}
+			}
+		}
+	}
+
+	// We didn't find it, just panic alright
+	kernel_panic("Could not convert physical address to virtual");
+	return NULL;
+}
+
+/**
+ * Converts a pointer to a virtual address
+ * to a pointer to a physical address.
+ */
+void* page_virt_to_phys(void* virt)
+{
+	// Calculate the indexes into the page directory and the subsequent page table.
+	// We also need to know the offset from the nearest 4KB boundary later.
+	size_t dir_i = (size_t)virt / MB(4);
+	size_t tbl_i = ((size_t)virt % MB(4) / KB(4));
+	size_t offset = ((size_t)virt / KB(4)) * KB(4);
+
+	// Get the actual directory entry
+	page_entry* dir_entry = page_directory + dir_i;
+	if (!page_is_present(dir_entry))
+		kernel_panic("Table not present");
+
+	// Now we need to find where that page table is.
+	page_entry* tbl;
+	if (paging_enabled)
+		tbl = (page_entry*) page_phys_to_virt( page_get_address(dir_entry));
+	else
+		tbl = (page_entry*) page_get_address(dir_entry);
+
+	// And index it.
+	page_entry* tbl_entry = tbl + tbl_i;
+
+	// Finally we can calculate the final pointer and return it.
+	return (void*) page_get_address(tbl_entry) + offset;
+}
+
+/**
+ * Gets a pointer to the directory entry that contains a certain virtual address.
+ */
+static page_entry* page_get_dir_entry(void* virt_addr)
+{
+	return &page_directory[(size_t)virt_addr / MB(4)];
+}
+
+/**
+ * Gets a pointer to the table entry that contains a certain virtual address.
+ */
+static page_entry* page_get_tbl_entry(page_entry* tbl, void* virt_addr)
+{
+	return tbl + ((size_t)virt_addr % MB(4)) / KB(4);
+}
+
+/**
+ * Gets a pointer to the table entry that contains a virtual address.
+ * If the table does not yet exist, it will be created.
+ */
+static page_entry* page_follow_dir_entry(page_entry* dir_entry)
+{
+	return (page_entry*) page_get_address(dir_entry);
+}
+
+static page_entry* page_get_entry(void* virt_addr)
+{
+	page_entry* dir_entry = page_get_dir_entry(virt_addr);
+	page_entry* tbl;
+	if ((page_get_flags(dir_entry) & PAGE_PRESENT) == 0)
+	{
+		printf("Creating new table\n");
+		tbl = page_create_table(dir_entry);
+	}
+	else
+	{
+		printf("Following directory entry\n");
+		tbl = page_follow_dir_entry(dir_entry);
+	}
+
+	return page_get_tbl_entry(tbl, virt_addr);
+}
+
+static void page_register_blocks(void* virt_first, size_t blocks)
+{
+	const void* virt_end = virt_first + blocks * KB(4);
+	for (void* i = virt_first; i < virt_end; i += 4096)
+	{
+		page_entry* entry = page_get_entry(i);
+		void* mem = pmem_alloc(KB(4));
+		page_set_address(entry, mem);
+		page_set_flags(entry, PAGE_PRESENT | PAGE_RW);
+	}
+}
+
+void* page_alloc(const size_t bytes)
+{
+	const size_t blocks_needed = bytes / KB(4);
+
+	void* virt_first;
+	size_t blocks_found = 0;
+
+	for (size_t dir_i = 0; dir_i < 1024; dir_i++)
+	{
+		page_entry* tbl = &page_directory[dir_i];
+		if ((page_get_flags(tbl) & PAGE_PRESENT) != 0)
+		{
+			if (tbl != page_tbl)
+			{
+				for (size_t tbl_i = 0; tbl_i < 1024; tbl_i++)
+				{
+					page_entry* entry = &tbl[tbl_i];
+					if ((page_get_flags(entry) & PAGE_PRESENT) == 0)
+					{
+						 if (blocks_found == 0)
+						 {
+							 blocks_found = 1;
+							 virt_first = (void*) (tbl_i * KB(4)) + (dir_i * MB(4));
+						 }
+						 else
+							 blocks_found++;
+					}
+					else
+						blocks_found = 0;
+				}
+			}
+		}
+		else
+		{
+			// Page table does not exist yet, which means every block will be free.
+			if (blocks_found == 0)
+			{
+				blocks_found = 1024;
+				virt_first = (void*) (dir_i * MB(4));
+			}
+			else
+			{
+				blocks_found += 1024;
+			}
+			if (blocks_found >= blocks_needed)
+				break;
+		}
+	}
+
+	page_register_blocks(virt_first, blocks_needed);
+	return NULL;
+}
+
+void* page_map(void* virt, void* phys, size_t length)
+{
+	if (length % KB(4) != 0)
+		kernel_panic("Length is not a multiple of four");
+	for (size_t offset = 0; offset < length; offset += KB(4))
+	{
+		page_entry* entry = page_get_entry((void*) ((size_t)virt + offset));
+		page_set_address(entry, (void*) ((size_t)phys + offset));
+		page_set_flags(entry, PAGE_PRESENT | PAGE_RW);
+	}
+	return virt;
+}
+
+void* page_idmap(void* addr, size_t length)
+{
+	printf("Id mapping 0x%p to 0x%p\n", (size_t) addr, (size_t)addr + length);
+	return page_map(addr, addr, length);
+}
+
+void page_free(void* virt)
+{
+	kernel_panic("Not yet implemented");
+}
+
+void page_init()
+{
+	// First we create the page directory and the page table table.
+	// This table contains all the pages containing page tables (page table-ception?)
+	page_directory = (page_entry*) pmem_alloc(KB(4));
+	page_tbl = (page_entry*) pmem_alloc(KB(4));
+
+	// If we couldn't allocate this, panic
+	if (page_directory == NULL)
+		kernel_panic("Could not allocate page directory");
+	if (page_tbl == NULL)
+		kernel_panic("Could not allocate meta page table");
+
+	// Set both the directory and the metatable to all zeroes
+	memset(page_directory, 0, KB(4));
+	memset(page_tbl, 0, KB(4));
+
+	// Now we make sure that the metatable actually has a link to itself, because
+	// it too is a page table that should be stored by it.
+	// Note that the page directory shouldn't not be stored by it.
+	page_entry* tbl_entry = page_tbl;
+	page_set_address(tbl_entry, page_tbl);
+	page_set_flags(tbl_entry, PAGE_PRESENT | PAGE_RW);
+
+	// Now we link the metatable to the page directory.
+	// We do this in the very last 4 megabytes of virtual memory.
+	// This way we are unlikely to be locking us out of any memory.
+	page_entry* dir_entry = page_directory + 1023;
+	page_set_address(dir_entry, page_tbl);
+	page_set_flags(dir_entry, PAGE_PRESENT | PAGE_RW);
+
+	// We are going to id map the page directory.
+	page_idmap(page_directory, KB(4));
+
+	// We are also going to calculate the page_tbl_offset now.
+	// This should just be the virtual location of the page_tbl.
+	page_tbl_offset = MB(4) * 1023;
+
+	// Before we can enable it the kernel will still need to add
+	// it's own maps. Otherwise we might triple-fault the system.
+}
+
+void page_enable()
+{
+	printf("Enabling paging\n");
+
+	// Load the address of the page directory into CR3
+	asm_load_cr3_page_dir((size_t) page_directory);
+	printf("Set page");
+	while (1);
+
+	// Set CR0.PG to 1.
+	// This will put the CPU in 32-bit paging mode.
+	// (see Intel Manual Volume 3, 4.1.2)
+	asm_enable_cr0_pepg();
+
+	printf("Paging enabled\n");
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

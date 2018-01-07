@@ -155,8 +155,6 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	tty_clear();
 
 	printf("Starting pizza-os (yum!)...\n");
-	printf("Size: %d\n", (size_t)(&kernel_end - &kernel_start));
-	printf("Size: %d\n", (size_t)&kernel_end - (size_t)&kernel_start);
 	// Detect memory
 	if ((mbd->flags & MULTIBOOT_INFO_MEMORY) > 0)
 	{
@@ -175,14 +173,14 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	if ((mbd->flags & MULTIBOOT_INFO_MEM_MAP) == 0)
 		kernel_panic("No memory map");
 
+	// Setup the physical memory allocator
+	printf("Init PMEM... ");
+	kernel_init_pmem();
+	printf("DONE\n");
+
 	// Initialise the CPU
 	printf("Init CPU... ");
 	cpu_init();
-	printf("DONE\n");
-
-	// Setup the physical memory allocator
-	printf("Init pmem... ");
-	kernel_init_pmem();
 	printf("DONE\n");
 
 	// Initialise the multiboot memory map so that

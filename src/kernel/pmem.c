@@ -10,6 +10,7 @@
 #include "kernel.h"
 #include <string.h>
 #include <stdio.h>
+#include <math.h>
 
 state_t* pmem_map;
 size_t pmem_size;
@@ -32,6 +33,7 @@ void* pmem_alloc(size_t amount)
 			}
 			else
 				blocks_found++;
+
 			if (blocks_found == blocks_needed)
 				break;
 		}
@@ -76,7 +78,7 @@ void pmem_init(void* start, size_t mem_size)
 
 void pmem_register_pages()
 {
-	page_idmap(pmem_map, pmem_size * sizeof(state_t));
+	page_idmap(pmem_map, ceilg(pmem_size * sizeof(state_t), KB(4)));
 }
 
 
