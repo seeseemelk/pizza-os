@@ -5,6 +5,7 @@
  *      Author: seeseemelk
  */
 #include "arch/pc/dev/vga.h"
+#include "page.h"
 #include "io.h"
 
 #include <string.h>
@@ -63,6 +64,9 @@ int vga_request(module_request* request)
 			cursor_y -= lines;
 			vga_write_cursor_address();
 		}
+		return 0;
+	case PAGING_ENABLED:
+		page_idmap(vga_memory, KB(64));
 		return 0;
 	default:
 		return 0;

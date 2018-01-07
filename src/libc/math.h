@@ -10,5 +10,6 @@
 #include <stddef.h>
 
 size_t ceilg(size_t n, size_t granularity);
+size_t ceildiv(size_t a, size_t b);
 
 #endif /* MATH_H_ */

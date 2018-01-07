@@ -15,9 +15,12 @@
 #include <stdbool.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <math.h>
 
 extern u8 kernel_end;
 extern u8 kernel_start;
+extern u8 stack_top;
+extern u8 stack_bottom;
 
 #define KERNEL_START &kernel_start
 #define KERNEL_END &kernel_end
@@ -148,7 +151,8 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 
 	// Enable early VGA output if possible
 #ifdef ENABLE_VGA
-	tty_set_tty(vga_init());
+	device* vga_dev = vga_init();
+	tty_set_tty(vga_dev);
 #endif
 
 	// Clean up the screen
@@ -196,16 +200,32 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	printf("ID Map kernel... ");
 	page_idmap(&kernel_start, &kernel_end - &kernel_start);
 	printf("DONE\n");
+
+	printf("Paging device mappings... ");
+	device_invoke(vga_dev, PAGING_ENABLED);
+
 	printf("Register pmem pages... ");
 	pmem_register_pages();
 	printf("DONE\n");
+
+
+	register int *stack asm("esp");
+	printf("Stack = 0x%p\n", stack);
+
+	/*printf("Registering stack... ");
+	size_t stack_size = (size_t)&stack_top - (size_t)&stack_bottom;
+	page_idmap(&stack_bottom, stack_size);
+	printf("DONE\n");*/
 
 	// Enable paging
 	printf("Enabling paging... ");
 	page_enable();
 	printf("DONE\n");
 
+	page_map((void*)0x00C00000, (void*)0x00B00000, KB(16));
+	printf("Ok");
 	while (1);
+
 
 	// ID-map the kernel.
 	if ((mbd->flags & MULTIBOOT_INFO_ELF_SHDR) == 0)

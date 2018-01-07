@@ -32,7 +32,7 @@ enum module_type
  */
 enum request_type
 {
-	UNLOAD, /* General request types */
+	UNLOAD, PAGING_ENABLED, /* General request types */
 	READ, WRITE, FLUSH, GET_SIZE, /* Block request types */
 	GET_CHAR, SET_CHAR, GET_WIDTH, GET_HEIGHT, GET_CURSOR_X, GET_CURSOR_Y, SET_CURSOR, SCROLL /* Terminal types */
 };

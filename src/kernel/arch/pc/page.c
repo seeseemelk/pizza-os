@@ -84,7 +84,7 @@ page_entry* page_metatable_add(page_entry* tbl_phys)
 			page_set_flags(mtbl_entry, PAGE_PRESENT | PAGE_RW);
 			// When we're not in paging, page_metatable is a physical pointer,
 			// But when it gets enabled it is converted into a virtual pointer.
-			return page_metatable + tbl_i * KB(4);
+			return (page_entry*)((void*)page_metatable + tbl_i * KB(4));
 		}
 	}
 	kernel_panic("No more pages free");
@@ -100,10 +100,19 @@ page_entry* page_metatable_add(page_entry* tbl_phys)
 page_entry* page_create_table(page_entry* dir_entry)
 {
 	page_entry* new_tbl = pmem_alloc(KB(4));
-	mem_window_set(new_tbl);
-	memset(mem_window, 0, KB(4));
+	if (paging_enabled)
+	{
+		mem_window_set(new_tbl);
+		memset(mem_window, 0, KB(4));
+	}
+	else
+	{
+		memset(new_tbl, 0, KB(4));
+	}
 	page_set_address(dir_entry, new_tbl);
-	return page_metatable_add(new_tbl);
+	page_entry* tbl_access = page_metatable_add(new_tbl);
+	page_set_flags(dir_entry, PAGE_PRESENT | PAGE_RW);
+	return tbl_access;
 }
 
 /**
@@ -120,7 +129,7 @@ void* page_follow_entry(page_entry* entry)
 		return addr;
 	else
 	{
-		mem_window_set(entry);
+		mem_window_set(addr);
 		return mem_window;
 	}
 }
@@ -132,13 +141,15 @@ void page_alloc_page(void* virt, void* phys)
 {
 	// We calculate the index into both the page directory and the page table.
 	size_t dir_i = (size_t)virt / MB(4);
-	size_t tbl_i = (size_t)virt % MB(4) / KB(4);
+	size_t tbl_i = ((size_t)virt % MB(4)) / KB(4);
 
 	// We then get a usable reference to the table that contains the page.
 	page_entry* dir_entry = page_directory + dir_i;
 	page_entry* tbl;
 	if (!page_is_present(dir_entry))
+	{
 		tbl = page_create_table(dir_entry);
+	}
 	else
 		tbl = page_follow_entry(dir_entry);
 
@@ -150,6 +161,13 @@ void page_alloc_page(void* virt, void* phys)
 
 void page_map(void* virt, void* phys, size_t length)
 {
+	if ((size_t)virt % KB(4) != 0)
+		kernel_panic("Virtual address not on page boundary");
+	if ((size_t)phys % KB(4) != 0)
+			kernel_panic("Physical address not on page boundary");
+	if (length % KB(4) != 0)
+		kernel_panic("Block length not on page boundary");
+
 	// We need to calculate how many blocks we need to allocate.
 	size_t blocks = length / KB(4);
 
@@ -157,7 +175,7 @@ void page_map(void* virt, void* phys, size_t length)
 	for (size_t block = 0; block < blocks; block++)
 	{
 		void* virt_adj = (void*) ((size_t) virt + block * KB(4));
-		void* phys_adj = (void*) ((size_t) virt + block * KB(4));
+		void* phys_adj = (void*) ((size_t) phys + block * KB(4));
 		page_alloc_page(virt_adj, phys_adj);
 	}
 }
@@ -171,6 +189,7 @@ void page_init()
 {
 	// First we allocate the page directory and the metatable.
 	page_directory = pmem_alloc(KB(4));
+	printf("Page: 0x%p\n", page_directory);
 	page_metatable = pmem_alloc(KB(4));
 
 	// And we clear it.
@@ -193,21 +212,74 @@ void page_init()
 	page_idmap(page_directory, KB(4));
 }
 
+page_entry* page_get_table(void* virt)
+{
+	size_t dir_i = (size_t)virt / MB(4);
+	page_entry* dir_entry = page_directory + dir_i;
+	void* tbl_addr = page_get_address(dir_entry);
+
+	for (size_t mtbl_i = 1; mtbl_i < 1024; mtbl_i++)
+	{
+		page_entry* mtbl_entry = page_metatable + mtbl_i;
+		if (page_is_present(mtbl_entry) && page_get_address(mtbl_entry) == tbl_addr)
+		{
+			return (page_entry*) (1023 * MB(4) + mtbl_i * KB(4));
+		}
+	}
+	kernel_panic("Could not find table");
+	return NULL;
+}
+
 void page_enable()
 {
-	printf("Enabling paging\n");
+	// Before we turn on paging we should allocate a page
+	// for the memory window. We are going to allocate it
+	// right before the metatable.
+	page_alloc_page((void*) (1023 * MB(4) - KB(4)), mem_window);
+
+	// Set this variable to true
+	paging_enabled = true;
+
+	// Also allocate some physical memory for the memory window.
+	//page_idmap(mem_window, KB(4));
 
 	// Load the address of the page directory into CR3
 	asm_load_cr3_page_dir((size_t) page_directory);
-	printf("Set page");
-	while (1);
 
 	// Set CR0.PG to 1.
 	// This will put the CPU in 32-bit paging mode.
 	// (see Intel Manual Volume 3, 4.1.2)
 	asm_enable_cr0_pepg();
 
-	printf("Paging enabled\n");
+	// Get the virtual address to the metatable.
+	page_metatable = (page_entry*) (1023 * MB(4));
+
+	// Now we still need to get the handle for the memory window.
+	page_entry* tbl = page_get_table((void*) (1022 * MB(4)));
+	mem_window_entry = (page_entry*)(tbl + 1023);
+	mem_window = (void*) (1023 * MB(4) - KB(4));
+
+	printf("TBL = 0x%X\n", tbl);
+	printf("Memory window = 0x%X\n", (size_t)mem_window);
+	printf("Memory window entry = 0x%X\n", *mem_window_entry);
+	//while(1);
+
+	/*// Find the entry that points to the memory window.
+	for (size_t block = 1; block < 1024; block++)
+	{
+		page_entry* entry = page_metatable + block;
+		if (page_is_present(entry))
+			printf("Entry %d = 0x%X\n", block, (size_t)entry);
+		if (page_is_present(entry) && page_get_address(entry) == mem_window)
+		{
+			mem_window_entry = entry;
+			break;
+		}
+	}*/
+
+	printf("Mem_window_entry = 0x%p\n", (size_t)mem_window_entry);
+	mem_window_set((void*) 0x1000);
+	//while(1) ;
 }
 
 

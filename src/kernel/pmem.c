@@ -70,10 +70,18 @@ void pmem_set(void* start, size_t amount, state_t state)
 
 void pmem_init(void* start, size_t mem_size)
 {
+	// Create the map and set it to FREE.
 	pmem_map = (state_t*) start;
 	pmem_size = mem_size / PMEM_BLOCK_SIZE;
 	for (size_t i = 0; i < pmem_size; i++)
 		pmem_map[i] = PMEM_FREE;
+
+	// Then set the blocks of the map itself to USED
+	size_t map_start = (size_t)pmem_map / PMEM_BLOCK_SIZE;
+	size_t blocks = ceildiv(pmem_size, PMEM_BLOCK_SIZE);
+	printf("Map starts at block %d and is %d long\n", map_start, blocks);
+	for (size_t block = 0; block < blocks; block++)
+		pmem_map[block + map_start] = PMEM_USED;
 }
 
 void pmem_register_pages()
