@@ -15,9 +15,10 @@
 #include <stddef.h>
 
 void* page_alloc();
+void* page_alloc_phys(void* phys, size_t length);
 void* page_map(void* virt, void* phys, size_t length);
 void* page_idmap(void* addr, size_t length);
-void page_free(void* virt);
+void page_free(void* virt, size_t length);
 
 /**
  * Allocates a single page.

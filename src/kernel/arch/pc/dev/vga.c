@@ -5,7 +5,6 @@
  *      Author: seeseemelk
  */
 #include "arch/pc/dev/vga.h"
-#include "page.h"
 #include "io.h"
 
 #include <string.h>
@@ -17,7 +16,7 @@ module* vga_module;
 device* vga_device;
 int width = 80;
 int height = 25;
-char* vga_memory = (char*) 0xB8000;
+char* vga_memory;
 int cursor_x = 0;
 int cursor_y = 0;
 
@@ -65,9 +64,6 @@ int vga_request(module_request* request)
 			vga_write_cursor_address();
 		}
 		return 0;
-	case PAGING_ENABLED:
-		page_idmap(vga_memory, KB(64));
-		return 0;
 	default:
 		return 0;
 	}
@@ -80,6 +76,7 @@ device* vga_init()
 
 	vga_module = module_register("vga", TERMINAL, &vga_request);
 	vga_device = device_register(vga_module, 0);
+	vga_memory = device_mmap((void*) 0xB8000, KB(8));
 	return vga_device;
 }
 

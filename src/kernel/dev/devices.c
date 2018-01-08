@@ -6,6 +6,7 @@
  */
 #include "dev/devices.h"
 #include "config.h"
+#include "page.h"
 
 #include <stddef.h>
 
@@ -86,7 +87,14 @@ int device_invoke(device* device, request_type type)
 	return device_invoke4(device, type, 0, 0, 0, 0);
 }
 
-
+/**
+ * Lets a device allocate some physical memory.
+ * A pointer to the memory is returned.
+ */
+void* device_mmap(void* phys, size_t length)
+{
+	return page_alloc_phys(phys, length);
+}
 
 
 

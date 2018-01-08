@@ -11,5 +11,6 @@
 
 extern void asm_enable_cr0_pepg();
 extern void asm_load_cr3_page_dir(size_t address);
+extern void asm_invlpg(void* virt);
 
 #endif /* ARCH_PC_ASMFN_H_ */

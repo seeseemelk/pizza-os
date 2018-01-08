@@ -5,7 +5,7 @@ SECTIONS
 	. = 1M;
 	kernel_start = .;
 
-	.text BLOCK(4K) : ALIGN(4K)
+	.text BLOCK(4K): ALIGN(4K)
 	{
 		*(.multiboot)
 		*(.text)

@@ -7,6 +7,7 @@
 
 #ifndef DEV_DEVICES_H_
 #define DEV_DEVICES_H_
+#include <stddef.h>
 
 typedef enum module_type module_type;
 typedef enum request_type request_type;
@@ -32,7 +33,7 @@ enum module_type
  */
 enum request_type
 {
-	UNLOAD, PAGING_ENABLED, /* General request types */
+	UNLOAD, PAGING_ENABLED /* Called when paging gets enabled */, /* General request types */
 	READ, WRITE, FLUSH, GET_SIZE, /* Block request types */
 	GET_CHAR, SET_CHAR, GET_WIDTH, GET_HEIGHT, GET_CURSOR_X, GET_CURSOR_Y, SET_CURSOR, SCROLL /* Terminal types */
 };
@@ -90,6 +91,11 @@ int device_invoke3(device* device, request_type type, int arg1, int arg2, int ar
 int device_invoke2(device* device, request_type type, int arg1, int arg2);
 int device_invoke1(device* device, request_type type, int arg1);
 int device_invoke(device* device, request_type type);
+
+/*
+ * Functions for allocating and deallocating memory.
+ */
+void* device_mmap(void* phys, size_t length);
 
 #endif /* DEV_DEVICES_H_ */
 

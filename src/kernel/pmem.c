@@ -68,6 +68,11 @@ void pmem_set(void* start, size_t amount, state_t state)
 			pmem_map[i] = state;
 }
 
+/**
+ * Initialises the memory allocator.
+ * A pointer should be passed to where it is allowed to place the memory map,
+ * and the total available memory size should be passed on.
+ */
 void pmem_init(void* start, size_t mem_size)
 {
 	// Create the map and set it to FREE.
@@ -79,7 +84,6 @@ void pmem_init(void* start, size_t mem_size)
 	// Then set the blocks of the map itself to USED
 	size_t map_start = (size_t)pmem_map / PMEM_BLOCK_SIZE;
 	size_t blocks = ceildiv(pmem_size, PMEM_BLOCK_SIZE);
-	printf("Map starts at block %d and is %d long\n", map_start, blocks);
 	for (size_t block = 0; block < blocks; block++)
 		pmem_map[block + map_start] = PMEM_USED;
 }

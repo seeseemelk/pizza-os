@@ -13,6 +13,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <math.h>
 
 page_entry* page_directory;
 page_entry* page_metatable;
@@ -64,6 +65,7 @@ void mem_window_set(void* phys)
 		// got a pointer to the memory window entry.
 		// We just move this to point to our new address.
 		page_set_address(mem_window_entry, phys);
+		asm_invlpg(mem_window);
 	}
 }
 
@@ -100,6 +102,9 @@ page_entry* page_metatable_add(page_entry* tbl_phys)
 page_entry* page_create_table(page_entry* dir_entry)
 {
 	page_entry* new_tbl = pmem_alloc(KB(4));
+	if (new_tbl == NULL)
+		kernel_panic("Could not allocate new page table");
+
 	if (paging_enabled)
 	{
 		mem_window_set(new_tbl);
@@ -135,6 +140,79 @@ void* page_follow_entry(page_entry* entry)
 }
 
 /**
+ * Gets a pointer to the page table that manages a specified section of the virtual memory.
+ * This function only works when paging has been enabled.
+ */
+page_entry* page_get_table(void* virt)
+{
+	size_t dir_i = (size_t)virt / MB(4);
+	page_entry* dir_entry = page_directory + dir_i;
+	void* tbl_addr = page_get_address(dir_entry);
+
+	for (size_t mtbl_i = 1; mtbl_i < 1024; mtbl_i++)
+	{
+		page_entry* mtbl_entry = page_metatable + mtbl_i;
+		if (page_is_present(mtbl_entry) && page_get_address(mtbl_entry) == tbl_addr)
+		{
+			return (page_entry*) (1023 * MB(4) + mtbl_i * KB(4));
+		}
+	}
+	kernel_panic("Could not find table");
+	return NULL;
+}
+
+/**
+ * Tries to find some free virtual memory.
+ */
+void* page_find_free(size_t pages_needed)
+{
+	void* found_addr;
+	size_t found_amount = 0;
+
+	for (size_t dir_i = 0; dir_i < 1023; dir_i++)
+	{
+		page_entry* dir_entry = page_directory + dir_i;
+		if (!page_is_present(dir_entry))
+		{
+			if (found_amount == 0)
+				found_addr = (void*) (dir_i * MB(4));
+			found_amount += 1024;
+			if (found_amount >= pages_needed)
+				goto found_enough;
+		}
+		else
+		{
+			// We found an existing directory entry,
+			// lets browse it.
+			page_entry* tbl = page_get_table(found_addr);
+			for (size_t tbl_i = 0; tbl_i < 1024; tbl_i++)
+			{
+				page_entry* tbl_entry = tbl + tbl_i;
+				if (!page_is_present(tbl_entry))
+				{
+					if (found_amount == 0)
+						found_addr = (void*) (dir_i * MB(4) + tbl_i * KB(4));
+					found_amount++;
+					if (found_amount >= pages_needed)
+						goto found_enough;
+				}
+				else
+				{
+					found_amount = 0;
+				}
+			}
+		}
+	}
+
+	found_enough:
+	if (found_amount < pages_needed)
+	{
+		while(1);
+	}
+	return found_addr;
+}
+
+/**
  * Allocates a single page.
  */
 void page_alloc_page(void* virt, void* phys)
@@ -154,9 +232,27 @@ void page_alloc_page(void* virt, void* phys)
 		tbl = page_follow_entry(dir_entry);
 
 	// And we add the entry to it.
+	// Note that if the page is already present,
+	// we should invalidate the page after loading it.
 	page_entry* tbl_entry = tbl + tbl_i;
 	page_set_address(tbl_entry, phys);
+	const bool was_present = page_is_present(tbl_entry);
 	page_set_flags(tbl_entry, PAGE_PRESENT | PAGE_RW);
+	if (was_present)
+		asm_invlpg(virt);
+}
+
+void* page_alloc_phys(void* phys, size_t length)
+{
+	size_t pages = ceildiv(length, KB(4));
+	void* virt = page_find_free(pages);
+	for (size_t page = 0; page < pages; page++)
+	{
+		void* virt_adj = (void*) (virt + page * KB(4));
+		void* phys_adj = (void*) (phys + page * KB(4));
+		page_alloc_page(virt_adj, phys_adj);
+	}
+	return virt;
 }
 
 void page_map(void* virt, void* phys, size_t length)
@@ -164,7 +260,7 @@ void page_map(void* virt, void* phys, size_t length)
 	if ((size_t)virt % KB(4) != 0)
 		kernel_panic("Virtual address not on page boundary");
 	if ((size_t)phys % KB(4) != 0)
-			kernel_panic("Physical address not on page boundary");
+		kernel_panic("Physical address not on page boundary");
 	if (length % KB(4) != 0)
 		kernel_panic("Block length not on page boundary");
 
@@ -185,12 +281,34 @@ void page_idmap(void* virt, size_t length)
 	page_map(virt, virt, length);
 }
 
+/**
+ * Frees a single page.
+ */
+void page_free_page(void* virt)
+{
+	size_t tbl_i = (size_t)virt % MB(4) / KB(4);
+	page_entry* tbl = page_get_table(virt);
+	page_entry* tbl_entry = tbl + tbl_i;
+	page_set_flags(tbl_entry, 0);
+	asm_invlpg(virt);
+}
+
+void page_free(void* virt, size_t length)
+{
+	size_t pages = length / KB(4);
+	for (size_t page = 0; page < pages; page++)
+		page_free_page(virt + page * KB(4));
+}
+
 void page_init()
 {
 	// First we allocate the page directory and the metatable.
 	page_directory = pmem_alloc(KB(4));
-	printf("Page: 0x%p\n", page_directory);
+	if (page_directory == NULL)
+		kernel_panic("Could not allocate page directory");
 	page_metatable = pmem_alloc(KB(4));
+	if (page_metatable == NULL)
+		kernel_panic("Could not allocate metatable");
 
 	// And we clear it.
 	memset(page_directory, 0, KB(4));
@@ -210,24 +328,6 @@ void page_init()
 
 	// Finally we ID-map the page directory.
 	page_idmap(page_directory, KB(4));
-}
-
-page_entry* page_get_table(void* virt)
-{
-	size_t dir_i = (size_t)virt / MB(4);
-	page_entry* dir_entry = page_directory + dir_i;
-	void* tbl_addr = page_get_address(dir_entry);
-
-	for (size_t mtbl_i = 1; mtbl_i < 1024; mtbl_i++)
-	{
-		page_entry* mtbl_entry = page_metatable + mtbl_i;
-		if (page_is_present(mtbl_entry) && page_get_address(mtbl_entry) == tbl_addr)
-		{
-			return (page_entry*) (1023 * MB(4) + mtbl_i * KB(4));
-		}
-	}
-	kernel_panic("Could not find table");
-	return NULL;
 }
 
 void page_enable()
@@ -259,10 +359,10 @@ void page_enable()
 	mem_window_entry = (page_entry*)(tbl + 1023);
 	mem_window = (void*) (1023 * MB(4) - KB(4));
 
-	printf("TBL = 0x%X\n", tbl);
+	/*printf("TBL = 0x%X\n", tbl);
 	printf("Memory window = 0x%X\n", (size_t)mem_window);
 	printf("Memory window entry = 0x%X\n", *mem_window_entry);
-	//while(1);
+	//while(1);*/
 
 	/*// Find the entry that points to the memory window.
 	for (size_t block = 1; block < 1024; block++)
@@ -277,8 +377,8 @@ void page_enable()
 		}
 	}*/
 
-	printf("Mem_window_entry = 0x%p\n", (size_t)mem_window_entry);
-	mem_window_set((void*) 0x1000);
+	/*printf("Mem_window_entry = 0x%p\n", (size_t)mem_window_entry);
+	mem_window_set((void*) 0x1000);*/
 	//while(1) ;
 }
 
