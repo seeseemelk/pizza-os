@@ -29,13 +29,13 @@ void* mem_realloc(void* address, size_t new_size);
  * Initiates the memory allocator.
  * The caller should give a range of memory address that can be used by the memory allocator.
  */
-void mem_init(size_t address, size_t size);
+void mem_init();
 
 /**
  * Initialises the memory allocator.
  * The total size of the memory should be passed
  */
-void mem_init(size_t memory_size);
+//void mem_init(size_t memory_size);
 
 #endif /* MEM_H_ */
 

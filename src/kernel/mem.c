@@ -12,22 +12,102 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <math.h>
+#include <string.h>
 
-#define BLOCK_SIZE KB(4)
+#define BLK_SIZE KB(4)
+#define TBL_SIZE BLK_SIZE * 1024
+#define TBLI(x) (((size_t)x) % TBL_SIZE / BLK_SIZE)
+#define DIRI(x) (((size_t)x) / TBL_SIZE)
 
 #define FREE 0
-#define USED 1
+#define USED -1
 typedef unsigned char state_t;
 
-void* mem_base;
+typedef struct dir_t dir_t;
+typedef struct tbl_t tbl_t;
+
+struct dir_t
+{
+	tbl_t* tbl;
+};
+
+struct tbl_t
+{
+	size_t state;
+};
+
+dir_t* directory;
+
+/**
+ * Get a table from the directory.
+ * This is actually a pointer to the first entry.
+ */
+tbl_t* mem_get_tbl(void* mem)
+{
+	size_t dir_i = DIRI(mem);
+
+	if (directory[dir_i].tbl == FREE)
+	{
+		tbl_t* tbl = (tbl_t) page_alloc(sizeof(tbl_t) * 1024);
+		memset(tbl, 0, sizeof(tbl_t) * 1024);
+		directory[dir_i].tbl = tbl;
+		return tbl;
+	}
+	else
+	{
+		tbl_t* tbl = directory[dir_i].tbl;
+		return tbl;
+	}
+}
+
+/**
+ * Gets a pointer to a table entry.
+ */
+tbl_t* mem_get_tbl_entry(void* mem)
+{
+	size_t tbl_i = TBLI(mem);
+
+	tbl_t* tbl = mem_get_tbl(mem);
+	return tbl + tbl_i;
+}
+
+void mem_alloc(const size_t bytes)
+{
+	// We allocate the pages.
+	void* mem = page_alloc(bytes);
+
+	// We set first table entry so that it contains the size of the allocated memory.
+	tbl_t* first_entry = mem_get_tbl_entry(mem);
+	first_entry->state = bytes;
+
+	// Then we set the state of the following entries to USED
+	// This only has to be done if we are allocating more than one block.
+	if (bytes / BLK_SIZE > 0)
+	{
+		size_t blocks = ceilg(bytes, BLK_SIZE);
+		for (size_t block = 1; block <= blocks; block++)
+		{
+			tbl_t* tbl_entry = mem_get_tbl_entry((void*)((size_t)mem + block * BLK_SIZE));
+			tbl_entry->state = USED;
+		}
+	}
+}
+
+void mem_init()
+{
+	directory = page_alloc(sizeof(dir_t) * 1024);
+}
+
+/*void* mem_base;
 size_t mem_length;
 
 state_t* mem_map;
 size_t map_entries;
 
-void* mem_alloc(size_t size)
+void* mem_alloc(const size_t size)
 {
-	kernel_panic("Not implemented");
+	const size_t required_size = size + sizeof(size_t);
 }
 
 void mem_free(void* address)
@@ -41,14 +121,17 @@ void* mem_realloc(void* address, size_t new_size)
 	return NULL;
 }
 
-void mem_init(size_t memory_size)
+void mem_init()
 {
 	// We split the map into enough entries so that the entire page table fits inside it.
-	map_entries = (memory_size / BLOCK_SIZE);
+
+	// First we set the initial number of entries we want in the table.
+	mem_length = 1024;
+	map_entries = (GB(4) / BLOCK_SIZE);
 	mem_map = page_alloc(map_entries * sizeof(state_t));
 	memset(mem_map, 0, map_entries * sizeof(state_t));
 }
-
+*/
 
 
 

@@ -2,6 +2,7 @@
 #include "multiboot.h"
 #include "config.h"
 #include "pmem.h"
+#include "mem.h"
 #include "dev/devices.h"
 #include "dev/tty.h"
 #include "page.h"
