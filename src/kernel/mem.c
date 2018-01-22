@@ -16,9 +16,9 @@
 #include <string.h>
 
 #define BLK_SIZE KB(4)
-#define TBL_SIZE BLK_SIZE * 1024
+#define TBL_SIZE MB(4)
 #define TBLI(x) (((size_t)x) % TBL_SIZE / BLK_SIZE)
-#define DIRI(x) (((size_t)x) / TBL_SIZE)
+#define DIRI(x) (((size_t)x) / MB(4))
 
 #define FREE 0
 #define USED -1
@@ -49,7 +49,7 @@ tbl_t* mem_get_tbl(void* mem)
 
 	if (directory[dir_i].tbl == FREE)
 	{
-		tbl_t* tbl = (tbl_t) page_alloc(sizeof(tbl_t) * 1024);
+		tbl_t* tbl = (tbl_t*) page_alloc(sizeof(tbl_t) * 1024);
 		memset(tbl, 0, sizeof(tbl_t) * 1024);
 		directory[dir_i].tbl = tbl;
 		return tbl;
@@ -72,7 +72,7 @@ tbl_t* mem_get_tbl_entry(void* mem)
 	return tbl + tbl_i;
 }
 
-void mem_alloc(const size_t bytes)
+void* mem_alloc(const size_t bytes)
 {
 	// We allocate the pages.
 	void* mem = page_alloc(bytes);
@@ -85,18 +85,21 @@ void mem_alloc(const size_t bytes)
 	// This only has to be done if we are allocating more than one block.
 	if (bytes / BLK_SIZE > 0)
 	{
-		size_t blocks = ceilg(bytes, BLK_SIZE);
-		for (size_t block = 1; block <= blocks; block++)
+		size_t blocks = ceildiv(bytes, BLK_SIZE);
+		for (size_t block = 1; block < blocks; block++)
 		{
 			tbl_t* tbl_entry = mem_get_tbl_entry((void*)((size_t)mem + block * BLK_SIZE));
 			tbl_entry->state = USED;
 		}
 	}
+
+	return mem;
 }
 
 void mem_init()
 {
 	directory = page_alloc(sizeof(dir_t) * 1024);
+	memset(directory, 0, sizeof(dir_t) * 1024);
 }
 
 /*void* mem_base;

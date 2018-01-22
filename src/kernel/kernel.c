@@ -17,6 +17,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <math.h>
+#include <string.h>
 
 extern u8 kernel_end;
 extern u8 kernel_start;
@@ -128,6 +129,21 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	printf("Init mem... ");
 	mem_init();
 	printf("DONE\n");
+
+	printf("Testing memory...\n");
+	//void* mem_one = mem_alloc(52);
+	void* mem_one = mem_alloc(1);
+	void* mem_two = mem_alloc(128);
+	while(1);
+	memset(mem_one, 5, 1);
+	memset(mem_two, 5, 128);
+	void* mem_three = mem_alloc(8192);
+	memset(mem_three, 5, 8192);
+
+	printf("  ONE 0x%X\n", (size_t)mem_one);
+	printf("  TWO 0x%X\n", (size_t)mem_two);
+	printf("THREE 0x%X\n", (size_t)mem_three);
+	//printf("THREE 0x%X 0x%X 0x%X\n", mem_three, mem_three, mem_three);
 
 	printf("Ok");
 	while (1);

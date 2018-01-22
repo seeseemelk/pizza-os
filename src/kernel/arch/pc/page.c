@@ -152,7 +152,7 @@ page_entry* page_get_table(void* virt)
 	for (size_t mtbl_i = 1; mtbl_i < 1024; mtbl_i++)
 	{
 		page_entry* mtbl_entry = page_metatable + mtbl_i;
-		if (page_is_present(mtbl_entry) && page_get_address(mtbl_entry) == tbl_addr)
+		if (page_is_present(mtbl_entry) && (page_get_address(mtbl_entry) == tbl_addr))
 		{
 			return (page_entry*) (1023 * MB(4) + mtbl_i * KB(4));
 		}
@@ -250,6 +250,19 @@ void* page_alloc_phys(void* phys, size_t length)
 	{
 		void* virt_adj = (void*) (virt + page * KB(4));
 		void* phys_adj = (void*) (phys + page * KB(4));
+		page_alloc_page(virt_adj, phys_adj);
+	}
+	return virt;
+}
+
+void* page_alloc(size_t length)
+{
+	size_t pages = ceildiv(length, KB(4));
+	void* virt = page_find_free(pages);
+	for (size_t page = 0; page < pages; page++)
+	{
+		void* virt_adj = (void*) (virt + page * KB(4));
+		void* phys_adj = pmem_alloc(KB(4));
 		page_alloc_page(virt_adj, phys_adj);
 	}
 	return virt;
