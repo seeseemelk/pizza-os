@@ -16,6 +16,7 @@
 #include <stdbool.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 #include <string.h>
 
@@ -132,11 +133,18 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 
 	printf("Testing memory...\n");
 	void* mem_one = mem_alloc(1);
-	void* mem_two = mem_alloc(8192);
+	void* mem_two = malloc(8192);
 	void* mem_three = mem_alloc(128);
 	printf("  ONE 0x%X\n", (size_t)mem_one);
 	printf("  TWO 0x%X\n", (size_t)mem_two);
 	printf("  THR 0x%X\n", (size_t)mem_three);
+
+	mem_free(mem_two);
+	mem_two = mem_alloc(4096);
+	void* mem_four = mem_alloc(512);
+
+	printf("  TWO 0x%X\n", mem_two);
+	printf(" FOUR 0x%X\n", mem_four);
 	while(1);
 
 	printf("THREE 0x%X\n", (size_t)mem_three);

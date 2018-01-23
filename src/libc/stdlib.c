@@ -8,7 +8,7 @@
 #include "string.h"
 #include "mem.h"
 
-/*void* malloc(size_t size)
+void* malloc(size_t size)
 {
 	return mem_alloc(size);
 }
@@ -30,5 +30,4 @@ void* realloc(void* ptr, size_t size)
 {
 	return mem_realloc(ptr, size);
 }
-*/
 

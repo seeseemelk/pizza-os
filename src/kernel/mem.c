@@ -100,13 +100,69 @@ void mem_free(void* addr)
 {
 	tbl_t* first_entry = mem_get_tbl_entry(addr);
 	size_t size = first_entry->state;
-	size_t blocks = size / BLK_SIZE;
+	size_t blocks = ceildiv(size, BLK_SIZE);
 	first_entry->state = FREE;
+	page_free(addr, size);
 
 	for (size_t i = 1; i < blocks; i++)
 	{
 		tbl_t* entry = mem_get_tbl_entry((void*)((size_t)addr + i * BLK_SIZE));
 		entry->state = FREE;
+	}
+}
+
+void* mem_realloc(void* addr, size_t new_size)
+{
+	tbl_t* first_entry = mem_get_tbl_entry(addr);
+	size_t old_size = first_entry->state;
+	size_t old_blocks = ceildiv(old_size, BLK_SIZE);
+	size_t new_blocks = ceildiv(new_size, BLK_SIZE);
+	if (new_blocks == old_blocks) // The size may have changed, but the number of blocks not.
+	{
+		first_entry->state = new_size;
+		return addr;
+	}
+	else if (new_blocks < old_blocks) // The number of blocks has been reduced. Let's free those.
+	{
+		for (int i = old_blocks - 1; i > new_blocks; i--)
+		{
+			void* virt = (void*)((size_t)addr + i * BLK_SIZE);
+			tbl_t* entry = mem_get_tbl_entry(virt);
+			entry->state = FREE;
+			page_free(virt, BLK_SIZE);
+		}
+		return addr;
+	}
+	else // The number of required blocks has increased.
+	{
+		// Not yet implemented.
+		kernel_panic("mem_realloc: Unsupported operation");
+		size_t needed = new_blocks - old_blocks;
+		size_t available = 0;
+		// Lets check if there are enough blocks free right here
+		for (int i = old_blocks; i < new_blocks; i++)
+		{
+			void* virt = (void*)((size_t)addr + i * BLK_SIZE);
+			tbl_t* entry = mem_get_tbl_entry(virt);
+			if (entry->state == FREE)
+				available++;
+		}
+
+		if (available >= needed) // We've got enough, let's allocate.
+		{
+			for (int i = old_blocks; i < new_blocks; i++)
+			{
+				void* virt = (void*)((size_t)addr + i * BLK_SIZE);
+				tbl_t* entry = mem_get_tbl_entry(virt);
+				if (entry->state == FREE)
+					available++;
+			}
+		}
+		else // We haven't got enough, let's deallocate.
+		{
+
+		}
+		return NULL;
 	}
 }
 
