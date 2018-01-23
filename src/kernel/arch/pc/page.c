@@ -19,7 +19,7 @@ page_entry* page_directory;
 page_entry* page_metatable;
 
 page_entry* mem_window_entry;
-void* mem_window;
+volatile void* mem_window;
 
 bool paging_enabled = false;
 
@@ -108,7 +108,7 @@ page_entry* page_create_table(page_entry* dir_entry)
 	if (paging_enabled)
 	{
 		mem_window_set(new_tbl);
-		memset(mem_window, 0, KB(4));
+		memset((void*)mem_window, 0, KB(4));
 	}
 	else
 	{
@@ -127,7 +127,7 @@ page_entry* page_create_table(page_entry* dir_entry)
  * Note that this pointer is only valid for until a next call to any paging functions
  * (except for page_get_* and page_set_* functions)
  */
-void* page_follow_entry(page_entry* entry)
+volatile void* page_follow_entry(page_entry* entry)
 {
 	void* addr = page_get_address(entry);
 	if (!paging_enabled)
@@ -157,6 +157,7 @@ page_entry* page_get_table(void* virt)
 			return (page_entry*) (1023 * MB(4) + mtbl_i * KB(4));
 		}
 	}
+	while (1);
 	kernel_panic("Could not find table");
 	return NULL;
 }
@@ -184,7 +185,7 @@ void* page_find_free(size_t pages_needed)
 		{
 			// We found an existing directory entry,
 			// lets browse it.
-			page_entry* tbl = page_get_table(found_addr);
+			page_entry* tbl = page_get_table((void*) (dir_i * MB(4)));
 			for (size_t tbl_i = 0; tbl_i < 1024; tbl_i++)
 			{
 				page_entry* tbl_entry = tbl + tbl_i;
@@ -229,7 +230,7 @@ void page_alloc_page(void* virt, void* phys)
 		tbl = page_create_table(dir_entry);
 	}
 	else
-		tbl = page_follow_entry(dir_entry);
+		tbl = (page_entry*) page_follow_entry(dir_entry);
 
 	// And we add the entry to it.
 	// Note that if the page is already present,
@@ -348,7 +349,7 @@ void page_enable()
 	// Before we turn on paging we should allocate a page
 	// for the memory window. We are going to allocate it
 	// right before the metatable.
-	page_alloc_page((void*) (1023 * MB(4) - KB(4)), mem_window);
+	page_alloc_page((void*) (1023 * MB(4) - KB(4)), (void*) mem_window);
 
 	// Set this variable to true
 	paging_enabled = true;

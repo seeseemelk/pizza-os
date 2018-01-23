@@ -96,6 +96,20 @@ void* mem_alloc(const size_t bytes)
 	return mem;
 }
 
+void mem_free(void* addr)
+{
+	tbl_t* first_entry = mem_get_tbl_entry(addr);
+	size_t size = first_entry->state;
+	size_t blocks = size / BLK_SIZE;
+	first_entry->state = FREE;
+
+	for (size_t i = 1; i < blocks; i++)
+	{
+		tbl_t* entry = mem_get_tbl_entry((void*)((size_t)addr + i * BLK_SIZE));
+		entry->state = FREE;
+	}
+}
+
 void mem_init()
 {
 	directory = page_alloc(sizeof(dir_t) * 1024);
