@@ -4,8 +4,8 @@
  *  Created on: Jan 7, 2018
  *      Author: seeseemelk
  */
-#include "arch/pc/page.h"
-#include "arch/pc/asmfn.h"
+#include "../i386/page.h"
+
 #include "pmem.h"
 #include "kernel.h"
 #include "cdefs.h"
@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <math.h>
+#include "../i386/asmfn.h"
 
 page_entry* page_directory;
 page_entry* page_metatable;

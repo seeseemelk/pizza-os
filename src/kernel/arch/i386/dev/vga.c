@@ -4,10 +4,10 @@
  *  Created on: Jan 2, 2018
  *      Author: seeseemelk
  */
-#include "arch/pc/dev/vga.h"
-#include "io.h"
+#include "../../i386/dev/vga.h"
 
 #include <string.h>
+#include "../../i386/io.h"
 
 #define R_ADDR 0x3B4
 #define R_DATA 0x3B5

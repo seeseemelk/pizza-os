@@ -5,8 +5,8 @@
  *      Author: seeseemelk
  */
 
-#ifndef ARCH_PC_DEV_VGA_H_
-#define ARCH_PC_DEV_VGA_H_
+#ifndef ARCH_I386_DEV_VGA_H_
+#define ARCH_I386_DEV_VGA_H_
 
 #include "dev/devices.h"
 
@@ -18,4 +18,4 @@ void vga_scroll(lines);*/
 
 device* vga_init();
 
-#endif /* ARCH_PC_DEV_VGA_H_ */
+#endif /* ARCH_I386_DEV_VGA_H_ */

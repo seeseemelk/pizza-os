@@ -5,9 +5,9 @@
  *      Author: seeseemelk
  */
 
-#ifndef ARCH_PC_CPU_H_
-#define ARCH_PC_CPU_H_
+#ifndef ARCH_I386_CPU_H_
+#define ARCH_I386_CPU_H_
 
 void cpu_init();
 
-#endif /* ARCH_PC_CPU_H_ */
+#endif /* ARCH_I386_CPU_H_ */

@@ -8,8 +8,8 @@
 #ifndef PAGE_H_
 #define PAGE_H_
 
-#if TARGET==PC
-#include "arch/pc/page.h"
+#if TARGET==i386
+#include "arch/i386/page.h"
 #endif
 
 #include <stddef.h>

@@ -6,10 +6,11 @@
 #include "dev/devices.h"
 #include "dev/tty.h"
 #include "page.h"
+#include "interrupts.h"
 
-#if TARGET==PC
-#include "arch/pc/cpu.h"
-#include "arch/pc/dev/vga.h"
+#if TARGET==i386
+#include "arch/i386/cpu.h"
+#include "arch/i386/dev/vga.h"
 #endif
 
 #include <stddef.h>
@@ -129,6 +130,10 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 
 	printf("Init mem... ");
 	mem_init();
+	printf("DONE\n");
+
+	printf("Init interrupts... ");
+	interrupt_init();
 	printf("DONE\n");
 
 	printf("Testing memory...\n");

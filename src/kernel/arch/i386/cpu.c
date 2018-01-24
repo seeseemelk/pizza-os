@@ -4,7 +4,8 @@
  *  Created on: Jan 3, 2018
  *      Author: seeseemelk
  */
-#include "arch/pc/cpu.h"
+#include "../i386/cpu.h"
+
 #include "cdefs.h"
 #include "pmem.h"
 #include "kernel.h"

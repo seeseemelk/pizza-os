@@ -4,27 +4,27 @@
  *  Created on: Jan 2, 2018
  *      Author: seeseemelk
  */
-#include "arch/pc/io.h"
+#include "../i386/io.h"
 
 void outb(u16 port, u8 value)
 {
 	asm volatile("outb %0, %1"
 		:
-		: "r" (value), "r" (port));
+		: "a" (value), "d" (port));
 }
 
 void outw(u16 port, u16 value)
 {
 	asm volatile("outw %0, %1"
 			:
-			: "r" (value), "r" (port));
+			: "a" (value), "d" (port));
 }
 
 void outl(u16 port, u32 value)
 {
 	asm volatile("outl %0, %1"
 			:
-			: "r" (value), "r" (port));
+			: "a" (value), "d" (port));
 }
 
 u8 inb(u16 port)

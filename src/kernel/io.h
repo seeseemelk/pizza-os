@@ -10,8 +10,8 @@
 
 #include "config.h"
 
-#if TARGET==PC
-#include "arch/pc/io.h"
+#if TARGET==i386
+#include "arch/i386/io.h"
 #endif
 
 

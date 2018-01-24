@@ -6,11 +6,11 @@
  *      Author: seeseemelk
  */
 
-#ifndef ARCH_PC_ASMFN_H_
-#define ARCH_PC_ASMFN_H_
+#ifndef ARCH_I386_ASMFN_H_
+#define ARCH_I386_ASMFN_H_
 
 extern void asm_enable_cr0_pepg();
 extern void asm_load_cr3_page_dir(size_t address);
 extern void asm_invlpg(volatile void* virt);
 
-#endif /* ARCH_PC_ASMFN_H_ */
+#endif /* ARCH_I386_ASMFN_H_ */
