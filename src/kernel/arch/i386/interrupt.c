@@ -7,7 +7,9 @@
 
 #include "arch/i386/interrupt.h"
 
+#include "arch/i386/pic.h"
 #include "cdefs.h"
+#include "../../page.h"
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stddef.h>
@@ -16,7 +18,7 @@
 extern void* inth_start;
 extern void* inth_end;
 
-#define GATE_MASK		0b00001111
+#define GATE_MASK		0b00011111
 
 #define T_INT_GATE 		0b00001110
 #define T_TRAP_GATE 	0b00001111
@@ -46,21 +48,23 @@ static void idt_set_type(int_descriptor* descriptor, u16 type)
 
 static void idt_set_address(int_descriptor* descriptor, void* addr, u16 segment)
 {
-	descriptor->offset1 = ((u32)addr) & 0xFFFF;
-	descriptor->offset2 = (((u32)addr) >> 16) & 0xFFFF;
+	descriptor->offset1 = (u16) (((u32)addr) & 0xFFFF);
+	descriptor->offset2 = (u16) ((((u32)addr) >> 16) & 0xFFFF);
 	descriptor->segment = segment;
 }
 
 static void idt_set_present(int_descriptor* descriptor, bool present)
 {
-	descriptor->flags |= BIT_PRESENT;
-	//descriptor->flags = (descriptor->flags & ~BIT_PRESENT) | (BIT_PRESENT * present);
+	if (!present)
+		descriptor->flags &= ~BIT_PRESENT;
+	else
+		descriptor->flags |= BIT_PRESENT;
 }
 
-void lidt(int_descriptor* idt)
+static void lidt(int_descriptor* idt)
 {
-	u64 val = 256;
-	val |= ((u64)(size_t)idt) << 16;
+	u64 val = 256 * sizeof(int_descriptor) - 1;
+	val |= ((u64)((size_t)idt)) << 16;
 	asm volatile("lidt %0"
 			:
 			: "m" (val));
@@ -69,13 +73,15 @@ void lidt(int_descriptor* idt)
 static void init_idt()
 {
 	idt = malloc(sizeof(int_descriptor) * 256);
+	printf("Idt: 0x%p\n", idt);
 
 	for (int i = 0; i < 256; i++)
 	{
 		idt[i].flags = 0;
+		idt[i].zero = 0;
 		idt_set_type(idt+i, T_INT_GATE);
 		idt_set_present(idt+i, true);
-		idt_set_address(idt+i, (void*)((size_t)handlers+INT_HANDLER_SIZE*i), 0);
+		idt_set_address(idt+i, (void*)((size_t)handlers+INT_HANDLER_SIZE*i), 8);
 	}
 
 	lidt(idt);
@@ -91,6 +97,7 @@ static void init_handlers()
 	printf("Size: %d\n", INT_HANDLER_SIZE);
 
 	handlers = malloc(INT_HANDLER_SIZE * 256);
+	printf("Handlers: 0x%p\n", handlers);
 	for (int i = 0; i < 256; i++)
 	{
 		char* handler = (char*)((size_t)handlers + i*INT_HANDLER_SIZE);
@@ -98,23 +105,22 @@ static void init_handlers()
 		{
 			handler[b] = original_handler[b];
 		}
+		*((u32*)(handler+1)) = i;
 	}
 }
 
 void arch_interrupt_init()
 {
+	asm volatile("cli");
 	init_handlers();
 	init_idt();
-	//while(1);
-	while(1);
+	pic_init();
 	asm volatile("sti");
-
-	while(1);
-	//printf("Something %d", *((char*)0xFF0000));
 }
 
-void cpu_int_handler(int interrupt_n)
+void cpu_int_handler(int interrupt_n, int error_code)
 {
-	printf("Interrupt");
-	while(1);
+	printf("Unhandled interrupt 0x%X\n", interrupt_n);
+	if (interrupt_n >= 20)
+		pic_send_eoi(interrupt_n);
 }

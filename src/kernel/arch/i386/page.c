@@ -158,7 +158,6 @@ page_entry* page_get_table(void* virt)
 			return (page_entry*) (1023 * MB(4) + mtbl_i * KB(4));
 		}
 	}
-	while (1);
 	kernel_panic("Could not find table");
 	return NULL;
 }
@@ -306,6 +305,14 @@ void page_free_page(void* virt)
 	page_entry* tbl_entry = tbl + tbl_i;
 	page_set_flags(tbl_entry, 0);
 	asm_invlpg(virt);
+}
+
+void* page_get_phys_address(void* virt)
+{
+	size_t tbl_i = (size_t)virt % MB(4) / KB(4);
+	size_t offset = (size_t)virt % KB(4);
+	page_entry* tbl = page_get_table(virt);
+	return page_get_address(tbl+tbl_i) + offset;
 }
 
 void page_free(void* virt, size_t length)
