@@ -53,13 +53,14 @@ static void idt_set_address(int_descriptor* descriptor, void* addr, u16 segment)
 
 static void idt_set_present(int_descriptor* descriptor, bool present)
 {
-	descriptor->flags = (descriptor->flags & ~BIT_PRESENT) | (BIT_PRESENT * present);
+	descriptor->flags |= BIT_PRESENT;
+	//descriptor->flags = (descriptor->flags & ~BIT_PRESENT) | (BIT_PRESENT * present);
 }
 
 void lidt(int_descriptor* idt)
 {
 	u64 val = 256;
-	val |= ((size_t)idt << 16);
+	val |= ((u64)(size_t)idt) << 16;
 	asm volatile("lidt %0"
 			:
 			: "m" (val));
