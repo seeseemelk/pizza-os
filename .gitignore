@@ -4,3 +4,5 @@
 
 # Ignore build directory
 build/
+build/*
+build/**/*
