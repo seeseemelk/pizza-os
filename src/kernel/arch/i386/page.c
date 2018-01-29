@@ -167,7 +167,7 @@ page_entry* page_get_table(void* virt)
  */
 void* page_find_free(size_t pages_needed)
 {
-	void* found_addr;
+	void* found_addr = NULL;
 	size_t found_amount = 0;
 
 	for (size_t dir_i = 0; dir_i < 1023; dir_i++)
@@ -208,7 +208,7 @@ void* page_find_free(size_t pages_needed)
 	found_enough:
 	if (found_amount < pages_needed)
 	{
-		while(1);
+		kernel_panic("Not enough pages left");
 	}
 	return found_addr;
 }

@@ -124,7 +124,7 @@ void* mem_realloc(void* addr, size_t new_size)
 	}
 	else if (new_blocks < old_blocks) // The number of blocks has been reduced. Let's free those.
 	{
-		for (int i = old_blocks - 1; i > new_blocks; i--)
+		for (unsigned int i = old_blocks - 1; i > new_blocks; i--)
 		{
 			void* virt = (void*)((size_t)addr + i * BLK_SIZE);
 			tbl_t* entry = mem_get_tbl_entry(virt);
@@ -140,7 +140,7 @@ void* mem_realloc(void* addr, size_t new_size)
 		size_t needed = new_blocks - old_blocks;
 		size_t available = 0;
 		// Lets check if there are enough blocks free right here
-		for (int i = old_blocks; i < new_blocks; i++)
+		for (unsigned int i = old_blocks; i < new_blocks; i++)
 		{
 			void* virt = (void*)((size_t)addr + i * BLK_SIZE);
 			tbl_t* entry = mem_get_tbl_entry(virt);
@@ -150,7 +150,7 @@ void* mem_realloc(void* addr, size_t new_size)
 
 		if (available >= needed) // We've got enough, let's allocate.
 		{
-			for (int i = old_blocks; i < new_blocks; i++)
+			for (unsigned int i = old_blocks; i < new_blocks; i++)
 			{
 				void* virt = (void*)((size_t)addr + i * BLK_SIZE);
 				tbl_t* entry = mem_get_tbl_entry(virt);

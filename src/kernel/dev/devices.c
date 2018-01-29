@@ -27,7 +27,7 @@ module* module_register(const char* name, module_type type, fn_module_request* f
 	return module;
 }
 
-device* device_register(module* module, const int minor)
+device* device_register(module* module)
 {
 	device* device = devices + num_devices_loaded;
 	device->module = module;

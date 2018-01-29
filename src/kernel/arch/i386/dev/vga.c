@@ -75,7 +75,7 @@ device* vga_init()
 	outb(0x3C2, (inb(0x3CC) & 0b11111110) | 0b00000010);
 
 	vga_module = module_register("vga", TERMINAL, &vga_request);
-	vga_device = device_register(vga_module, 0);
+	vga_device = device_register(vga_module);
 	vga_memory = device_mmap((void*) 0xB8000, KB(8));
 	return vga_device;
 }

@@ -21,6 +21,7 @@ stack_top:
 section .text
 global _start:function (_start.end - _start)
 _start:
+	mov ebp, stack_top
 	mov esp, stack_top
 	push esp
 	push eax

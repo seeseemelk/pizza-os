@@ -19,7 +19,7 @@ void* memcpy(void* dest, void* src, size_t num)
 	}
 	else
 	{
-		for (size_t i = num-1; i >= 0; i--)
+		for (size_t i = num-1; i > 0; i--)
 			c_dest[i] = c_src[i];
 	}
 	return dest;

@@ -8,7 +8,9 @@
 #include "arch/i386/interrupt.h"
 
 #include "arch/i386/pic.h"
+#include "arch/i386/asmfn.h"
 #include "cdefs.h"
+#include "kernel.h"
 #include "../../page.h"
 #include <stdbool.h>
 #include <stdlib.h>
@@ -101,11 +103,11 @@ static void init_handlers()
 	for (int i = 0; i < 256; i++)
 	{
 		char* handler = (char*)((size_t)handlers + i*INT_HANDLER_SIZE);
-		for (int b = 0; b < INT_HANDLER_SIZE; b++)
+		for (unsigned int b = 0; b < INT_HANDLER_SIZE; b++)
 		{
 			handler[b] = original_handler[b];
 		}
-		*((u32*)(handler+1)) = i;
+		*((u32*)(handler+2)) = i;
 	}
 }
 
@@ -115,12 +117,37 @@ void arch_interrupt_init()
 	init_handlers();
 	init_idt();
 	pic_init();
+	asm volatile("int $0x30");
 	asm volatile("sti");
 }
 
-void cpu_int_handler(int interrupt_n, int error_code)
+void cpu_int_handler(int irq) //, int error_code)
 {
-	printf("Unhandled interrupt 0x%X\n", interrupt_n);
-	if (interrupt_n >= 20)
-		pic_send_eoi(interrupt_n);
+	//cli();
+
+	if (irq == 0xD) // General protection fault
+	{
+		kernel_panic("General Protection Fault (error: 0x%X)", 0); //error_code);
+	}
+	else if (irq == 0xE) // Page fault
+	{
+		kernel_panic("Page Fault (error: 0x%X)", 0); //error_code);
+	}
+	else
+	{
+		printf("Unhandled interrupt 0x%X\n", irq);
+		if (irq >= 0x20)
+			pic_send_eoi(irq);
+	}
+
+	//sti();
 }
+
+
+
+
+
+
+
+
+

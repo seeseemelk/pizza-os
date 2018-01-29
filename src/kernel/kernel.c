@@ -95,6 +95,7 @@ void kernel_init_paging()
 
 void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 {
+	UNUSED(magic);
 	/*
 	 * Information for the multiboot header can be found at:
 	 * https://www.gnu.org/software/grub/manual/multiboot/multiboot.html
@@ -132,19 +133,26 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	mem_init();
 	printf("DONE\n");
 
+
+	register u32 *ebp asm("esp");
+	printf("Stack: 0x%X\n", ebp);
+	//while (1);
+
 	printf("Init interrupts... ");
 	interrupt_init();
 	printf("DONE\n");
 
 	printf("Testing memory...\n");
 	void* mem_one = mem_alloc(1);
-	void* mem_two = malloc(8192);
-	void* mem_three = mem_alloc(128);
+	/*void* mem_two = malloc(8192);
+	void* mem_three = mem_alloc(128);*/
 	printf("  ONE 0x%X\n", (size_t)mem_one);
+	void* mem_two = malloc(8192);
 	printf("  TWO 0x%X\n", (size_t)mem_two);
+	void* mem_three = mem_alloc(128);
 	printf("  THR 0x%X\n", (size_t)mem_three);
 
-	mem_free(mem_two);
+	/*mem_free(mem_two);
 	mem_two = mem_alloc(4096);
 	void* mem_four = mem_alloc(512);
 
@@ -152,10 +160,12 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	printf(" FOUR 0x%X\n", mem_four);
 	while(1);
 
-	printf("THREE 0x%X\n", (size_t)mem_three);
+	printf("THREE 0x%X\n", (size_t)mem_three);*/
 	//printf("THREE 0x%X 0x%X 0x%X\n", mem_three, mem_three, mem_three);
 
-	printf("Ok");
+	asm("int $0x20");
+
+	printf("Ok\n");
 	while (1);
 
 	// Init paging

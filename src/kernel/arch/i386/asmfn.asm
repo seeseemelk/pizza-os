@@ -17,3 +17,13 @@ asm_invlpg:
 	mov eax, [esp+4]
 	invlpg [eax]
 	ret
+
+global cli
+cli:
+	cli
+	ret
+
+global sti
+sti:
+	sti
+	ret

@@ -76,7 +76,7 @@ struct module_request
  * Functions for registering modules and devices
  */
 module* module_register(const char* name, module_type type, fn_module_request* fn_request);
-device* device_register(module* module, const int minor);
+device* device_register(module* module);
 
 /*
  * Functions for finding a specific device.

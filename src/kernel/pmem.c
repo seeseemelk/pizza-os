@@ -19,7 +19,7 @@ void* pmem_alloc(size_t amount)
 {
 	const size_t blocks_needed = ((amount - 1) / PMEM_BLOCK_SIZE) + 1;
 
-	size_t index_found;
+	size_t index_found = 0;
 	size_t blocks_found = 0;
 
 	for (size_t i = 0; i < pmem_size; i++)
