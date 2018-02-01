@@ -6,6 +6,7 @@
  */
 #include "../i386/cpu.h"
 
+#include "arch/i386/asmfn.h"
 #include "cdefs.h"
 #include "pmem.h"
 #include "kernel.h"
@@ -64,7 +65,7 @@ static void gdt_set_access(gdt_entry* entry, bool present, int privilege, bool e
 static void gdt_set_flags(gdt_entry* entry, bool granularity)
 {
 	// 0x40 -> set size bit to 1 (32-bit protected mode)
-	entry->limit16_19 = (entry->limit16_19 & 0x0F) | (granularity << 8 | 0x40);
+	entry->limit16_19 = (entry->limit16_19 & 0x0F) | (granularity << 7 | 0x40);
 }
 
 static void gdt_zero_entry(gdt_entry* entry)
@@ -77,23 +78,20 @@ static void gdt_zero_entry(gdt_entry* entry)
 	entry->base24_31 = 0;
 }
 
-static void gdt_load(gdt_descriptor* descriptor)
+void gdt_load(gdt_descriptor* descriptor)
 {
-	asm __volatile__ ("lgdt %0"
+	asm __volatile__ (
+			"lgdt %0;"
 			:
 			: "m" (*descriptor));
+	asm_reload_segment_registers();
 }
 
 /*
  * General cpu functions
  */
-
 void cpu_init()
 {
-	/*gdt_table = pmem_alloc(sizeof(gdt_entry) * 3);
-	if (gdt_table == NULL)
-		kernel_panic("Could not allocate GDT table");*/
-
 	gdt_zero_entry(&gdt_table[0]);
 
 	gdt_set_base(gdt_table+1, 0);

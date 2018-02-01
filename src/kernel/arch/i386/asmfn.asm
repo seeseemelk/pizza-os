@@ -27,3 +27,15 @@ global sti
 sti:
 	sti
 	ret
+
+global asm_reload_segment_registers
+asm_reload_segment_registers:
+	jmp dword 8:.jump
+.jump:
+	mov ax, 16
+	mov ds, ax
+	mov es, ax
+	mov gs, ax
+	mov fs, ax
+	mov ss, ax
+	ret

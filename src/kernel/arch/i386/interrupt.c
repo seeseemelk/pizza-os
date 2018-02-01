@@ -83,7 +83,7 @@ static void init_idt()
 		idt[i].zero = 0;
 		idt_set_type(idt+i, T_INT_GATE);
 		idt_set_present(idt+i, true);
-		idt_set_address(idt+i, (void*)((size_t)handlers+INT_HANDLER_SIZE*i), 8);
+		idt_set_address(idt+i, (void*)(handlers+INT_HANDLER_SIZE*i), 8);
 	}
 
 	lidt(idt);
@@ -107,23 +107,23 @@ static void init_handlers()
 		{
 			handler[b] = original_handler[b];
 		}
-		*((u32*)(handler+2)) = i;
+		*((u32*)(handler+1)) = i;
 	}
 }
 
 void arch_interrupt_init()
 {
-	asm volatile("cli");
+	cli();
 	init_handlers();
 	init_idt();
 	pic_init();
-	asm volatile("int $0x30");
-	asm volatile("sti");
+	while(1);
+	sti();
 }
 
 void cpu_int_handler(int irq) //, int error_code)
 {
-	//cli();
+	cli();
 
 	if (irq == 0xD) // General protection fault
 	{
@@ -140,7 +140,7 @@ void cpu_int_handler(int irq) //, int error_code)
 			pic_send_eoi(irq);
 	}
 
-	//sti();
+	sti();
 }
 
 
