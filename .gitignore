@@ -6,3 +6,6 @@
 build/
 build/*
 build/**/*
+
+# Ignore bosch configuration
+bx_enh_dbg.ini
