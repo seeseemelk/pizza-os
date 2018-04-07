@@ -3,11 +3,7 @@ cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 set(CMAKE_LEGACY_CYGWIN_WIN32 0)
 
 # Setup toolchain
-set(CMAKE_SYSTEM_NAME "Generic")
-set(CMAKE_SYSTEM_PROCESSOR "i386")
-
-set(CMAKE_C_COMPILER "i386-elf-gcc")
-set(CMAKE_CXX_COMPILER "i386-elf-gcc")
+set(CMAKE_TOOLCHAIN_FILE "toolchain.cmake")
 
 set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
 
