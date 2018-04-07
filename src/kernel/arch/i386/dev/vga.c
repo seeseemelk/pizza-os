@@ -7,7 +7,7 @@
 #include "../../i386/dev/vga.h"
 
 #include <string.h>
-#include "../../i386/io.h"
+#include "io.h"
 
 #define R_ADDR 0x3B4
 #define R_DATA 0x3B5

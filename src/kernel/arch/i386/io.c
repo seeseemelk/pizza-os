@@ -4,7 +4,7 @@
  *  Created on: Jan 2, 2018
  *      Author: seeseemelk
  */
-#include "../i386/io.h"
+#include "../../io.h"
 
 void outb(u16 port, u8 value)
 {

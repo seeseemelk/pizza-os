@@ -7,7 +7,7 @@
 
 #include "arch/i386/pic.h"
 
-#include "io.h"
+#include "../../io.h"
 
 #define MSR_CMD 0x0020
 #define MSR_DAT 0x0021
