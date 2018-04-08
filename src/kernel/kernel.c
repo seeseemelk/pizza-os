@@ -7,6 +7,7 @@
 #include "devices.h"
 #include "dev/tty.h"
 #include "page.h"
+#include "thread.h"
 
 #if TARGET==i386
 #include "arch/i386/i386_cpu.h"
@@ -138,6 +139,8 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	/*printf("Init mem... ");
 	mem_init();
 	printf("DONE\n");*/
+
+	thread_init();
 
 
 	register u32 *ebp asm("esp");
