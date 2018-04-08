@@ -39,3 +39,9 @@ asm_reload_segment_registers:
 	mov fs, ax
 	mov ss, ax
 	ret
+
+
+
+
+
+
