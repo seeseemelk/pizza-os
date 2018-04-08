@@ -5,7 +5,7 @@
  *      Author: seeseemelk
  */
 
-#include "interrupts.h"
+#include <interrupt.h>
 #include "config.h"
 #include "kernel.h"
 #include "dev/devices.h"

@@ -4,8 +4,8 @@
  *  Created on: Jan 2, 2018
  *      Author: seeseemelk
  */
+#include <interrupt.h>
 #include "vga.h"
-#include "interrupts.h"
 #include "io.h"
 
 #include <string.h>

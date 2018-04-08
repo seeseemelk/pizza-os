@@ -4,8 +4,8 @@
  * The architecture-dependent code should implement `arch_interrupt_init`
  */
 
-#ifndef INTERRUPTS_H_
-#define INTERRUPTS_H_
+#ifndef INTERRUPT_H_
+#define INTERRUPT_H_
 
 #include "dev/devices.h"
 
@@ -51,4 +51,4 @@ void interrupt_init();
 void arch_interrupt_init();
 
 
-#endif /* INTERRUPTS_H_ */
+#endif /* INTERRUPT_H_ */

@@ -1,3 +1,4 @@
+#include <interrupt.h>
 #include "kernel.h"
 #include "multiboot.h"
 #include "config.h"
@@ -6,7 +7,6 @@
 #include "dev/devices.h"
 #include "dev/tty.h"
 #include "page.h"
-#include "interrupts.h"
 
 #if TARGET==i386
 #include <arch/i386/i386_cpu.h>
