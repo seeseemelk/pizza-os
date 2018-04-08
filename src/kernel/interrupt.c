@@ -5,10 +5,10 @@
  *      Author: seeseemelk
  */
 
-#include <interrupt.h>
+#include "interrupt.h"
 #include "config.h"
 #include "kernel.h"
-#include "dev/devices.h"
+#include "devices.h"
 
 #include <stdlib.h>
 #include <stddef.h>

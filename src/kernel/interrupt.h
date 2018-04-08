@@ -7,7 +7,7 @@
 #ifndef INTERRUPT_H_
 #define INTERRUPT_H_
 
-#include "dev/devices.h"
+#include "devices.h"
 
 /**
  * Registers a device for handling a specific interrupt.

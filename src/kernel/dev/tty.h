@@ -7,7 +7,7 @@
 
 #ifndef DEV_TTY_H_
 #define DEV_TTY_H_
-#include "dev/devices.h"
+#include "devices.h"
 
 void tty_set_tty(device* device);
 

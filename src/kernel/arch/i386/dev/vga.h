@@ -8,7 +8,7 @@
 #ifndef ARCH_I386_DEV_VGA_H_
 #define ARCH_I386_DEV_VGA_H_
 
-#include "dev/devices.h"
+#include "devices.h"
 
 device* vga_init();
 
