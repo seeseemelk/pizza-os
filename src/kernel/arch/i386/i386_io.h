@@ -5,8 +5,8 @@
  *      Author: seeseemelk
  */
 
-#ifndef ARCH_I386_IO_H_
-#define ARCH_I386_IO_H_
+#ifndef ARCH_I386_I386_IO_H_
+#define ARCH_I386_I386_IO_H_
 #include "cdefs.h"
 
-#endif /* ARCH_I386_IO_H_ */
+#endif /* ARCH_I386_I386_IO_H_ */

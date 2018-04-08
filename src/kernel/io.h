@@ -57,7 +57,7 @@ u16 inw(u16 port);
 u32 inl(u16 port);
 
 #if TARGET==i386
-#include "arch/i386/io.h"
+#include <arch/i386/i386_io.h>
 #endif
 
 #endif /* IO_H_ */

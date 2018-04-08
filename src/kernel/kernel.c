@@ -9,7 +9,7 @@
 #include "interrupts.h"
 
 #if TARGET==i386
-#include "arch/i386/cpu.h"
+#include <arch/i386/i386_cpu.h>
 #include "arch/i386/dev/vga.h"
 #endif
 

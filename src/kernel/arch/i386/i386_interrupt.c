@@ -5,14 +5,13 @@
  *      Author: seeseemelk
  */
 
-#include "arch/i386/interrupt.h"
-
-#include "arch/i386/pic.h"
-#include "arch/i386/asmfn.h"
+#include "i386_asm.h"
+#include "i386_interrupt.h"
+#include "i386_pic.h"
 #include "cdefs.h"
 #include "kernel.h"
-#include "../../interrupts.h"
-#include "../../page.h"
+#include "interrupts.h"
+#include "page.h"
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stddef.h>
