@@ -113,6 +113,12 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	kernel_init_pmem();
 	kernel_init_paging();
 
+	//printf("Init interrupts... ");
+
+	mem_init();
+	interrupt_init();
+	//printf("DONE\n");
+
 	// Enable VGA output if possible
 	#ifdef ENABLE_VGA
 	device* vga_dev = vga_init();
@@ -129,18 +135,14 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 
 	printf("Kernel range: 0x%p to 0x%p\n", KERNEL_START, KERNEL_END);
 
-	printf("Init mem... ");
+	/*printf("Init mem... ");
 	mem_init();
-	printf("DONE\n");
+	printf("DONE\n");*/
 
 
 	register u32 *ebp asm("esp");
 	printf("Stack: 0x%X\n", ebp);
 	//while (1);
-
-	printf("Init interrupts... ");
-	interrupt_init();
-	printf("DONE\n");
 
 	printf("Testing memory...\n");
 	void* mem_one = mem_alloc(1);
@@ -163,7 +165,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	printf("THREE 0x%X\n", (size_t)mem_three);*/
 	//printf("THREE 0x%X 0x%X 0x%X\n", mem_three, mem_three, mem_three);
 
-	asm("int $0x20");
+	//asm("int $0x20");
 
 	printf("Ok\n");
 	while (1);

@@ -11,6 +11,7 @@
 #include "arch/i386/asmfn.h"
 #include "cdefs.h"
 #include "kernel.h"
+#include "../../interrupts.h"
 #include "../../page.h"
 #include <stdbool.h>
 #include <stdlib.h>
@@ -75,7 +76,6 @@ static void lidt(int_descriptor* idt)
 static void init_idt()
 {
 	idt = malloc(sizeof(int_descriptor) * 256);
-	printf("Idt: 0x%p\n", idt);
 
 	for (int i = 0; i < 256; i++)
 	{
@@ -93,13 +93,7 @@ static void init_handlers()
 {
 	char* original_handler = (char*)&inth_start;
 
-	printf("\n");
-	printf("Begin: 0x%p\n", &inth_start);
-	printf("End: 0x%p\n", &inth_end);
-	printf("Size: %d\n", INT_HANDLER_SIZE);
-
 	handlers = malloc(INT_HANDLER_SIZE * 256);
-	printf("Handlers: 0x%p\n", handlers);
 	for (int i = 0; i < 256; i++)
 	{
 		char* handler = (char*)((size_t)handlers + i*INT_HANDLER_SIZE);
@@ -117,30 +111,14 @@ void arch_interrupt_init()
 	init_handlers();
 	init_idt();
 	pic_init();
-	while(1);
 	sti();
 }
 
-void cpu_int_handler(int irq) //, int error_code)
+void cpu_int_handler(int irq, int error_code)
 {
-	cli();
-
-	if (irq == 0xD) // General protection fault
-	{
-		kernel_panic("General Protection Fault (error: 0x%X)", 0); //error_code);
-	}
-	else if (irq == 0xE) // Page fault
-	{
-		kernel_panic("Page Fault (error: 0x%X)", 0); //error_code);
-	}
-	else
-	{
-		printf("Unhandled interrupt 0x%X\n", irq);
-		if (irq >= 0x20)
-			pic_send_eoi(irq);
-	}
-
-	sti();
+	interrupt_handle(irq, error_code);
+	if (irq >= 0x20)
+		pic_send_eoi(irq);
 }
 
 

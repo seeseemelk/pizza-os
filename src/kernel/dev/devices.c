@@ -54,17 +54,17 @@ device* device_get_first(module_type type)
 /*
  * Functions for communicating with a device.
  */
-module_request requests;
 
 int device_invoke4(device* device, request_type type, int arg1, int arg2, int arg3, int arg4)
 {
-	requests.device = device;
-	requests.type = type;
-	requests.arg1 = arg1;
-	requests.arg2 = arg2;
-	requests.arg3 = arg3;
-	requests.arg4 = arg4;
-	return device->module->fn_request(&requests);
+	module_request request;
+	request.device = device;
+	request.type = type;
+	request.arg1 = arg1;
+	request.arg2 = arg2;
+	request.arg3 = arg3;
+	request.arg4 = arg4;
+	return device->module->fn_request(&request);
 }
 
 int device_invoke3(device* device, request_type type, int arg1, int arg2, int arg3)
