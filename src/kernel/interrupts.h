@@ -10,7 +10,7 @@
 #include "dev/devices.h"
 
 /**
- * Registers a device for handling a specific number.
+ * Registers a device for handling a specific interrupt.
  * This will causes the device's event handler to receive
  * events for the specific interrupt.
  * @note Using `device` was chosen instead of `module` because a
@@ -21,13 +21,19 @@
 void interrupt_register(device* dev, int interrupt);
 
 /**
- * End the interrupt chain for a specific number.
+ * Ends the interrupt chain for a specific interrupt.
  * The function should be called if a device has determined that
  * it has to handle the interrupt and that the interrupt should
  * no longer be passed down to any other devices.
  * @param interrupt_number The uniquely identifying number of the interrupt.
  */
-void interrupt_end(int interrupt_number);
+void interrupt_accept(int interrupt_id);
+
+/**
+ * @internal
+ * Handles the platform-independent part of the interrupt.
+ */
+void interrupt_handle(int interrupt, int code);
 
 /**
  * @internal
