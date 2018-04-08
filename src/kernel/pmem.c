@@ -47,7 +47,7 @@ void* pmem_alloc(size_t amount)
 	}
 	else
 	{
-		printf("WARNING! No more blocks left\n");
+		kernel_panic("WARNING! No more blocks left\n");
 		return NULL;
 	}
 }

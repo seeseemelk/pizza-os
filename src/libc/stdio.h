@@ -10,9 +10,10 @@
 
 #include <stdarg.h>
 
-int puts(const char* str);
-int putchar(char character);
-int vprintf(const char* format, va_list arg);
-int printf(const char* format, ...);
+// The k prefix
+int kputs(const char* str);
+int kputchar(char character);
+int kvprintf(const char* format, va_list arg);
+int kprintf(const char* format, ...);
 
 #endif /* STDIO_H_ */

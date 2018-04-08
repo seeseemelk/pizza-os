@@ -37,9 +37,9 @@ void kernel_panic(const char* format, ...)
 	va_list args;
 	va_start(args, format);
 
-	printf("Panicking!!! (is the pizza gone?)\n");
-	vprintf(format, args);
-	putchar('\n');
+	kprintf("Panicking!!! (is the pizza gone?)\n");
+	kvprintf(format, args);
+	kputchar('\n');
 
 	va_end(args);
 
@@ -127,13 +127,13 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	tty_clear();
 
 	// Show startup screen.
-	printf("Starting pizza-os (yum!)...\n");
+	kprintf("Starting pizza-os (yum!)...\n");
 	if (memory_available < MB(4))
-		printf("Memory detected: %u KiB\n", memory_available / KB(1));
+		kprintf("Memory detected: %u KiB\n", memory_available / KB(1));
 	else
-		printf("Memory detected: %u MiB\n", memory_available / MB(1));
+		kprintf("Memory detected: %u MiB\n", memory_available / MB(1));
 
-	printf("Kernel range: 0x%p to 0x%p\n", KERNEL_START, KERNEL_END);
+	kprintf("Kernel range: 0x%p to 0x%p\n", KERNEL_START, KERNEL_END);
 
 	/*printf("Init mem... ");
 	mem_init();
@@ -141,18 +141,18 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 
 
 	register u32 *ebp asm("esp");
-	printf("Stack: 0x%X\n", ebp);
+	kprintf("Stack: 0x%X\n", ebp);
 	//while (1);
 
-	printf("Testing memory...\n");
+	kprintf("Testing memory...\n");
 	void* mem_one = mem_alloc(1);
 	/*void* mem_two = malloc(8192);
 	void* mem_three = mem_alloc(128);*/
-	printf("  ONE 0x%X\n", (size_t)mem_one);
+	kprintf("  ONE 0x%X\n", (size_t)mem_one);
 	void* mem_two = malloc(8192);
-	printf("  TWO 0x%X\n", (size_t)mem_two);
+	kprintf("  TWO 0x%X\n", (size_t)mem_two);
 	void* mem_three = mem_alloc(128);
-	printf("  THR 0x%X\n", (size_t)mem_three);
+	kprintf("  THR 0x%X\n", (size_t)mem_three);
 
 	/*mem_free(mem_two);
 	mem_two = mem_alloc(4096);
@@ -167,7 +167,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 
 	//asm("int $0x20");
 
-	printf("Ok\n");
+	kprintf("Ok\n");
 	while (1);
 
 	// Init paging
@@ -207,13 +207,13 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	//page_init();
 
 	// Do other stuff
-	printf("Hello world!\n");
-	printf("Percent test %%\n");
-	printf("Decimal test %d\n", 1385ul);
-	printf("Hexadecimal test 0x%x\n", 0xc0ffee);
-	printf("Hexadecimal test 0x%X\n", 0xc0ffee);
+	kprintf("Hello world!\n");
+	kprintf("Percent test %%\n");
+	kprintf("Decimal test %d\n", 1385ul);
+	kprintf("Hexadecimal test 0x%x\n", 0xc0ffee);
+	kprintf("Hexadecimal test 0x%X\n", 0xc0ffee);
 
-	printf("Reached end of kernel_main()\n");
+	kprintf("Reached end of kernel_main()\n");
 }
 
 
