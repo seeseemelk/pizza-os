@@ -5,10 +5,10 @@
  *      Author: seeseemelk
  */
 
-#include "interrupts.h"
+#include "interrupt.h"
 #include "config.h"
 #include "kernel.h"
-#include "dev/devices.h"
+#include "devices.h"
 
 #include <stdlib.h>
 #include <stddef.h>
@@ -62,7 +62,7 @@ void interrupt_handle(int irq, int code)
 			if (last_handled == id)
 				return;
 		}
-		printf("Unhandled interrupt 0x%X\n", irq);
+		kprintf("Unhandled interrupt 0x%X\n", irq);
 	}
 }
 

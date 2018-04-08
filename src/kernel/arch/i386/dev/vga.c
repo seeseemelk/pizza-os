@@ -4,11 +4,11 @@
  *  Created on: Jan 2, 2018
  *      Author: seeseemelk
  */
-#include "../../i386/dev/vga.h"
-#include "../../../interrupts.h"
+#include <interrupt.h>
+#include "vga.h"
+#include "io.h"
 
 #include <string.h>
-#include "io.h"
 #include <stdio.h>
 
 #define R_ADDR 0x3B4

@@ -4,9 +4,8 @@
  *  Created on: Jan 3, 2018
  *      Author: seeseemelk
  */
-#include "../i386/cpu.h"
-
-#include "arch/i386/asmfn.h"
+#include "i386_asm.h"
+#include "i386_cpu.h"
 #include "cdefs.h"
 #include "pmem.h"
 #include "kernel.h"

@@ -4,7 +4,7 @@
  *  Created on: Jan 2, 2018
  *      Author: seeseemelk
  */
-#include "dev/devices.h"
+#include "devices.h"
 #include "config.h"
 #include "page.h"
 

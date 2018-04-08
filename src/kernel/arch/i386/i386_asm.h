@@ -6,8 +6,8 @@
  *      Author: seeseemelk
  */
 
-#ifndef ARCH_I386_ASMFN_H_
-#define ARCH_I386_ASMFN_H_
+#ifndef ARCH_I386_I386_ASM_H_
+#define ARCH_I386_I386_ASM_H_
 
 #include <stddef.h>
 
@@ -18,4 +18,4 @@ extern void cli();
 extern void sti();
 extern void asm_reload_segment_registers();
 
-#endif /* ARCH_I386_ASMFN_H_ */
+#endif /* ARCH_I386_I386_ASM_H_ */

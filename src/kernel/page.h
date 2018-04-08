@@ -9,7 +9,7 @@
 #define PAGE_H_
 
 #if TARGET==i386
-#include "arch/i386/page.h"
+#include <arch/i386/i386_page.h>
 #endif
 
 #include <stddef.h>

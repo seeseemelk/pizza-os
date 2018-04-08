@@ -21,7 +21,7 @@ static int print_unumber(unsigned long long number, int radix, bool upper)
 	const char* chars = (upper) ? radixUpperChars : radixLowerChars;
 	if (number == 0)
 	{
-		putchar(chars[0]);
+		kputchar(chars[0]);
 		return 1;
 	}
 	else
@@ -34,7 +34,7 @@ static int print_unumber(unsigned long long number, int radix, bool upper)
 
 		for (int i = size-1; i >= 0; i--)
 		{
-			putchar(converted[i]);
+			kputchar(converted[i]);
 		}
 
 		return size;
@@ -47,24 +47,24 @@ static int print_number(signed long long number, int radix, bool upper)
 		return print_unumber(number, radix, upper);
 	else
 	{
-		putchar('-');
+		kputchar('-');
 		return print_unumber(-number, radix, upper) + 1;
 	}
 }
 
-int putchar(char c)
+int kputchar(char c)
 {
 	tty_put_char(c);
 	return c;
 }
 
-int puts(const char* str)
+int kputs(const char* str)
 {
 	tty_print(str);
 	return 1;
 }
 
-int vprintf(const char* format, va_list args)
+int kvprintf(const char* format, va_list args)
 {
 	int length = 0;
 
@@ -77,7 +77,7 @@ int vprintf(const char* format, va_list args)
 			switch (c)
 			{
 			case '%':
-				putchar('%');
+				kputchar('%');
 				length++;
 				break;
 			case 'd':
@@ -97,11 +97,11 @@ int vprintf(const char* format, va_list args)
 				length += print_unumber(va_arg(args, unsigned int), 16, true);
 				break;
 			case 'c':
-				putchar((char) va_arg(args, unsigned int));
+				kputchar((char) va_arg(args, unsigned int));
 				length++;
 				break;
 			case 's':
-				length += puts(va_arg(args, const char*));
+				length += kputs(va_arg(args, const char*));
 				break;
 			case 'p':
 				length += print_unumber(va_arg(args, size_t), 16, true);
@@ -115,7 +115,7 @@ int vprintf(const char* format, va_list args)
 				formatOption = true;
 			else
 			{
-				putchar(c);
+				kputchar(c);
 				length++;
 			}
 		}
@@ -125,11 +125,11 @@ int vprintf(const char* format, va_list args)
 	return length;
 }
 
-int printf(const char* format, ...)
+int kprintf(const char* format, ...)
 {
 	va_list args;
 	va_start(args, format);
-	int result = vprintf(format, args);
+	int result = kvprintf(format, args);
 	va_end(args);
 	return result;
 }

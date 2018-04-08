@@ -5,10 +5,10 @@
  *      Author: seeseemelk
  */
 
-#ifndef ARCH_I386_PAGE_H_
-#define ARCH_I386_PAGE_H_
+#ifndef ARCH_I386_I386_PAGE_H_
+#define ARCH_I386_I386_PAGE_H_
 
-#include "../i386/page.h"
+#include "i386_page.h"
 
 #include "cdefs.h"
 
@@ -29,4 +29,4 @@ void page_set_flags(page_entry* entry, bool present, bool rw, bool user);*/
 void page_init();
 void page_enable();
 
-#endif /* ARCH_I386_PAGE_H_ */
+#endif /* ARCH_I386_I386_PAGE_H_ */
