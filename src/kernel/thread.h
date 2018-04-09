@@ -22,10 +22,10 @@ struct thread_data
 	u16 cs;
 	u32 eip;
 	u32 eflags;
-	u32 eax;
+	/*u32 eax; // We don't actually need these
 	u32 ecx;
 	u32 edx;
-	u32 ebx;
+	u32 ebx;*/
 	u32 esp;
 	u32 ebp;
 	u32 esi;

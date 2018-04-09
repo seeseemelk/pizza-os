@@ -3,6 +3,7 @@
 #include "cdefs.h"
 #include "kernel.h"
 #include "config.h"
+#include "arch/i386/i386_asm.h"
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -20,7 +21,7 @@ void thread_start()
 	kernel_panic("Reached end of thread");
 }
 
-void thread_enter(thread_data* data)
+/*int __attribute__((optimize("O0"))) thread_enter(thread_data* data)
 {
 	asm volatile (
 			// Restore EBP and ESP so we can use the stack.
@@ -38,7 +39,7 @@ void thread_enter(thread_data* data)
 			// Load the values so we can load with pushal
 			"movl %0, %%eax;"
 			"add $4, %%eax;"
-			//"pushw (%%eax);" // We don't use CS (yet)
+			//"pushl (%%eax);" // We don't use CS (yet)
 			"add $2, %%eax;"
 			"pushl (%%eax);"
 			"add $4, %%eax;"
@@ -63,39 +64,61 @@ void thread_enter(thread_data* data)
 			"popfl;"
 
 			// Perform far jump
+			//"popl %%eax; popl %%ebx;"
 			"ret;"
 			:
 			: "r" (data)
 			: "eax"
 
 	);
+	return 0;
 }
-
-void thread_save(thread_data* data)
+*//*
+void __attribute__((optimize("O0"))) thread_save(thread_data* data)
 {
-	asm volatile (
+	/ *asm volatile (
 			"movl %%esp, %0;"
 			"movl %%ebp, %1;"
 			: "=m" (data->esp), "=m" (data->ebp)
-	);
+	);* /
 	asm volatile (
 			"movl %%esi, %0;"
 			"movl %%edi, %1;"
 			"movw %%ds, %%ax; movw %%ax, %2;"
 			"movw %%ss, %%ax; movw %%ax, %3;"
 			"movw %%cs, %%ax; movw %%ax, %4;"
-			"movl $1f, %5;"
+			"movl %4, %%eax;"
+			: "=m" (data->esi), "=m" (data->edi), "=m" (data->ds), "=m" (data->ss), "=m" (data->cs)
+			:
+			: "eax"
+	);
+	asm volatile (
+			"movl %%esp, %0;"
+			"movl %%ebp, %1;"
+			"movl $1f, %2;"
+			"jmp 2f;"
 			"1:"
-			: "=m" (data->esi), "=m" (data->edi), "=m" (data->cs), "=m" (data->ss), "=m" (data->ds),
-			  "=m" (data->eip)
+			//"jmp 1b;"
+			"mov $1, %%eax;"
+			"pop %%ebx;"
+			"pop %%esi;"
+			"pop %%edi;"
+			"pop %%ebp;"
+			"ret;"
+			"2:"
+			: "=m" (data->esp), "=m" (data->ebp), "=m" (data->eip)
 	);
 }
-
+*/
 void thread_switch(thread_t* thread)
 {
-	thread_save(&current_thread->data);
+	int return_value = thread_save(&current_thread->data);
 	current_thread = thread;
 	thread_enter(&thread->data);
+	if (return_value != 0)
+	{
+		kernel_panic("Returned from thread");
+	}
 }
 
 /**
@@ -171,9 +194,9 @@ void thread_init()
 	current_thread->id = next_thread_id++;
 	thread_save(&current_thread->data);
 
+	kernel_panic("Wee");
 	thread_create(&thread1);
 	thread_create(&thread2);
-
 	sched_run();
 }
 

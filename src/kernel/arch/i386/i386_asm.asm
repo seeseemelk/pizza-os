@@ -40,6 +40,58 @@ asm_reload_segment_registers:
 	mov ss, ax
 	ret
 
+global thread_save
+thread_save:
+	enter 0, 0
+
+	;Get a pointer to the data structure
+	mov edx, [ebp+4]
+
+	;Store DS
+	mov ax, ds
+	mov [edx], ax
+
+	;Store SS
+	mov ax, ss
+	mov [edx+2], ax
+
+	;Store CS
+	mov ax, cs
+	mov [edx+4], ax
+
+	;Store EIP
+	mov dword [edx+6], .exit
+
+	;Store EFLAGS
+	pushf
+	pop eax
+	mov [edx+10], eax
+
+	;Store ESP
+	mov [edx+14], esp
+
+	;Store EBP
+	mov [edx+16], ebp
+
+	;Store ESI
+	mov [edx+22], esi
+
+	;Store EDI
+	mov [edx+26], edi
+
+	;Return with a value of 0
+	.exit:
+	leave
+	mov eax, 0
+	ret
+
+global thread_enter
+thread_enter:
+	cli
+	.loop:
+	hlt
+	jmp .loop
+	ret
 
 
 
