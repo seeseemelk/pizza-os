@@ -1,6 +1,7 @@
 #include "thread.h"
 #include "kernel.h"
 #include "cdefs.h"
+#include "kernel.h"
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -23,7 +24,7 @@ struct thread_data
 	u32 esi;
 	u32 edi;
 	void* stack;
-};
+} __attribute__((packed));
 
 void thread_save(thread_data* data)
 {
@@ -51,39 +52,32 @@ void thread_save(thread_data* data)
 	//data->eip = (u32) __builtin_return_address(0);
 }
 
-thread_data thread_one;
-//thread_data thread_two;
-
 void empty_func()
 {
 }
 
-void other_thread()
-{
-
-}
-
 void thread_enter(thread_data* data)
 {
-	/*asm volatile (
+	asm volatile (
 			// Restore EBP and ESP so we can use the stack.
-			"movl %0, %%eax;"
+			"movl 30(%0), %%eax;"
 			"movl %%eax, %%esp;"
-			"movl %1, %%eax;"
+			"movl 34(%0), %%eax;"
 			"movl %%eax, %%ebp;"
 
 			// Restore DS and SS
-			"movl %3, %%eax;"
+			"movl 0(%0), %%eax;"
 			"movl %%eax, %%ds;"
-			"movl %4, %%eax;"
+			"movl 2(%0), %%eax;"
 			"movl %%eax, %%ss;"
 
 			// Load the values so we can load with pushal
-			"movl %2, %%eax;"
+			"movl %0, %%eax;"
 			"add $4, %%eax;"
-			"pushw (%%eax);"
+			//"pushw (%%eax);"
 			"add $2, %%eax;"
 			"pushl (%%eax);"
+			"add $4, %%eax;"
 			"pushl (%%eax);"
 			"add $4, %%eax;"
 			"pushl (%%eax);"
@@ -105,68 +99,33 @@ void thread_enter(thread_data* data)
 			"popfl;"
 
 			// Perform far jump
-			"jmp *-6(%%esp);"
+			"ret;"
 			:
-			: "m" (data->esp), "m" (data->ebp), "m" (data), "m" (data->ds), "m" (data->ss)
-	);*/
-	asm volatile (
-				// Restore EBP and ESP so we can use the stack.
-				"movl 30(%0), %%eax;"
-				"movl %%eax, %%esp;"
-				"movl 34(%0), %%eax;"
-				"movl %%eax, %%ebp;"
+			: "r" (data)
+			: "eax"
 
-				// Restore DS and SS
-				"movl 0(%0), %%eax;"
-				"movl %%eax, %%ds;"
-				"movl 2(%0), %%eax;"
-				"movl %%eax, %%ss;"
+	);
+}
 
-				// Load the values so we can load with pushal
-				"movl %0, %%eax;"
-				"add $4, %%eax;"
-				"pushw (%%eax);"
-				"add $2, %%eax;"
-				"pushl (%%eax);"
-				"pushl (%%eax);"
-				"add $4, %%eax;"
-				"pushl (%%eax);"
-				"add $4, %%eax;"
-				"pushl (%%eax);"
-				"add $4, %%eax;"
-				"pushl (%%eax);"
-				"add $4, %%eax;"
-				"pushl (%%eax);"
-				"add $4, %%eax;"
-				"pushl (%%eax);"
-				"add $4, %%eax;"
-				"pushl (%%eax);"
-				"add $4, %%eax;"
-				"pushl (%%eax);"
-				"add $4, %%eax;"
-				"pushl (%%eax);"
-				"popal;" // Restore the values now from the stack.
-				"popfl;"
+thread_data thread_one;
+thread_data thread_two;
 
-				// Perform far jump
-				"jmp *-6(%%esp);"
-				:
-				: "r" (data)
-				: "eax"
-
-		);
+void other_thread()
+{
+	kprintf("It works!\n");
+	thread_enter(&thread_two);
+	//while (1);
 }
 
 void thread_init()
 {
 	thread_save(&thread_one);
+	thread_save(&thread_two);
 	thread_one.stack = malloc(4096);
 	thread_one.eip = (u32) &other_thread;
-	thread_one.ebp = (u32)((char*)thread_one.stack + 4095);
-	thread_one.esp = (u32)((char*)thread_one.stack + 4095);
+	thread_one.ebp = (u32)((char*)thread_one.stack + 4092);
+	thread_one.esp = (u32)((char*)thread_one.stack + 4092);
 	thread_enter(&thread_one);
-	//thread_write_data(thread_two, &other_thread);
-	//thread_write_data(thread_one, )
 }
 
 
