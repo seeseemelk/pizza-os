@@ -44,7 +44,9 @@ void kernel_panic(const char* format, ...)
 
 	va_end(args);
 
-	while (1);
+	asm volatile ("cli");
+	while (1)
+		asm volatile ("hlt");
 }
 
 /**

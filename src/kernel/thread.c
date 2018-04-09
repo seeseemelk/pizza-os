@@ -2,58 +2,22 @@
 #include "kernel.h"
 #include "cdefs.h"
 #include "kernel.h"
+#include "config.h"
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>
 
-typedef struct thread_data thread_data;
+thread_t* threads;
+size_t next_thread_id = 1;
+thread_t* current_thread;
 
-struct thread_data
+/**
+ * Saves the current thread's registers to a given thread_data struct.
+ */
+void thread_start()
 {
-	u16 ds;
-	u16 ss;
-	u16 cs;
-	u32 eip;
-	u32 eflags;
-	u32 eax;
-	u32 ecx;
-	u32 edx;
-	u32 ebx;
-	u32 esp;
-	u32 ebp;
-	u32 esi;
-	u32 edi;
-	void* stack;
-} __attribute__((packed));
-
-void thread_save(thread_data* data)
-{
-	asm volatile (
-			/*"movl %%eax, %0;"
-			"movl %%ebx, %1;"
-			"movl %%ecx, %2;"
-			"movl %%edx, %3;"*/
-			"movl %%esp, %4;"
-			"movl %%ebp, %5;"
-			: "=m" (data->eax), "=m" (data->ebx), "=m" (data->ecx), "=m" (data->edx), "=m" (data->esp),
-			  "=m" (data->ebp)
-	);
-	asm volatile (
-			"movl %%esi, %0;"
-			"movl %%edi, %1;"
-			"movw %%ds, %%ax; movw %%ax, %2;"
-			"movw %%ss, %%ax; movw %%ax, %3;"
-			"movw %%cs, %%ax; movw %%ax, %4;"
-			"movl $1f, %5;"
-			"1:"
-			: "=m" (data->esi), "=m" (data->edi), "=m" (data->cs), "=m" (data->ss), "=m" (data->ds),
-			  "=m" (data->eip)
-	);
-	//data->eip = (u32) __builtin_return_address(0);
-}
-
-void empty_func()
-{
+	current_thread->entry_point();
+	kernel_panic("Reached end of thread");
 }
 
 void thread_enter(thread_data* data)
@@ -74,7 +38,7 @@ void thread_enter(thread_data* data)
 			// Load the values so we can load with pushal
 			"movl %0, %%eax;"
 			"add $4, %%eax;"
-			//"pushw (%%eax);"
+			//"pushw (%%eax);" // We don't use CS (yet)
 			"add $2, %%eax;"
 			"pushl (%%eax);"
 			"add $4, %%eax;"
@@ -107,28 +71,132 @@ void thread_enter(thread_data* data)
 	);
 }
 
-thread_data thread_one;
-thread_data thread_two;
-
-void other_thread()
+void thread_save(thread_data* data)
 {
-	kprintf("It works!\n");
-	thread_enter(&thread_two);
-	//while (1);
+	asm volatile (
+			"movl %%esp, %0;"
+			"movl %%ebp, %1;"
+			: "=m" (data->esp), "=m" (data->ebp)
+	);
+	asm volatile (
+			"movl %%esi, %0;"
+			"movl %%edi, %1;"
+			"movw %%ds, %%ax; movw %%ax, %2;"
+			"movw %%ss, %%ax; movw %%ax, %3;"
+			"movw %%cs, %%ax; movw %%ax, %4;"
+			"movl $1f, %5;"
+			"1:"
+			: "=m" (data->esi), "=m" (data->edi), "=m" (data->cs), "=m" (data->ss), "=m" (data->ds),
+			  "=m" (data->eip)
+	);
+}
+
+void thread_switch(thread_t* thread)
+{
+	thread_save(&current_thread->data);
+	current_thread = thread;
+	thread_enter(&thread->data);
+}
+
+/**
+ * Real entry point for any thread.
+ */
+thread_t* thread_create(void(*entry_point)(void))
+{
+	thread_t* thread = NULL;
+	// Find a free thread
+	for (int i = 0; i < 64; i++)
+	{
+		if (threads[i].id == 0)
+		{
+			thread = threads + i;
+			break;
+		}
+	}
+	if (thread == NULL)
+		kernel_panic("Too many threads");
+
+	thread->entry_point = entry_point;
+	thread->id = next_thread_id++;
+	thread_data* data = &thread->data;
+	thread_save(data);
+	data->stack = malloc(4096);
+	data->ebp = (u32)((char*)data->stack + 4092);
+	data->esp = (u32)((char*)data->stack + 4092);
+	data->eip = (u32) thread_start;
+
+	return thread;
+}
+
+void thread_free(thread_t* thread)
+{
+	kprintf("Freeing %d, current is %d\n", thread->id, current_thread->id);
+	if (current_thread->id == thread->id)
+		kernel_panic("Trying to free currently running thread");
+	free(thread->data.stack);
+	thread->id = 0;
+}
+
+void thread_leave()
+{
+	thread_switch(threads);
+}
+
+void sched_run();
+
+void thread1()
+{
+	while(1)
+	{
+		kprintf("From thread 1\n");
+		thread_leave();
+	}
+}
+
+void thread2()
+{
+	while(1)
+	{
+		kprintf("From thread 2\n");
+		thread_leave();
+	}
 }
 
 void thread_init()
 {
-	thread_save(&thread_one);
-	thread_save(&thread_two);
-	thread_one.stack = malloc(4096);
-	thread_one.eip = (u32) &other_thread;
-	thread_one.ebp = (u32)((char*)thread_one.stack + 4092);
-	thread_one.esp = (u32)((char*)thread_one.stack + 4092);
-	thread_enter(&thread_one);
+	threads = calloc(sizeof(thread_t), MAX_THREADS);
+
+	/* Stores this call chain as a thread. */
+	current_thread = threads;
+	current_thread->id = next_thread_id++;
+	thread_save(&current_thread->data);
+
+	thread_create(&thread1);
+	thread_create(&thread2);
+
+	sched_run();
 }
 
-
+void sched_run()
+{
+	while (1)
+	{
+		int run = 0;
+		for (int i = 1; i < MAX_THREADS; i++)
+		{
+			thread_t* thread = threads + i;
+			if (thread->id != 0)
+			{
+				thread_switch(thread);
+				run++;
+			}
+		}
+		if (run == 0)
+		{
+			kernel_panic("Last thread died");
+		}
+	}
+}
 
 
 
