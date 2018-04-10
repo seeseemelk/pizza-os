@@ -100,7 +100,7 @@ static void init_handlers()
 		{
 			handler[b] = original_handler[b];
 		}
-		*((u32*)(handler+1)) = i;
+		*((u32*)(handler+2)) = i;
 	}
 }
 

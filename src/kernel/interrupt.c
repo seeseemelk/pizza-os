@@ -66,7 +66,7 @@ void interrupt_handle(int irq, int code)
 			if (last_handled == id)
 				return;
 		}
-		kprintf("Unhandled interrupt 0x%X\n - No one wants this pizza", irq);
+		kprintf("Unhandled interrupt 0x%X\n", irq);
 	}
 }
 
