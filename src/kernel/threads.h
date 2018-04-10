@@ -3,35 +3,15 @@
  * Contains threading-related functions.
  */
 
-#ifndef THREAD_H_
-#define THREAD_H_
+#ifndef THREADS_H_
+#define THREADS_H_
 #include "cdefs.h"
 
 /**
  * Contains information necessary to perform context switches.
+ * It is to be defined by the architecture dependent code.
  */
 typedef struct thread_data thread_data;
-
-/**
- * @internal
- */
-struct thread_data
-{
-	u16 ds;
-	u16 ss;
-	u16 cs;
-	u32 eip;
-	u32 eflags;
-	/*u32 eax; // We don't actually need these
-	u32 ecx;
-	u32 edx;
-	u32 ebx;*/
-	u32 esp;
-	u32 ebp;
-	u32 esi;
-	u32 edi;
-	void* stack;
-} __attribute__((packed));
 
 /**
  * Contains information about a thread.
@@ -45,8 +25,12 @@ struct thread_t
 {
 	int id; /*< The unique ID of the thread to run. */
 	void(*entry_point)(void); /*< The entry point of the thread. */
-	thread_data data; /*< Contains important data required for performing context switches */
+	thread_data* data; /*< Contains important data required for performing context switches */
 };
+
+#if TARGET==i386
+#include "arch/i386/i386_threads.h"
+#endif
 
 /**
  * Always points to the currently running thread.
@@ -87,4 +71,7 @@ thread_t* thread_get(int id);
  */
 void thread_init();
 
-#endif /* THREAD_H_ */
+void thread_save(thread_data* data);
+void thread_enter(thread_data* data);
+
+#endif /* THREADS_H_ */

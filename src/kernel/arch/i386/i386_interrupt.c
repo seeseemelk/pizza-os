@@ -120,6 +120,15 @@ void cpu_int_handler(int irq, int error_code)
 		pic_send_eoi(irq);
 }
 
+void interrupt_enable()
+{
+	sti();
+}
+
+void interrupt_disable()
+{
+	cli();
+}
 
 
 

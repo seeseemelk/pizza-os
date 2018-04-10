@@ -1,12 +1,17 @@
-#include "thread.h"
 #include "kernel.h"
 #include "cdefs.h"
 #include "kernel.h"
 #include "config.h"
-#include "arch/i386/i386_asm.h"
+#include "interrupt.h"
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <threads.h>
+
+// For some reason it won't read the struct from thread.h
+#if TARGET==i386
+#include "arch/i386/i386_threads.h"
+#endif
 
 thread_t* threads;
 size_t next_thread_id = 1;
@@ -23,11 +28,11 @@ void thread_start()
 
 void thread_switch(thread_t* thread)
 {
-	cli();
-	thread_save(&current_thread->data);
+	interrupt_disable();
+	thread_save(current_thread->data);
 	current_thread = thread;
-	thread_enter(&thread->data);
-	sti();
+	thread_enter(thread->data);
+	interrupt_enable();
 }
 
 /**
@@ -50,7 +55,7 @@ thread_t* thread_create(void(*entry_point)(void))
 
 	thread->entry_point = entry_point;
 	thread->id = next_thread_id++;
-	thread_data* data = &thread->data;
+	thread_data* data = thread->data;
 	thread_save(data);
 	data->stack = malloc(4096);
 	data->ebp = (u32)((char*)data->stack + 4092);
@@ -66,7 +71,7 @@ void thread_free(thread_t* thread)
 	kprintf("Freeing %d, current is %d\n", thread->id, current_thread->id);
 	if (current_thread->id == thread->id)
 		kernel_panic("Trying to free currently running thread");
-	free(thread->data.stack);
+	free(thread->data->stack);
 	thread->id = 0;
 }
 
@@ -98,11 +103,16 @@ void thread2()
 void thread_init()
 {
 	threads = calloc(sizeof(thread_t), MAX_THREADS);
+	thread_data* datas = calloc(sizeof(thread_data), MAX_THREADS);
+	for (int i = 0; i < MAX_THREADS; i++)
+	{
+		threads[i].data = datas + i;
+	}
 
 	/* Stores this call chain as a thread. */
 	current_thread = threads;
 	current_thread->id = next_thread_id++;
-	thread_save(&current_thread->data);
+	thread_save(current_thread->data);
 
 	thread_create(&thread1);
 	thread_create(&thread2);
