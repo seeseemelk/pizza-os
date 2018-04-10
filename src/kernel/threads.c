@@ -22,17 +22,18 @@ thread_t* current_thread;
  */
 void thread_start()
 {
+	interrupt_enable();
 	current_thread->entry_point();
 	kernel_panic("Reached end of thread");
 }
 
 void thread_switch(thread_t* thread)
 {
-	interrupt_disable();
+	//interrupt_disable();
 	thread_save(current_thread->data);
 	current_thread = thread;
 	thread_enter(thread->data);
-	interrupt_enable();
+	//interrupt_enable();
 }
 
 /**
@@ -93,6 +94,16 @@ void thread_init()
 	current_thread = threads;
 	current_thread->id = next_thread_id++;
 	thread_save(current_thread->data);
+}
+
+void thread_set_paused(thread_t* thread, bool paused)
+{
+	thread->paused = paused;
+}
+
+bool thread_is_paused(thread_t* thread)
+{
+	return thread->paused;
 }
 
 void thread_iterator_create(thread_it* it)

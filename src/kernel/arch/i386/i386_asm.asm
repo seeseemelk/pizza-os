@@ -118,6 +118,7 @@ thread_enter:
 
 	;Perform return
 	push dword [edx+6]
+	sti
 	ret
 
 	leave

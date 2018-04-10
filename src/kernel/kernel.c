@@ -8,10 +8,11 @@
 #include "devices.h"
 #include "dev/tty.h"
 #include "page.h"
+#include "threads.h"
 #include "sched.h"
+#include "cpu.h"
 
 #if TARGET==i386
-#include "arch/i386/i386_cpu.h"
 #include "arch/i386/dev/vga.h"
 #endif
 
