@@ -6,6 +6,7 @@
 #ifndef THREADS_H_
 #define THREADS_H_
 #include "cdefs.h"
+#include <stdbool.h>
 
 /**
  * Contains information necessary to perform context switches.
@@ -19,6 +20,12 @@ typedef struct thread_data thread_data;
 typedef struct thread_t thread_t;
 
 /**
+ * Thread iterator.
+ * Is used to iterator over all existing threads.
+ */
+typedef struct thread_it thread_it;
+
+/**
  * Represents a single thread.
  */
 struct thread_t
@@ -26,6 +33,16 @@ struct thread_t
 	int id; /*< The unique ID of the thread to run. */
 	void(*entry_point)(void); /*< The entry point of the thread. */
 	thread_data* data; /*< Contains important data required for performing context switches */
+};
+
+/**
+ * Thread iterator.
+ * All members are used internally.
+ */
+struct thread_it
+{
+	thread_t* thread;
+	int index;
 };
 
 #if TARGET==i386
@@ -64,6 +81,26 @@ void thread_switch(thread_t* thread);
  * @return The thread or `NULL` if thread with the given ID exists.
  */
 thread_t* thread_get(int id);
+
+/**
+ * Creates a new iterator.
+ * @param it The struct to store the iterator in.
+ */
+void thread_iterator_create(thread_it* it);
+
+/**
+ * Checks if a next thread exists.
+ * @param it The iterator to use.
+ * @return `true` if there is a next thread, `false` if the end of the thread pool has been reached.
+ */
+bool thread_iterator_has_next(thread_it* it);
+
+/**
+ * Gets the next existing thread.
+ * @param it The iterator to use.
+ * @return The next thread or `null` if there is no next thread.
+ */
+thread_t* thread_iterator_next(thread_it* it);
 
 /**
  * @internal

@@ -80,26 +80,6 @@ void thread_leave()
 	thread_switch(threads);
 }
 
-void sched_run();
-
-void thread1()
-{
-	while(1)
-	{
-		kprintf("From thread 1\n");
-		thread_leave();
-	}
-}
-
-void thread2()
-{
-	while(1)
-	{
-		kprintf("From thread 2\n");
-		thread_leave();
-	}
-}
-
 void thread_init()
 {
 	threads = calloc(sizeof(thread_t), MAX_THREADS);
@@ -113,31 +93,33 @@ void thread_init()
 	current_thread = threads;
 	current_thread->id = next_thread_id++;
 	thread_save(current_thread->data);
-
-	thread_create(&thread1);
-	thread_create(&thread2);
-	sched_run();
 }
 
-void sched_run()
+void thread_iterator_create(thread_it* it)
 {
-	while (1)
+	it->thread = threads;
+	it->index = 0;
+}
+
+bool thread_iterator_has_next(thread_it* it)
+{
+	return it->thread != NULL;
+}
+
+thread_t* thread_iterator_next(thread_it* it)
+{
+	thread_t* thread_to_return = it->thread;
+	it->thread = NULL;
+	for (int i = it->index + 1; i < MAX_THREADS; i++)
 	{
-		int run = 0;
-		for (int i = 1; i < MAX_THREADS; i++)
+		if (threads[i].id != 0)
 		{
-			thread_t* thread = threads + i;
-			if (thread->id != 0)
-			{
-				thread_switch(thread);
-				run++;
-			}
-		}
-		if (run == 0)
-		{
-			kernel_panic("Last thread died");
+			it->thread = threads + i;
+			it->index = i;
+			break;
 		}
 	}
+	return thread_to_return;
 }
 
 

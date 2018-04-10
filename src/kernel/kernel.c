@@ -8,6 +8,7 @@
 #include "devices.h"
 #include "dev/tty.h"
 #include "page.h"
+#include "sched.h"
 
 #if TARGET==i386
 #include "arch/i386/i386_cpu.h"
@@ -173,6 +174,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	//asm("int $0x20");
 
 	kprintf("Ok\n");
+	sched_main();
 	while (1);
 
 	// Init paging
