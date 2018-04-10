@@ -42,7 +42,11 @@ void interrupt_init()
 
 void interrupt_handle(int irq, int code)
 {
-	if (irq == 0xD) // General protection fault
+	if (irq == 0x6) // Invalid opcode
+	{
+		kernel_panic("Invalid opcode");
+	}
+	else if (irq == 0xD) // General protection fault
 	{
 		kernel_panic("General Protection Fault (error: 0x%X)", code);
 	}
