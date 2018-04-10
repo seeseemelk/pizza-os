@@ -1,5 +1,6 @@
 /**
  * @file
+ * Contains configuration information.
  */
 
 #ifndef CONFIG_H_
@@ -20,6 +21,9 @@
 
 /** The maximum number of interrupt handlers that can be loaded for each interrupt. */
 #define MAX_NUM_INT_HANDLERS 16
+
+/** The maximum number of threads that can be allocated at any one time. */
+#define MAX_THREADS 16
 
 /** Enables VGA drivers if defined */
 #define ENABLE_VGA

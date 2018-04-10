@@ -7,7 +7,6 @@
 
 #ifndef ARCH_I386_I386_CPU_H_
 #define ARCH_I386_I386_CPU_H_
-
-void cpu_init();
+#include "cpu.h"
 
 #endif /* ARCH_I386_I386_CPU_H_ */

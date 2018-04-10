@@ -44,11 +44,23 @@ void interrupt_init();
 
 /**
  * @internal
- * To be implemented by arch-dependent code.
+ * @note To be implemented by arch-dependent code.
  * Lets the chosen architecture initialize interrupt.
  * This is called automatically by interrupt_init().
  */
 void arch_interrupt_init();
+
+/**
+ * Enables interrupts
+ * @note To be implement by arch-dependent code.
+ */
+void interrupt_enable();
+
+/**
+ * Disables interrupts
+ * @note To be implement by arch-dependent code.
+ */
+void interrupt_disable();
 
 
 #endif /* INTERRUPT_H_ */

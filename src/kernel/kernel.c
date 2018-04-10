@@ -1,3 +1,4 @@
+#include <threads.h>
 #include "interrupt.h"
 #include "kernel.h"
 #include "multiboot.h"
@@ -7,9 +8,11 @@
 #include "devices.h"
 #include "dev/tty.h"
 #include "page.h"
+#include "threads.h"
+#include "sched.h"
+#include "cpu.h"
 
 #if TARGET==i386
-#include "arch/i386/i386_cpu.h"
 #include "arch/i386/dev/vga.h"
 #endif
 
@@ -43,7 +46,9 @@ void kernel_panic(const char* format, ...)
 
 	va_end(args);
 
-	while (1);
+	asm volatile ("cli");
+	while (1)
+		asm volatile ("hlt");
 }
 
 /**
@@ -139,6 +144,8 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	mem_init();
 	printf("DONE\n");*/
 
+	thread_init();
+
 
 	register u32 *ebp asm("esp");
 	kprintf("Stack: 0x%X\n", ebp);
@@ -168,6 +175,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	//asm("int $0x20");
 
 	kprintf("Ok\n");
+	sched_main();
 	while (1);
 
 	// Init paging

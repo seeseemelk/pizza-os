@@ -26,7 +26,7 @@ void interrupt_register(device* dev, int interrupt)
 	if (num_handlers[interrupt] < MAX_NUM_INT_HANDLERS)
 		handlers[interrupt][num_handlers[interrupt]++] = dev;
 	else
-		kernel_panic("Too many handlers have been registered for interrupt 0x%X", interrupt);
+		kernel_panic("Too many handlers - too much pizza - have been registered for interrupt 0x%X", interrupt);
 }
 
 void interrupt_init()
@@ -42,13 +42,17 @@ void interrupt_init()
 
 void interrupt_handle(int irq, int code)
 {
-	if (irq == 0xD) // General protection fault
+	if (irq == 0x6) // Invalid opcode
 	{
-		kernel_panic("General Protection Fault (error: 0x%X)", code);
+		kernel_panic("Invalid opcode - This ain't pizza?");
+	}
+	else if (irq == 0xD) // General protection fault
+	{
+		kernel_panic("General Protection Fault (error: 0x%X) - Forgot how to eat pizza?", code);
 	}
 	else if (irq == 0xE) // Page fault
 	{
-		kernel_panic("Page Fault (error: 0x%X)", code);
+		kernel_panic("Page Fault (error: 0x%X) - No pizza on this plate", code);
 	}
 	else
 	{

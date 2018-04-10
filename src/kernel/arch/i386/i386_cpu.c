@@ -86,6 +86,11 @@ void gdt_load(gdt_descriptor* descriptor)
 	asm_reload_segment_registers();
 }
 
+void cpu_pause()
+{
+	asm ("hlt");
+}
+
 /*
  * General cpu functions
  */
