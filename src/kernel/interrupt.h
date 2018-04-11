@@ -18,7 +18,7 @@
  * @param dev The device that will be handling the interrupts.
  * @param interrupt The interrupt number to handle.
  */
-void interrupt_register(device* dev, int interrupt);
+void interrupt_register(device_t* dev, int interrupt);
 
 /**
  * Ends the interrupt chain for a specific interrupt.

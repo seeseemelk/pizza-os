@@ -126,7 +126,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 
 	// Enable VGA output if possible
 	#ifdef ENABLE_VGA
-	device* vga_dev = vga_init();
+	device_t* vga_dev = vga_init();
 	tty_set_tty(vga_dev);
 	#endif
 	tty_clear();

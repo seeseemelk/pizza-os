@@ -14,8 +14,8 @@
 #define R_ADDR 0x3B4
 #define R_DATA 0x3B5
 
-module* vga_module;
-device* vga_device;
+module_t* vga_module;
+device_t* vga_device;
 int width = 80;
 int height = 25;
 char* vga_memory;
@@ -31,7 +31,7 @@ static void vga_write_cursor_address()
 	outb(R_DATA, cursor_index & 0xFF);
 }
 
-int vga_request(module_request* request)
+int vga_dev_request(dev_req_t* request)
 {
 	//GET_CHAR, SET_CHAR, GET_WIDTH, GET_HEIGHT, GET_CURSOR_X, GET_CURSOR_Y, SET_CURSOR, SCROLL
 	switch (request->type)
@@ -73,12 +73,12 @@ int vga_request(module_request* request)
 	}
 }
 
-device* vga_init()
+device_t* vga_init()
 {
 	// Set the CRT controller address to 0x03B4 and 0x03B5
 	outb(0x3C2, (inb(0x3CC) & 0b11111110) | 0b00000010);
 
-	vga_module = module_register("vga", TERMINAL, &vga_request);
+	vga_module = module_register("vga", TERMINAL, NULL, &vga_dev_request);
 	vga_device = device_register(vga_module);
 	vga_memory = device_mmap((void*) 0xB8000, KB(8));
 	interrupt_register(vga_device, 0x20);

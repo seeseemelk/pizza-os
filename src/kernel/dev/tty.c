@@ -7,12 +7,12 @@
 #include "dev/tty.h"
 #include <stddef.h>
 
-device* tty;
+device_t* tty;
 int width;
 int height;
 int max_index;
 
-void tty_set_tty(device* dev)
+void tty_set_tty(device_t* dev)
 {
 	tty = dev;
 	width = device_invoke(tty, GET_WIDTH);

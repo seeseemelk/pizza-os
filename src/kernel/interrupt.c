@@ -16,12 +16,12 @@
 
 typedef struct int_handler int_handler;
 
-device** handlers[256]; /* Contains an array of pointers to devices (handlers) for each interrupt */
+device_t** handlers[256]; /* Contains an array of pointers to devices (handlers) for each interrupt */
 int num_handlers[256]; /* Contains the number of handlers registered for each interrupt */
 int int_count = 0; /* A counter that can be used to individually track interrupts */
 int last_handled = -1; /* The id of the last handled interrupt */
 
-void interrupt_register(device* dev, int interrupt)
+void interrupt_register(device_t* dev, int interrupt)
 {
 	if (num_handlers[interrupt] < MAX_NUM_INT_HANDLERS)
 		handlers[interrupt][num_handlers[interrupt]++] = dev;
@@ -33,7 +33,7 @@ void interrupt_init()
 {
 	for (int i = 0; i < 256; i++)
 	{
-		handlers[i] = malloc(sizeof(device*) * MAX_NUM_INT_HANDLERS);
+		handlers[i] = malloc(sizeof(device_t*) * MAX_NUM_INT_HANDLERS);
 		num_handlers[i] = 0;
 	}
 
@@ -57,11 +57,11 @@ void interrupt_handle(int irq, int code)
 	else
 	{
 		int id = int_count++;
-		device** devices = handlers[irq];
+		device_t** devices = handlers[irq];
 		int num_devices = num_handlers[irq];
 		for (int i = 0; i < num_devices; i++)
 		{
-			device* dev = devices[i];
+			device_t* dev = devices[i];
 			device_invoke2(dev, INTERRUPT, irq, id);
 			if (last_handled == id)
 				return;
