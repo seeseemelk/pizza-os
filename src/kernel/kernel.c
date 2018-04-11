@@ -11,6 +11,7 @@
 #include "threads.h"
 #include "sched.h"
 #include "cpu.h"
+#include "vfs.h"
 
 #if TARGET==i386
 #include "arch/i386/dev/vga.h"
@@ -147,19 +148,19 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	thread_init();
 
 
-	register u32 *ebp asm("esp");
+	/*register u32 *ebp asm("esp");
 	kprintf("Stack: 0x%X\n", ebp);
 	//while (1);
 
 	kprintf("Testing memory...\n");
-	void* mem_one = mem_alloc(1);
+	void* mem_one = mem_alloc(1);*/
 	/*void* mem_two = malloc(8192);
 	void* mem_three = mem_alloc(128);*/
-	kprintf("  ONE 0x%X\n", (size_t)mem_one);
+	/*kprintf("  ONE 0x%X\n", (size_t)mem_one);
 	void* mem_two = malloc(8192);
 	kprintf("  TWO 0x%X\n", (size_t)mem_two);
 	void* mem_three = mem_alloc(128);
-	kprintf("  THR 0x%X\n", (size_t)mem_three);
+	kprintf("  THR 0x%X\n", (size_t)mem_three);*/
 
 	/*mem_free(mem_two);
 	mem_two = mem_alloc(4096);
@@ -174,7 +175,10 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 
 	//asm("int $0x20");
 
-	kprintf("Ok\n");
+	//kprintf("Ok\n");
+	kprintf("Initialising VFS\n");
+	vfs_init();
+	kprintf("Done\n");
 	sched_main();
 	while (1);
 
