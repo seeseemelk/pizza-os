@@ -10,6 +10,6 @@
 
 #include "devices.h"
 
-device* vga_init();
+device_t* vga_init();
 
 #endif /* ARCH_I386_DEV_VGA_H_ */
