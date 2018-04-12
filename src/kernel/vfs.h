@@ -33,10 +33,16 @@ struct stat_t
 {
 	const char* filename; /*< The name of the file. */
 	unsigned long long size; /*< The size of the file. */
-	unsigned int inode; /*< The inode number of the file. This is unique per device */
+	unsigned int inode; /*< The inode number of the file according to the device driver. This is unique per device */
 	file_t type;
-	device* dev;
+	device_t* dev;
 };
+
+typedef struct
+{
+	device_t* dev;
+	it_t* iterator;
+} dir_it_t;
 
 /**
  * Reads information about a file.
@@ -44,7 +50,7 @@ struct stat_t
  * @param stat The `stat_t` to store the file's information in.
  * @return `0` on success, something else when an error occurred.
  */
-int vfs_stat(const char* path, stat_t* stat);
+//int vfs_stat(const char* path, stat_t* stat);
 
 /**
  * Initialises the VFS.

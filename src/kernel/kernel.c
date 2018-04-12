@@ -13,6 +13,8 @@
 #include "cpu.h"
 #include "vfs.h"
 
+#include "dev/tmpfs.h"
+
 #if TARGET==i386
 #include "arch/i386/dev/vga.h"
 #endif
@@ -177,8 +179,13 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 
 	//kprintf("Ok\n");
 	kprintf("Initialising VFS\n");
+#ifdef ENABLE_TMPFS
+	tmpfs_init();
+#endif
 	vfs_init();
 	kprintf("Done\n");
+
+	//while (1);
 	sched_main();
 	while (1);
 

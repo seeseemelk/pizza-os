@@ -1,8 +1,6 @@
-/*
- * devices.h
- *
- *  Created on: Jan 2, 2018
- *      Author: seeseemelk
+/**
+ * @file
+ * Contains device management related functions.
  */
 
 #ifndef DEV_DEVICES_H_
@@ -41,7 +39,28 @@ enum request_type
 {
 	UNLOAD, INTERRUPT, /* General request types */
 	PAGING_ENABLED, /* Called when paging gets enabled */
-	READ, WRITE, FLUSH, GET_SIZE, /* Block request types */
+
+	READ, WRITE, FLUSH, /* File request types */
+	/**
+	 * A `MOUNT` request will be sent to a module.
+	 * This will cause the module to create a new device and return a pointer to it.
+	 * @param arg1 Contains a pointer to the block device to read from.
+	 * If no block device is required this will be `NULL`.
+	 * @param arg2 The inode number for the root directory. This is so that the VFS
+	 * can make sure that the mounted filesystem and the parent filesystem share the
+	 * same inode number for the mountpoint.
+	 * @return A pointer to the newly created device.
+	 */
+	MOUNT,
+	STAT, /* Filesystem request types */
+
+	/**
+	 * Creates a new directory iterator.
+	 * @param arg1 The inode of the directory to get an iterator for.
+	 * @return A pointer to a newly created `iterator`.
+	 */
+	DIRIT_CREATE,
+
 	GET_CHAR, SET_CHAR, GET_WIDTH, GET_HEIGHT, GET_CURSOR_X, GET_CURSOR_Y, SET_CURSOR, SCROLL /* Terminal types */
 };
 
@@ -65,6 +84,7 @@ struct device_t
 {
 	const module_t* module; /**< A pointer to the module that handles this device. */
 	int minor; /** The minor number. This number will uniquely specific a specific device. */
+	void* data; /** Can be used by the module itself as a pointer to a data structure containing extra information needed during runtime. */
 };
 
 /**
@@ -116,6 +136,13 @@ device_t* device_register(module_t* module);
  * Functions for finding a specific device.
  */
 device_t* device_get_first(module_type type);
+
+/**
+ * Gets a module by its name.
+ * @param name The name of the module to get.
+ * @return The module or `NULL` if no such module exists.
+ */
+module_t* module_get(const char* name);
 
 /*
  * Functions for communicating with a module.

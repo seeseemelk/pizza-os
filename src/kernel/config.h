@@ -25,10 +25,13 @@
 /** The maximum number of threads that can be allocated at any one time. */
 #define MAX_THREADS 16
 
-/** Enables VGA drivers if defined */
-#define ENABLE_VGA
-
 /** The minimum block size that the physical memory allocator can allocate */
 #define PMEM_BLOCK_SIZE KB(4)
+
+/** Should VGA be enabled */
+#define ENABLE_VGA
+
+/** Should TMPFS be enabled */
+#define ENABLE_TMPFS
 
 #endif /* CONFIG_H_ */
