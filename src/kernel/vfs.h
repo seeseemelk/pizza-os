@@ -13,44 +13,22 @@
 #include <stdbool.h>
 #include <devices.h>
 
-typedef enum file_t file_t;
-
-/**
- * Describes different types of files.
- */
-enum file_t
+typedef struct
 {
-	FILE,
-	DIRECTORY
-};
-
-typedef struct stat_t stat_t;
-
-/**
- * Contains information about a file.
- */
-struct stat_t
-{
-	const char* filename; /*< The name of the file. */
-	unsigned long long size; /*< The size of the file. */
-	unsigned int inode; /*< The inode number of the file according to the device driver. This is unique per device */
-	file_t type;
-	device_t* dev;
-};
+	const char name[256];
+	unsigned int itag;
+} tag_t;
 
 typedef struct
 {
-	device_t* dev;
-	it_t* iterator;
-} dir_it_t;
+	const char name[256];
+	unsigned int itag[16];
+} file_t;
 
-/**
- * Reads information about a file.
- * @param path The path of the file.
- * @param stat The `stat_t` to store the file's information in.
- * @return `0` on success, something else when an error occurred.
- */
-//int vfs_stat(const char* path, stat_t* stat);
+typedef struct
+{
+	unsigned int itag[16];
+} tagged_t;
 
 /**
  * Initialises the VFS.
