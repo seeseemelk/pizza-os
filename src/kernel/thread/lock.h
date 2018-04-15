@@ -30,13 +30,28 @@ struct lock_t
 void lock_create(lock_t* lock);
 
 /**
+ * Locks the thread, but does not put the thread in sleep mode.
+ * Useful for critical sections.
+ * @param lock The lock to lock.
+ */
+void lock_lock(lock_t* lock);
+
+/**
+ * Unlocks the thread.
+ * @param lock The lock to unlock.
+ */
+void lock_unlock(lock_t* lock);
+
+/**
  * Waits until the lock is signaled.
+ * This will put the current thread into sleep mode.
  * @param lock The lock to wait for.
  */
 void lock_wait(lock_t* lock);
 
 /**
  * Signals the lock.
+ * This will take the owning thread out of sleep mode.
  */
 void lock_signal(lock_t* lock);
 

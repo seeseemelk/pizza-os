@@ -14,6 +14,17 @@ void lock_create(lock_t* lock)
 	lock->signal = false;
 }
 
+void lock_lock(lock_t* lock)
+{
+	lock->owner = current_thread;
+	lock->signal = false;
+}
+
+void lock_unlock(lock_t* lock)
+{
+	lock->signal = true;
+}
+
 void lock_wait(lock_t* lock)
 {
 	lock->owner = current_thread;
@@ -32,7 +43,7 @@ void lock_signal(lock_t* lock)
 		thread_set_paused(lock->owner, false);
 	}
 	else
-		kernel_panic("Signaling unlock lock - Can't wait until finished eating pizza if not eating pizza");
+		kernel_panic("Signaling un-owned lock - Can't wait until finished eating pizza if not eating pizza");
 }
 
 bool lock_is_locked(lock_t* lock)

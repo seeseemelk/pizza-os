@@ -74,6 +74,11 @@ tbl_t* mem_get_tbl_entry(void* mem)
 
 void* mem_alloc(const size_t bytes)
 {
+	// If the user is allocating 0 bytes,
+	// we can just return a null-pointer.
+	if (bytes == 0)
+		return NULL;
+
 	// We allocate the pages.
 	void* mem = page_alloc(bytes);
 
