@@ -8,3 +8,6 @@ General IO can be performed by including kernel/io.h.
 # Interrupts
 Interrupts are handled by kernel/interrupts.h.
 A high-level overview of this can be found at \ref Interrupts.
+
+# Virtual Filesystem
+Information about the virtual filesystem can be found at \ref VFS. 

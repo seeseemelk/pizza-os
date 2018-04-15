@@ -8,8 +8,8 @@
 #include "config.h"
 #include "page.h"
 #include "kernel.h"
-
 #include <stddef.h>
+#include <string.h>
 
 module_t modules[MAX_MODULES];
 device_t devices[MAX_DEVICES];
@@ -32,7 +32,7 @@ module_t* module_register(const char* name, module_type type,
 
 device_t* device_register(module_t* module)
 {
-	device_t* device = devices + num_devices_loaded;
+	device_t* device = devices + num_devices_loaded++;
 	device->module = module;
 	device->minor = module->num_devices_loaded;
 	module->num_devices_loaded++;
@@ -50,6 +50,28 @@ device_t* device_get_first(module_type type)
 		{
 			return &devices[i];
 		}
+	}
+	return NULL;
+}
+
+module_t* module_get(const char* name)
+{
+	for (int i = 0; i < num_modules_loaded; i++)
+	{
+		module_t* module = modules + i;
+		if (strcmp(module->name, name) == 0)
+			return module;
+	}
+	return NULL;
+}
+
+device_t* device_get_by_minor(unsigned short major, unsigned short minor)
+{
+	for (int i = 0; i < num_devices_loaded++; i++)
+	{
+		device_t* dev = devices + i;
+		if (dev->minor == minor && dev->module->major == major)
+			return dev;
 	}
 	return NULL;
 }
