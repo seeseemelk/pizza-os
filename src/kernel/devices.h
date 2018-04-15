@@ -29,7 +29,7 @@ typedef int(fn_device_request)(struct dev_req_t*);
  */
 enum module_type
 {
-	BLOCK, TERMINAL, FILESYSTEM
+	BLOCK, TERMINAL, FILESYSTEM, KEYBOARD
 };
 
 /**
@@ -59,7 +59,9 @@ enum request_type
 	 * @param arg1 The inode of the directory to get an iterator for.
 	 * @return A pointer to a newly created `iterator`.
 	 */
-	DIRIT_CREATE,
+	DIROPEN,
+	DIRCLOSE,
+	DIRNEXT,
 
 	GET_CHAR, SET_CHAR, GET_WIDTH, GET_HEIGHT, GET_CURSOR_X, GET_CURSOR_Y, SET_CURSOR, SCROLL /* Terminal types */
 };
@@ -69,7 +71,7 @@ enum request_type
  */
 struct module_t
 {
-	int major; /**< The major number contains the uniquely identifying number for the module. */
+	unsigned short major; /**< The major number contains the uniquely identifying number for the module. */
 	const char* name; /**< The name is a simple string that will be displayed in logs. */
 	module_type type; /**< The type of module this is. */
 	fn_module_request* fn_mod_req; /**< A pointer to a function that will handle all the request for the module. */
@@ -83,7 +85,7 @@ struct module_t
 struct device_t
 {
 	const module_t* module; /**< A pointer to the module that handles this device. */
-	int minor; /** The minor number. This number will uniquely specific a specific device. */
+	unsigned short minor; /** The minor number. This number will uniquely specific a specific device. */
 	void* data; /** Can be used by the module itself as a pointer to a data structure containing extra information needed during runtime. */
 };
 
@@ -143,6 +145,14 @@ device_t* device_get_first(module_type type);
  * @return The module or `NULL` if no such module exists.
  */
 module_t* module_get(const char* name);
+
+/**
+ * Gets a device by its mayor and minor number.
+ * @param major The major number of the owning module.
+ * @param minor The minor number of the device.
+ * @return The device, or `null` if there is no device with the given major/minor number.
+ */
+device_t* device_get_by_minor(unsigned short major, unsigned short minor);
 
 /*
  * Functions for communicating with a module.

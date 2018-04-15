@@ -13,22 +13,46 @@
 #include <stdbool.h>
 #include <devices.h>
 
-typedef struct
+typedef struct devi_t
 {
-	const char name[256];
-	unsigned int itag;
-} tag_t;
+	unsigned short dev_major;
+	unsigned short dev_minor;
+} devi_t;
 
-typedef struct
+typedef unsigned int ino_t;
+
+typedef enum
 {
-	const char name[256];
-	unsigned int itag[16];
+	EDIRECTORY, EFILE
 } file_t;
 
-typedef struct
+typedef struct stat_t
 {
-	unsigned int itag[16];
-} tagged_t;
+	devi_t dev;
+	ino_t ino;
+	file_t type;
+} stat_t;
+
+typedef struct mount_t
+{
+	device_t* dev;
+	const char* path;
+} mount_t;
+
+typedef struct DIR
+{
+	devi_t dev;
+	ino_t inode;
+	void* dev_it;
+} DIR;
+
+typedef struct dirent_t
+{
+	devi_t dev;
+	ino_t inode;
+	file_t type;
+	char name[256];
+} dirent_t;
 
 /**
  * Initialises the VFS.

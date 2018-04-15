@@ -7,15 +7,16 @@
 #include "collections/iterator.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 module_t* tmpfs;
 
 #define MAX_NODES 256
 #define MAX_CHILDREN 16
 
-typedef struct
+typedef struct node_t
 {
-	const char* name;
+	char name[256];
 	file_t type;
 	unsigned int size;
 	void* content;
@@ -31,7 +32,7 @@ typedef struct
 {
 	node_t* inode;
 	unsigned int index;
-} it_data_t;
+} dird_t;
 
 /*
  * READ, WRITE, FLUSH,
@@ -39,12 +40,17 @@ typedef struct
  * DIRIT_NEW, DIRIT_NEXT
  */
 
-void tmpfs_create_dir(dev_info_t* dev_info, unsigned int id)
+node_t* tmpfs_create_dir(dev_info_t* dev_info, node_t* parent, const char* name)
 {
+	unsigned int id = dev_info->next_id++;
 	node_t* dir = dev_info->nodes + id;
-	dir->type = DIRECTORY;
+	dir->type = EDIRECTORY;
 	dir->content = calloc(sizeof(unsigned int), MAX_CHILDREN);
 	dir->size = 0;
+	strncpy(dir->name, name, 256);
+	if (parent != NULL)
+		((unsigned int*) parent->content)[parent->size++] = id;
+	return dir;
 }
 
 int tmpfs_mod_req(mod_req_t* request)
@@ -53,9 +59,9 @@ int tmpfs_mod_req(mod_req_t* request)
 	if (type == MOUNT) {
 		device_t* device = device_register(tmpfs);
 		dev_info_t* dev_info = malloc(sizeof(dev_info_t));
-		tmpfs_create_dir(dev_info, 0);
-		dev_info->next_id = 1;
+		node_t* root_dir = tmpfs_create_dir(dev_info, NULL, "");
 		device->data = (void*) dev_info;
+		tmpfs_create_dir(dev_info, root_dir, "dir");
 		return (int) device;
 	} else {
 		kernel_panic("Unknown request type on TMPFS module");
@@ -63,30 +69,32 @@ int tmpfs_mod_req(mod_req_t* request)
 	}
 }
 
-bool tmpfs_it_has_next(it_t* it)
-{
-	it_data_t* data = (it_data_t*) it->data;
-	return data->index < data->inode->size;
-}
-
-void* tmpfs_it_next(it_t* it)
-{
-	it_data_t* data = (it_data_t*) it->data;
-	return data->inode->content + (data->index++);
-}
-
 int tmpfs_dev_req(dev_req_t* request)
 {
 	dev_info_t* dev = (dev_info_t*) request->device->data;
 
 	request_type type = request->type;
-	if (type == DIRIT_CREATE) {
-		unsigned int inode = request->arg1;
-		it_t* it = it_new(&tmpfs_it_has_next, &tmpfs_it_next);
-		it_data_t* data = malloc(sizeof(it_data_t));
-		it->data = (void*) data;
-		data->index = 0;
-		data->inode = dev->nodes + inode;
+	if (type == DIROPEN) {
+		dird_t* dird = malloc(sizeof(dird_t));
+		dird->inode = dev->nodes + request->arg1;
+		dird->index = 0;
+		return (int) dird;
+	} else if (type == DIRNEXT) {
+		dird_t* dird = (dird_t*) request->arg1;
+		if (dird->index < dird->inode->size)
+		{
+			dirent_t* dirent = (dirent_t*) request->arg2;
+			unsigned int node_id = ((unsigned int*) dird->inode->content)[dird->index];
+			node_t* node = dev->nodes + node_id;
+			dird->index++;
+			strncpy(dirent->name, node->name, 256);
+			return 1;
+		}
+		else
+			return 0;
+	} else if (type == DIRCLOSE) {
+		dird_t* dird = (dird_t*) request->arg1;
+		free(dird);
 		return 0;
 	} else {
 		kernel_panic("Unknown request type on TMPFS module");

@@ -65,6 +65,17 @@ module_t* module_get(const char* name)
 	return NULL;
 }
 
+device_t* device_get_by_minor(unsigned short major, unsigned short minor)
+{
+	for (int i = 0; i < num_devices_loaded++; i++)
+	{
+		device_t* dev = devices + i;
+		if (dev->minor == minor && dev->module->major == major)
+			return dev;
+	}
+	return NULL;
+}
+
 /*
  * Functions for communicating with a module.
  */
