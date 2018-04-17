@@ -93,12 +93,7 @@ int ps2_dev_req(dev_req_t* req)
 	return 0;
 }
 
-/*enum ps2state
-{
-	EDISABLE, EFLUSH, ESETCONFIG, ETESTCTRL
-};*/
-
-void ps2_init_hardware(ps2ctrl_t* dev)
+void ps2_st_init(ps2ctrl_t* dev)
 {
 	// Disables devices
 	ps2_write_command(dev, 0xAD);
@@ -113,6 +108,12 @@ void ps2_init_hardware(ps2ctrl_t* dev)
 	dev->num_ports = ((config & (1<<5)) == 1) + 1;
 	config &= 0b10111100;
 	ps2_write_ram(dev, 0, config);
+}
+
+void ps2_init_hardware(ps2ctrl_t* dev)
+{
+	// Initializes the PS/2 Device
+	ps2_st_init(dev);
 
 	// Test PS/2 Controller
 	ps2_write_command(dev, 0xAA);
@@ -122,6 +123,10 @@ void ps2_init_hardware(ps2ctrl_t* dev)
 	else if (data != 0x55)
 		kernel_panic("PS/2 unknown status flag 0x%X", data);
 	kprintf("PS/2 Controller OK\n");
+
+	// Sometimes testing the PS/2 controller causes it to be reset,
+	// so we need to initialise it again just to be sage.
+	ps2_st_init(dev);
 
 	// Test 1st PS/2 Port
 	ps2_write_command(dev, 0xAB);
@@ -140,7 +145,7 @@ void ps2_init_hardware(ps2ctrl_t* dev)
 	ps2_write_command(dev, 0xAE);
 
 	// Set Controller Configuration Byte (Enable interrupts)
-	config = ps2_read_ram(dev, 0);
+	unsigned int config = ps2_read_ram(dev, 0);
 	config |= 1;
 	ps2_write_ram(dev, 0, config);
 
