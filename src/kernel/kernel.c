@@ -1,3 +1,4 @@
+#include <dev/pcps2.h>
 #include <threads.h>
 #include "interrupt.h"
 #include "kernel.h"
@@ -13,7 +14,6 @@
 #include "cpu.h"
 #include "vfs.h"
 
-#include "dev/ps2.h"
 #include "dev/tmpfs.h"
 
 #if TARGET==i386
@@ -179,7 +179,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	//asm("int $0x20");
 
 	//kprintf("Ok\n");
-	ps2_init();
+	pcps2_init();
 
 	kprintf("Initialising VFS\n");
 #ifdef ENABLE_TMPFS

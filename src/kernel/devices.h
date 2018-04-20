@@ -29,7 +29,10 @@ typedef int(fn_device_request)(struct dev_req_t*);
  */
 enum module_type
 {
-	BLOCK, TERMINAL, FILESYSTEM, KEYBOARD, CONTROLLER
+	OTHER, BLOCK, TERMINAL, FILESYSTEM, KEYBOARD,
+
+	/* Controller types */
+	PS2
 };
 
 /**

@@ -1,4 +1,5 @@
-#include "ps2.h"
+#include "dev/pcps2.h"
+#include "bus/ps2.h"
 #include "devices.h"
 #include "io.h"
 #include "cdefs.h"
@@ -12,7 +13,17 @@
 #define PS2_STA 0x64
 #define PS2_CMD 0x64
 
-ps2ctrl_t* ps2_get_controller(const device_t* dev)
+#define CTRL(bus) ((ps2ctrl_t*)bus)
+#define BUS(dev) (&dev->bus)
+
+typedef struct ps2ctrl_t
+{
+	ps2_bus_t bus;
+	int num_ports;
+	lock_t lock;
+} ps2ctrl_t;
+
+ps2ctrl_t* pcps2_get_controller(const device_t* dev)
 {
 	return (ps2ctrl_t*) dev->data;
 }
@@ -23,69 +34,69 @@ ps2ctrl_t* ps2_get_controller(const device_t* dev)
  * The only use it has is to prevent race conditions when
  * using ps2_wait().
  */
-void ps2_lock(ps2ctrl_t* dev)
+void pcps2_lock(ps2_bus_t* dev)
 {
-	lock_lock(&dev->lock);
+	lock_lock(&CTRL(dev)->lock);
 }
 
-unsigned char ps2_read_status(ps2ctrl_t* dev)
+unsigned char pcps2_read_status(ps2_bus_t* dev)
 {
-	ps2_lock(dev);
+	pcps2_lock(dev);
 	return inb(PS2_STA);
 }
 
-unsigned char ps2_read_resp(ps2ctrl_t* dev)
+unsigned char pcps2_read_resp(ps2_bus_t* dev)
 {
-	ps2_lock(dev);
+	pcps2_lock(dev);
 	while ((inb(PS2_STA) & 1) == 0) ;
 	return inb(PS2_DAT);
 }
 
-unsigned char ps2_read_data(ps2ctrl_t* dev)
+unsigned char pcps2_read_data(ps2_bus_t* dev)
 {
-	ps2_lock(dev);
+	pcps2_lock(dev);
 	return inb(PS2_DAT);
 }
 
-void ps2_write_data(ps2ctrl_t* dev, unsigned char data)
+void pcps2_write_data(ps2_bus_t* dev, unsigned char data)
 {
-	ps2_lock(dev);
+	pcps2_lock(dev);
 	outb(PS2_DAT, data);
 }
 
-void ps2_write_command(ps2ctrl_t* dev, unsigned char command)
+void pcps2_write_command(ps2_bus_t* dev, unsigned char command)
 {
-	ps2_lock(dev);
+	pcps2_lock(dev);
 	outb(PS2_CMD, command);
 }
 
-unsigned char ps2_read_ram(ps2ctrl_t* dev, unsigned char i)
+unsigned char pcps2_read_ram(ps2_bus_t* dev, unsigned char i)
 {
-	ps2_lock(dev);
+	pcps2_lock(dev);
 	outb(PS2_CMD, 0x20 + i);
-	return ps2_read_resp(dev);
+	return pcps2_read_resp(dev);
 }
 
-void ps2_write_ram(ps2ctrl_t* dev, unsigned char i, unsigned char val)
+void pcps2_write_ram(ps2_bus_t* dev, unsigned char i, unsigned char val)
 {
-	ps2_lock(dev);
+	pcps2_lock(dev);
 	outb(PS2_CMD, 0x60 + i);
 	while ((inb(PS2_STA) & 2) == 1);
 	outb(PS2_DAT, val);
 }
 
-void ps2_wait(ps2ctrl_t* dev)
+void pcps2_wait(ps2_bus_t* dev)
 {
-	lock_wait(&dev->lock);
-	lock_lock(&dev->lock);
+	lock_wait(&CTRL(dev)->lock);
+	lock_lock(&CTRL(dev)->lock);
 }
 
-int ps2_dev_req(dev_req_t* req)
+int pcps2_dev_req(dev_req_t* req)
 {
 	if (req->type == INTERRUPT)
 	{
 		interrupt_accept(req->arg2);
-		ps2ctrl_t* dev = ps2_get_controller(req->device);
+		ps2ctrl_t* dev = pcps2_get_controller(req->device);
 		lock_signal(&dev->lock);
 	}
 	else
@@ -93,31 +104,31 @@ int ps2_dev_req(dev_req_t* req)
 	return 0;
 }
 
-void ps2_st_init(ps2ctrl_t* dev)
+void pcps2_st_init(ps2ctrl_t* dev)
 {
 	// Disables devices
-	ps2_write_command(dev, 0xAD);
-	ps2_write_command(dev, 0xA7);
+	pcps2_write_command(BUS(dev), 0xAD);
+	pcps2_write_command(BUS(dev), 0xA7);
 
 	// Flush output buffer (Wait until bit 0 = 1)
-	while ((ps2_read_status(dev) & 1) == 1)
-		ps2_read_data(dev);
+	while ((pcps2_read_status(BUS(dev)) & 1) == 1)
+		pcps2_read_data(BUS(dev));
 
 	// Set Controller Configuration Byte
-	unsigned char config = ps2_read_ram(dev, 0);
+	unsigned char config = pcps2_read_ram(BUS(dev), 0);
 	dev->num_ports = ((config & (1<<5)) == 1) + 1;
 	config &= 0b10111100;
-	ps2_write_ram(dev, 0, config);
+	pcps2_write_ram(BUS(dev), 0, config);
 }
 
-void ps2_init_hardware(ps2ctrl_t* dev)
+void pcps2_init_hardware(ps2ctrl_t* dev)
 {
 	// Initializes the PS/2 Device
-	ps2_st_init(dev);
+	pcps2_st_init(dev);
 
 	// Test PS/2 Controller
-	ps2_write_command(dev, 0xAA);
-	unsigned char data = ps2_read_resp(dev);
+	pcps2_write_command(BUS(dev), 0xAA);
+	unsigned char data = pcps2_read_resp(BUS(dev));
 	if (data == 0xFC)
 		kernel_panic("PS/2 Controller Bad");
 	else if (data != 0x55)
@@ -126,11 +137,11 @@ void ps2_init_hardware(ps2ctrl_t* dev)
 
 	// Sometimes testing the PS/2 controller causes it to be reset,
 	// so we need to initialise it again just to be sage.
-	ps2_st_init(dev);
+	pcps2_st_init(dev);
 
 	// Test 1st PS/2 Port
-	ps2_write_command(dev, 0xAB);
-	data = ps2_read_resp(dev);
+	pcps2_write_command(BUS(dev), 0xAB);
+	data = pcps2_read_resp(BUS(dev));
 	if (data == 1)
 		kernel_panic("PS/2 Clock Stuck Low");
 	else if (data == 2)
@@ -142,27 +153,27 @@ void ps2_init_hardware(ps2ctrl_t* dev)
 	kprintf("PS/2 Port 1 OK\n");
 
 	// Enable Port 1
-	ps2_write_command(dev, 0xAE);
+	pcps2_write_command(BUS(dev), 0xAE);
 
 	// Set Controller Configuration Byte (Enable interrupts)
-	unsigned int config = ps2_read_ram(dev, 0);
+	unsigned int config = pcps2_read_ram(BUS(dev), 0);
 	config |= 1;
-	ps2_write_ram(dev, 0, config);
+	pcps2_write_ram(BUS(dev), 0, config);
 
 	// Reset Device
-	ps2_write_data(dev, 0xFF);
+	pcps2_write_data(BUS(dev), 0xFF);
 	unsigned char resp;
-	while ((resp = ps2_read_data(dev)) != 0xFA)
+	while ((resp = pcps2_read_data(BUS(dev))) != 0xFA)
 	{
 		if (resp == 0xFC)
 			kernel_panic("PS/2 Device 1 Reset Failure");
 		else if (resp == 0xFE)
-			ps2_write_data(dev, 0xFF);
+			pcps2_write_data(BUS(dev), 0xFF);
 	}
 	kprintf("PS/2 Device 1 Ready\n");
 }
 
-void ps2_init(void)
+void pcps2_init(void)
 {
 	/*
 	 * If ACPI was supported we would have to check if such a controller
@@ -170,18 +181,26 @@ void ps2_init(void)
 	 * of the i386.
 	 * Therefore ACPI support in PizzaOS is purely optional, if ever implemented.
 	 */
-	module_t* mod = module_register("ps2", CONTROLLER, NULL, &ps2_dev_req);
+	module_t* mod = module_register("ps2", PS2, NULL, &pcps2_dev_req);
 	device_t* dev = device_register(mod);
 	ps2ctrl_t* ctrl = malloc(sizeof(ps2ctrl_t));
 	lock_create(&ctrl->lock);
 	dev->data = (void*) ctrl;
 	interrupt_register(dev, 0x21);
 
-	// Init the hardware.
-	ps2_init_hardware(ctrl);
+	ctrl->bus.read_status = pcps2_read_status;
+	ctrl->bus.read_data = pcps2_read_data;
+	ctrl->bus.write_data = pcps2_write_data;
+	ctrl->bus.write_command = pcps2_write_command;
+	ctrl->bus.wait = pcps2_wait;
+
+	// Initialises the hardware.
+	pcps2_init_hardware(ctrl);
 
 	// Wait for it to be initialised.
-	ps2_wait(ctrl);
+	pcps2_wait(BUS(ctrl));
+
+	ps2_register(dev, &ctrl->bus);
 }
 
 

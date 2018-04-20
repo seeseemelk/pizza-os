@@ -1,7 +1,7 @@
+#include <dev/pcps2.h>
 #include "pckbd.h"
 #include "devices.h"
 #include "cdefs.h"
-#include "dev/ps2.h"
 
 module_t* pckbd;
 device_t* keyboard;
