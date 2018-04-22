@@ -8,6 +8,6 @@
 #ifndef DEV_PCKBD_H_
 #define DEV_PCKBD_H_
 
-void pcbkd_init();
+void pcbkd_init(ps2_bus_t* bus);
 
 #endif /* DEV_PCKBD_H_ */
