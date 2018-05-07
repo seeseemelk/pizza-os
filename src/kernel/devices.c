@@ -11,47 +11,57 @@
 #include <stddef.h>
 #include <string.h>
 
-module_t modules[MAX_MODULES];
-device_t devices[MAX_DEVICES];
+typedef struct
+{
+	device_t* dev;
+	void* bus;
+} dev_bus_t;
+
+module_t* modules[MAX_MODULES];
+device_t* devices[MAX_DEVICES];
 int num_modules_loaded = 0;
 int num_devices_loaded = 0;
 
-module_t* module_register(const char* name, module_type type,
+int num_bus_loaded[BUSCOUNT];
+dev_bus_t busses[BUSCOUNT][MAX_DEVICES];
+
+void module_register(module_t* module, const char* name,
 		fn_module_request* fn_mod_req, fn_device_request* fn_dev_req)
 {
-	module_t* module = modules + num_modules_loaded;
+	modules[num_modules_loaded] = module;
 	module->name = name;
-	module->type = type;
 	module->fn_mod_req = fn_mod_req;
 	module->fn_dev_req = fn_dev_req;
 	module->major = num_modules_loaded;
 	module->num_devices_loaded = 0;
 	num_modules_loaded++;
-	return module;
 }
 
-device_t* device_register(module_t* module)
+void device_register(device_t* device, module_t* module)
 {
-	device_t* device = devices + num_devices_loaded++;
+	devices[num_devices_loaded++] = device;
 	device->module = module;
 	device->minor = module->num_devices_loaded;
 	module->num_devices_loaded++;
-	return device;
+}
+
+void device_register_bus(device_t* device, bus_t type, void* bus)
+{
+	dev_bus_t* dev_bus = busses[type][num_bus_loaded[type]++];
+	dev_bus->dev = device;
+	dev_bus->bus = bus;
 }
 
 /*
- * Functions for finding a specific device.
+ * Functions for finding a device for a specific bus.
  */
-device_t* device_get_first(module_type type)
+device_t* device_get_first(bus_t type)
 {
-	for (int i = 0; i < num_devices_loaded; i++)
-	{
-		if (devices[i].module->type == type)
-		{
-			return &devices[i];
-		}
-	}
-	return NULL;
+	int loaded = num_bus_loaded[type];
+	if (loaded > 0)
+		return busses[type][loaded];
+	else
+		return NULL;
 }
 
 module_t* module_get(const char* name)

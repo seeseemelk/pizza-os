@@ -5,6 +5,7 @@
 
 #ifndef DEV_DEVICES_H_
 #define DEV_DEVICES_H_
+#include "bus.h"
 #include <stddef.h>
 
 typedef enum module_type module_type;
@@ -25,48 +26,12 @@ typedef int(fn_module_request)(struct mod_req_t*);
 typedef int(fn_device_request)(struct dev_req_t*);
 
 /**
- * Defines the type of module a certain module is.
- */
-enum module_type
-{
-	OTHER, BLOCK, TERMINAL, FILESYSTEM, KEYBOARD,
-
-	/* Controller types */
-	PS2
-};
-
-/**
  * Defines the different types of requests that can be made to a module.
  */
 enum request_type
 {
 	UNLOAD, INTERRUPT, /* General request types */
 	PAGING_ENABLED, /* Called when paging gets enabled */
-
-	READ, WRITE, FLUSH, /* File request types */
-	/**
-	 * A `MOUNT` request will be sent to a module.
-	 * This will cause the module to create a new device and return a pointer to it.
-	 * @param arg1 Contains a pointer to the block device to read from.
-	 * If no block device is required this will be `NULL`.
-	 * @param arg2 The inode number for the root directory. This is so that the VFS
-	 * can make sure that the mounted filesystem and the parent filesystem share the
-	 * same inode number for the mountpoint.
-	 * @return A pointer to the newly created device.
-	 */
-	MOUNT,
-	STAT, /* Filesystem request types */
-
-	/**
-	 * Creates a new directory iterator.
-	 * @param arg1 The inode of the directory to get an iterator for.
-	 * @return A pointer to a newly created `iterator`.
-	 */
-	DIROPEN,
-	DIRCLOSE,
-	DIRNEXT,
-
-	GET_CHAR, SET_CHAR, GET_WIDTH, GET_HEIGHT, GET_CURSOR_X, GET_CURSOR_Y, SET_CURSOR, SCROLL /* Terminal types */
 };
 
 /**
@@ -76,7 +41,6 @@ struct module_t
 {
 	unsigned short major; /**< The major number contains the uniquely identifying number for the module. */
 	const char* name; /**< The name is a simple string that will be displayed in logs. */
-	module_type type; /**< The type of module this is. */
 	fn_module_request* fn_mod_req; /**< A pointer to a function that will handle all the request for the module. */
 	fn_device_request* fn_dev_req; /**< A pointer to a function that will handle all the request for devices owned by the module. */
 	int num_devices_loaded;
@@ -89,7 +53,6 @@ struct device_t
 {
 	const module_t* module; /**< A pointer to the module that handles this device. */
 	unsigned short minor; /** The minor number. This number will uniquely specific a specific device. */
-	void* data; /** Can be used by the module itself as a pointer to a data structure containing extra information needed during runtime. */
 };
 
 /**
@@ -129,18 +92,23 @@ struct mod_req_t
  * Either one of these can be `NULL` if module requests or device
  * requests arent't needed.
  */
-module_t* module_register(const char* name, module_type type,
+void module_register(module_t* module, const char* name,
 		fn_module_request* fn_mod_req, fn_device_request* fn_dev_req);
 
 /**
  * Registers a new device.
  */
-device_t* device_register(module_t* module);
+void device_register(device_t* device, module_t* module);
+
+/**
+ * Registers a device as a bus.
+ */
+void device_register_bus(device_t*, bus_t type, void* bus);
 
 /*
  * Functions for finding a specific device.
  */
-device_t* device_get_first(module_type type);
+device_t* device_get_first(bus_t type);
 
 /**
  * Gets a module by its name.

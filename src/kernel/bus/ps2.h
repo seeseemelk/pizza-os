@@ -10,13 +10,13 @@
 typedef struct ps2_bus_t ps2_bus_t;
 struct ps2_bus_t
 {
+	device_t* dev;
 	u8 (*read_status)(ps2_bus_t* dev);
 	void(*write_status)(ps2_bus_t* dev, u8 data);
 	u8(*read_data)(ps2_bus_t* dev);
 	void(*write_data)(ps2_bus_t* dev, u8 data);
 	void(*write_command)(ps2_bus_t* dev, u8 data);
 	void(*wait)(ps2_bus_t* dev);
-	device_t* dev;
 };
 
 /**
