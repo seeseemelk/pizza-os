@@ -180,14 +180,15 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 
 	//kprintf("Ok\n");
 	pcps2_init();
-	while(1);
 
+	/*
 	kprintf("Initialising VFS\n");
 #ifdef ENABLE_TMPFS
 	tmpfs_init();
 #endif
 	vfs_init();
 	kprintf("Done\n");
+	*/
 
 	//while (1);
 	sched_main();

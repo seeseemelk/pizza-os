@@ -18,6 +18,7 @@
 
 typedef struct
 {
+	device_t* dev;
 	int num_ports;
 	lock_t lock;
 	ps2_bus_t bus;
