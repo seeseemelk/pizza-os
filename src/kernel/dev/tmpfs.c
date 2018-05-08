@@ -55,7 +55,8 @@ node_t* tmpfs_create_dir(dev_info_t* dev_info, node_t* parent, const char* name)
 
 int tmpfs_mod_req(mod_req_t* request)
 {
-	request_type type = request->type;
+	UNUSED(request);
+	/*request_type type = request->type;
 	if (type == MOUNT) {
 		device_t* device = device_register(tmpfs);
 		dev_info_t* dev_info = malloc(sizeof(dev_info_t));
@@ -66,12 +67,14 @@ int tmpfs_mod_req(mod_req_t* request)
 	} else {
 		kernel_panic("Unknown request type on TMPFS module");
 		return 0;
-	}
+	}*/
+	return 0;
 }
 
 int tmpfs_dev_req(dev_req_t* request)
 {
-	dev_info_t* dev = (dev_info_t*) request->device->data;
+	UNUSED(request);
+	/*dev_info_t* dev = (dev_info_t*) request->device->data;
 
 	request_type type = request->type;
 	if (type == DIROPEN) {
@@ -99,13 +102,14 @@ int tmpfs_dev_req(dev_req_t* request)
 	} else {
 		kernel_panic("Unknown request type on TMPFS module");
 		return 0;
-	}
+	}*/
+	return 0;
 }
 
 void tmpfs_init()
 {
-	tmpfs = module_register("tmpfs", FILESYSTEM, &tmpfs_mod_req, &tmpfs_dev_req);
-	kprintf("tmpfs loaded as %d\n", tmpfs->major);
+	//tmpfs = module_register("tmpfs", FILESYSTEM, &tmpfs_mod_req, &tmpfs_dev_req);
+	//kprintf("tmpfs loaded as %d\n", tmpfs->major);
 }
 
 

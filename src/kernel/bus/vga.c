@@ -1,13 +1,14 @@
 #include "bus/vga.h"
+#include "cdefs.h"
 
 void vga_get_size(vga_bus_t* vga, int* width, int* height)
 {
 	vga->get_size(vga->dev, width, height);
 }
 
-void vga_get_char(vga_bus_t* vga, int x, int y)
+char vga_get_char(vga_bus_t* vga, int x, int y)
 {
-	vga->get_char(vga->dev, x, y);
+	return vga->get_char(vga->dev, x, y);
 }
 
 void vga_set_char(vga_bus_t* vga, int x, int y, char c)

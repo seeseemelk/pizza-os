@@ -108,7 +108,7 @@ void device_register_bus(device_t*, bus_t type, void* bus);
 /*
  * Functions for finding a specific device.
  */
-device_t* device_get_first(bus_t type);
+void* device_get_first(bus_t type);
 
 /**
  * Gets a module by its name.

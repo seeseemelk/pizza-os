@@ -21,7 +21,7 @@
 
 typedef struct
 {
-	device_t* dev;
+	device_t dev;
 	int width;
 	int height;
 	char* memory;
@@ -30,8 +30,7 @@ typedef struct
 } vga_t;
 
 module_t vga_mod;
-vga_t vga_dev =
-{ .width = 80, .height = 25, .cursor_x = 0, .cursor_y = 0 };
+vga_t vga_dev = { .width = 80, .height = 25, .cursor_x = 0, .cursor_y = 0 };
 
 static void vga_write_cursor_address(vga_t* vga)
 {

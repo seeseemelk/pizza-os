@@ -7,6 +7,7 @@
 
 #ifndef BUS_VGA_H_
 #define BUS_VGA_H_
+#include "devices.h"
 
 typedef struct
 {
@@ -20,7 +21,7 @@ typedef struct
 } vga_bus_t;
 
 void vga_get_size(vga_bus_t* vga, int* width, int* height);
-void vga_get_char(vga_bus_t* vga, int x, int y);
+char vga_get_char(vga_bus_t* vga, int x, int y);
 void vga_set_char(vga_bus_t* vga, int x, int y, char c);
 void vga_get_cursor(vga_bus_t* vga, int* x, int* y);
 void vga_set_cursor(vga_bus_t* vga, int x, int y);

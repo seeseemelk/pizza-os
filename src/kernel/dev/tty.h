@@ -8,8 +8,9 @@
 #ifndef DEV_TTY_H_
 #define DEV_TTY_H_
 #include "devices.h"
+#include "bus/vga.h"
 
-void tty_set_tty(device_t* device);
+void tty_set_tty(vga_bus_t* device);
 
 char tty_get_char(const int x, const int y);
 void tty_set_char(const int x, const int y, char c);

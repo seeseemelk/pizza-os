@@ -22,7 +22,7 @@ device_t* devices[MAX_DEVICES];
 int num_modules_loaded = 0;
 int num_devices_loaded = 0;
 
-int num_bus_loaded[BUSCOUNT];
+int num_bus_loaded[BUSCOUNT] = {0};
 dev_bus_t busses[BUSCOUNT][MAX_DEVICES];
 
 void module_register(module_t* module, const char* name,
@@ -47,7 +47,8 @@ void device_register(device_t* device, module_t* module)
 
 void device_register_bus(device_t* device, bus_t type, void* bus)
 {
-	dev_bus_t* dev_bus = busses[type][num_bus_loaded[type]++];
+	dev_bus_t* dev_bus = busses[type] + num_bus_loaded[type];
+	num_bus_loaded[type]++;
 	dev_bus->dev = device;
 	dev_bus->bus = bus;
 }
@@ -55,11 +56,11 @@ void device_register_bus(device_t* device, bus_t type, void* bus)
 /*
  * Functions for finding a device for a specific bus.
  */
-device_t* device_get_first(bus_t type)
+void* device_get_first(bus_t type)
 {
 	int loaded = num_bus_loaded[type];
 	if (loaded > 0)
-		return busses[type][loaded];
+		return busses[type][0].bus;
 	else
 		return NULL;
 }
@@ -68,7 +69,7 @@ module_t* module_get(const char* name)
 {
 	for (int i = 0; i < num_modules_loaded; i++)
 	{
-		module_t* module = modules + i;
+		module_t* module = modules[i];
 		if (strcmp(module->name, name) == 0)
 			return module;
 	}
@@ -79,7 +80,7 @@ device_t* device_get_by_minor(unsigned short major, unsigned short minor)
 {
 	for (int i = 0; i < num_devices_loaded++; i++)
 	{
-		device_t* dev = devices + i;
+		device_t* dev = devices[i];
 		if (dev->minor == minor && dev->module->major == major)
 			return dev;
 	}
