@@ -16,15 +16,14 @@ typedef struct
 	signal_t int_signal;
 } pckbd_t;
 
-module_t mod;
-pckbd_t kbd;
-
+module_t* mod;
+device_t* kbd;
+/*
 int pckbd_req(dev_req_t* req)
 {
 	if (req->type == READ)
 	{
-		/*lock_wait(lock);
-		lock_lock(lock)*/
+		//lock_lock();
 		return 0;
 	}
 	else
@@ -33,12 +32,16 @@ int pckbd_req(dev_req_t* req)
 		return 0;
 	}
 }
-
+*/
 void pckbd_init(ps2_bus_t* bus)
 {
-	module_register(&mod, "pckbd", KEYBOARD, NULL, &pckbd_req);
-	device_register(DEV(&kbd), &mod);
+	UNUSED(bus);
+	/*mod = module_register("pckbd", KEYBOARD, NULL, &pckbd_req);
+	kbd = device_register(mod);
 
-	kbd.bus = bus;
-	signal_new(&kbd.int_signal);
+	pckbd_t* pckbd = malloc(sizeof(pckbd_t));
+	pckbd->bus = bus;
+	lock_create(&pckbd->lock);
+
+	kbd->data = pckbd;*/
 }

@@ -50,19 +50,23 @@ void vfs_diropen(DIR* dir, const char* path)
 	device_t* dev = vfs_finddev(path);
 	vfs_save_devi(dev, &dir->dev);
 	dir->inode = 0;
-	dir->dev_it = (void*) device_invoke1(dev, DIROPEN, dir->inode);
+	//dir->dev_it = (void*) device_invoke1(dev, DIROPEN, dir->inode);
 }
 
 void vfs_dirclose(DIR* dir)
 {
 	device_t* dev = vfs_getdev(&dir->dev);
-	device_invoke1(dev, DIRCLOSE, (int) dir->dev_it);
+	UNUSED(dev);
+	//device_invoke1(dev, DIRCLOSE, (int) dir->dev_it);
 }
 
 int vfs_dirnext(DIR* dir, dirent_t* dirent)
 {
+	UNUSED(dirent);
 	device_t* dev = vfs_getdev(&dir->dev);
-	return device_invoke2(dev, DIRNEXT, (int) dir->dev_it, (int) dirent);
+	UNUSED(dev);
+	//return device_invoke2(dev, DIRNEXT, (int) dir->dev_it, (int) dirent);
+	return 0;
 }
 
 void tvfs_list(const char* path)
@@ -107,7 +111,7 @@ void vfs_init()
 	module_t* tmpfs = module_get("tmpfs");
 	if (tmpfs == NULL)
 		kernel_panic("tmpfs module not loaded");
-	mounts[0].dev = (device_t*) module_invoke(tmpfs, MOUNT);
+	//mounts[0].dev = (device_t*) module_invoke(tmpfs, MOUNT);
 	//vfs_save_devi(dev, &mounts[0].dev);
 	mounts[0].path = "/";
 	num_mounts++;

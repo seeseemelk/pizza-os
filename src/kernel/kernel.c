@@ -130,8 +130,8 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 
 	// Enable VGA output if possible
 	#ifdef ENABLE_VGA
-	device_t* vga_dev = vga_init();
-	tty_set_tty(vga_dev);
+	vga_init();
+	tty_set_tty(device_get_first(VGA));
 	#endif
 	tty_clear();
 
@@ -181,12 +181,14 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	//kprintf("Ok\n");
 	pcps2_init();
 
+	/*
 	kprintf("Initialising VFS\n");
 #ifdef ENABLE_TMPFS
 	tmpfs_init();
 #endif
 	vfs_init();
 	kprintf("Done\n");
+	*/
 
 	//while (1);
 	sched_main();

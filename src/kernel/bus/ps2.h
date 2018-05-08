@@ -10,13 +10,13 @@
 typedef struct ps2_bus_t ps2_bus_t;
 struct ps2_bus_t
 {
-	u8 (*read_status)(ps2_bus_t* dev);
-	void(*write_status)(ps2_bus_t* dev, u8 data);
-	u8(*read_data)(ps2_bus_t* dev);
-	void(*write_data)(ps2_bus_t* dev, u8 data);
-	void(*write_command)(ps2_bus_t* dev, u8 data);
-	void(*wait)(ps2_bus_t* dev);
 	device_t* dev;
+	u8 (*read_status)(device_t* dev);
+	void(*write_status)(device_t* dev, u8 data);
+	u8(*read_data)(device_t* dev);
+	void(*write_data)(device_t* dev, u8 data);
+	void(*write_command)(device_t* dev, u8 data);
+	void(*wait)(device_t* dev);
 };
 
 /**
@@ -52,20 +52,5 @@ void ps2_write_command(ps2_bus_t* bus, u8 data);
  * @param bus The device to wait for.
  */
 void ps2_wait(ps2_bus_t* bus);
-
-/**
- * Registers a PS/2 controller.
- * @param dev The device driver that accesses the PS/2 device.
- * @param bus Contains function pointers to the device driver.
- */
-void ps2_register(device_t* dev, ps2_bus_t* bus);
-
-/**
- * Gets a given device as a PS/2 bus.
- * @param dev The device to get.
- * @return The related bus struct, or `NULL` if the device is not
- *  a registered PS/2 bus.
- */
-ps2_bus_t* ps2_get(device_t* dev);
 
 #endif /* BUS_PS2_H_ */
