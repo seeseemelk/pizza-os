@@ -5,9 +5,10 @@
 #include "cdefs.h"
 #include "interrupt.h"
 #include "kernel.h"
-#include "thread/lock.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include "thread/signal.h"
+#include "thread/mutex.h"
 
 #define PS2_DAT 0x60
 #define PS2_STA 0x64
@@ -20,7 +21,8 @@ typedef struct ps2ctrl_t
 {
 	ps2_bus_t bus;
 	int num_ports;
-	lock_t lock;
+	mutex_t lock;
+	signal_t int_signal;
 } ps2ctrl_t;
 
 ps2ctrl_t* pcps2_get_controller(const device_t* dev)
@@ -28,67 +30,69 @@ ps2ctrl_t* pcps2_get_controller(const device_t* dev)
 	return (ps2ctrl_t*) dev->data;
 }
 
-/**
- * Locks the device.
- * Note that operations can still be performed as normal.
- * The only use it has is to prevent race conditions when
- * using ps2_wait().
- */
 void pcps2_lock(ps2_bus_t* dev)
 {
-	lock_lock(&CTRL(dev)->lock);
+	mutex_lock(&CTRL(dev)->lock);
+}
+
+void pcps2_unlock(ps2_bus_t* dev)
+{
+	mutex_unlock(&CTRL(dev)->lock);
+}
+
+void pcps2_signal_unset(ps2_bus_t* dev)
+{
+	signal_unset(&CTRL(dev)->int_signal);
+}
+
+void pcps2_signal_wait(ps2_bus_t* dev)
+{
+	signal_wait(&CTRL(dev)->int_signal);
 }
 
 unsigned char pcps2_read_status(ps2_bus_t* dev)
 {
-	pcps2_lock(dev);
+	UNUSED(dev);
 	return inb(PS2_STA);
 }
 
 unsigned char pcps2_read_resp(ps2_bus_t* dev)
 {
-	pcps2_lock(dev);
+	UNUSED(dev);
 	while ((inb(PS2_STA) & 1) == 0) ;
 	return inb(PS2_DAT);
 }
 
 unsigned char pcps2_read_data(ps2_bus_t* dev)
 {
-	pcps2_lock(dev);
+	UNUSED(dev);
 	return inb(PS2_DAT);
 }
 
 void pcps2_write_data(ps2_bus_t* dev, unsigned char data)
 {
-	pcps2_lock(dev);
+	UNUSED(dev);
 	outb(PS2_DAT, data);
 }
 
 void pcps2_write_command(ps2_bus_t* dev, unsigned char command)
 {
-	pcps2_lock(dev);
+	UNUSED(dev);
 	outb(PS2_CMD, command);
 }
 
 unsigned char pcps2_read_ram(ps2_bus_t* dev, unsigned char i)
 {
-	pcps2_lock(dev);
 	outb(PS2_CMD, 0x20 + i);
 	return pcps2_read_resp(dev);
 }
 
 void pcps2_write_ram(ps2_bus_t* dev, unsigned char i, unsigned char val)
 {
-	pcps2_lock(dev);
+	UNUSED(dev);
 	outb(PS2_CMD, 0x60 + i);
 	while ((inb(PS2_STA) & 2) == 1);
 	outb(PS2_DAT, val);
-}
-
-void pcps2_wait(ps2_bus_t* dev)
-{
-	lock_wait(&CTRL(dev)->lock);
-	lock_lock(&CTRL(dev)->lock);
 }
 
 int pcps2_dev_req(dev_req_t* req)
@@ -97,7 +101,8 @@ int pcps2_dev_req(dev_req_t* req)
 	{
 		interrupt_accept(req->arg2);
 		ps2ctrl_t* dev = pcps2_get_controller(req->device);
-		lock_signal(&dev->lock);
+		signal_signal(&dev->int_signal);
+		//lock_signal(&dev->lock);
 	}
 	else
 		kernel_panic("PS2: Unknown request type");
@@ -181,10 +186,10 @@ void pcps2_init(void)
 	 * of the i386.
 	 * Therefore ACPI support in PizzaOS is purely optional, if ever implemented.
 	 */
-	module_t* mod = module_register("ps2", PS2, NULL, &pcps2_dev_req);
+	/*module_t* mod = module_register("ps2", PS2, NULL, &pcps2_dev_req);
 	device_t* dev = device_register(mod);
 	ps2ctrl_t* ctrl = malloc(sizeof(ps2ctrl_t));
-	lock_create(&ctrl->lock);
+	signal_new(&ctrl->int_signal);
 	dev->data = (void*) ctrl;
 	interrupt_register(dev, 0x21);
 
@@ -192,15 +197,15 @@ void pcps2_init(void)
 	ctrl->bus.read_data = pcps2_read_data;
 	ctrl->bus.write_data = pcps2_write_data;
 	ctrl->bus.write_command = pcps2_write_command;
-	ctrl->bus.wait = pcps2_wait;
+	ctrl->bus.wait = pcps2_signal_wait;
 
 	// Initialises the hardware.
 	pcps2_init_hardware(ctrl);
 
 	// Wait for it to be initialised.
-	pcps2_wait(BUS(ctrl));
+	pcps2_signal_wait(BUS(ctrl));
 
-	ps2_register(dev, &ctrl->bus);
+	ps2_register(dev, &ctrl->bus);*/
 }
 
 

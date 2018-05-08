@@ -128,14 +128,21 @@ struct mod_req_t
  * that will be used to handle module- and device requests.
  * Either one of these can be `NULL` if module requests or device
  * requests arent't needed.
+ * @param module A module struct that will be used to store information about the module.
+ * @param name A name for the driver.
+ * @param type The type of device the module is responsible for.
+ * @param fn_mod_req The module request function that is responsible for handling requests
+ *        to the module.
+ * @param dn_dev_req The device request function that is responsible for handling requests
+ *        to a device owned by the module.
  */
-module_t* module_register(const char* name, module_type type,
+void module_register(module_t* module, const char* name, module_type type,
 		fn_module_request* fn_mod_req, fn_device_request* fn_dev_req);
 
 /**
  * Registers a new device.
  */
-device_t* device_register(module_t* module);
+void device_register(device_t* dev, module_t* module);
 
 /*
  * Functions for finding a specific device.

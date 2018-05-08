@@ -78,8 +78,8 @@ device_t* vga_init()
 	// Set the CRT controller address to 0x03B4 and 0x03B5
 	outb(0x3C2, (inb(0x3CC) & 0b11111110) | 0b00000010);
 
-	vga_module = module_register("vga", TERMINAL, NULL, &vga_dev_request);
-	vga_device = device_register(vga_module);
+	module_register(vga_module, "vga", TERMINAL, NULL, &vga_dev_request);
+	device_register(vga_device, vga_module);
 	vga_memory = device_mmap((void*) 0xB8000, KB(8));
 	interrupt_register(vga_device, 0x20);
 	return vga_device;

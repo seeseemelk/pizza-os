@@ -49,7 +49,7 @@ void list_add(list_t* list, void* item)
 	if (list->size == list->max_size)
 	{
 		list->max_size *= 2;
-		list->contents = realloc(list->contents, list->max_size);
+		list->contents = realloc(list->contents, sizeof(void*) * list->max_size);
 	}
 
 	list->contents[list->size] = item;

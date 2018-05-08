@@ -57,7 +57,7 @@ int tmpfs_mod_req(mod_req_t* request)
 {
 	request_type type = request->type;
 	if (type == MOUNT) {
-		device_t* device = device_register(tmpfs);
+		//device_t* device = device_register(tmpfs);
 		dev_info_t* dev_info = malloc(sizeof(dev_info_t));
 		node_t* root_dir = tmpfs_create_dir(dev_info, NULL, "");
 		device->data = (void*) dev_info;
