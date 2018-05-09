@@ -83,7 +83,7 @@ void pcps2_write_ram(device_t* dev, unsigned char i, unsigned char val)
 
 void pcps2_signal_wait(device_t* dev)
 {
-
+	UNUSED(dev);
 }
 
 void pcps2_wait(device_t* dev)

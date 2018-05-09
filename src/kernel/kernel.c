@@ -102,6 +102,28 @@ void kernel_init_paging()
 	page_enable();
 }
 
+void thread1()
+{
+	while (1)
+	{
+		kprintf("Hello from %d\n", 1);
+	}
+}
+
+void thread2()
+{
+	while (1)
+	{
+		kprintf("Hello from %d\n", 1);
+	}
+}
+
+void thread_test()
+{
+	thread_create(thread1);
+	thread_create(thread2);
+}
+
 void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 {
 	UNUSED(magic);
@@ -191,6 +213,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	*/
 
 	//while (1);
+	thread_test();
 	sched_main();
 	while (1);
 
