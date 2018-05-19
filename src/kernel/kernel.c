@@ -142,13 +142,19 @@ void kernel_init_paging()
 	page_enable();
 }
 
-void kernel_loop()
+void kernel_loop1()
 {
 	while (1)
 	{
-		kernel_log("Looped");
-		//thread_set_paused(current_thread, true);
-		//thread_leave();
+		kernel_log("Loop1");
+	}
+}
+
+void kernel_loop2()
+{
+	while (1)
+	{
+		kernel_log("Loop2");
 	}
 }
 
@@ -242,7 +248,8 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	*/
 
 	//while (1);
-	//thread_create(kernel_loop);
+	thread_create(kernel_loop1);
+	thread_create(kernel_loop2);
 	sched_main();
 	while (1);
 
