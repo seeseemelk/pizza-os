@@ -121,7 +121,9 @@ void cpu_int_handler(int irq, int error_code)
 void arch_interrupt_finish(irq_t* irq)
 {
 	if (irq->num >= 0x20)
-			pic_send_eoi(irq->num);
+	{
+		pic_send_eoi(irq->num);
+	}
 }
 
 void interrupt_enable()

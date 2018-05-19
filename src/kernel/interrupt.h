@@ -59,7 +59,7 @@ void interrupt_finish(irq_t* irq);
  * Lets the chosen architecture finish handling the
  * interrupt.
  */
-void arch_interrupt_finish();
+void arch_interrupt_finish(irq_t* irq);
 
 /**
  * @internal

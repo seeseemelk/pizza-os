@@ -80,7 +80,8 @@ void interrupt_finish(irq_t* irq)
 {
 	if (!irq->finished)
 	{
-		arch_interrupt_finish();
+		irq->finished = true;
+		arch_interrupt_finish(irq);
 	}
 }
 

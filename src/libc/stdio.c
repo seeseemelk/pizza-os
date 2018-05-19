@@ -87,6 +87,9 @@ int kvprintf(const char* format, va_list args)
 			case 'u':
 				length += print_unumber(va_arg(args, unsigned int), 10, false);
 				break;
+			case 'l':
+				length += print_unumber(va_arg(args, unsigned long long), 10, true);
+				break;
 			case 'o':
 				length += print_unumber(va_arg(args, unsigned int), 8, false);
 				break;

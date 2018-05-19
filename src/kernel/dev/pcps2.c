@@ -7,7 +7,6 @@
 #include "kernel.h"
 #include "thread/lock.h"
 #include <stdlib.h>
-#include <stdio.h>
 
 #define PS2_DAT 0x60
 #define PS2_STA 0x64
@@ -131,7 +130,7 @@ void pcps2_init_hardware(ps2ctrl_t* dev)
 		kernel_panic("PS/2 Controller Bad");
 	else if (data != 0x55)
 		kernel_panic("PS/2 unknown status flag 0x%X", data);
-	kprintf("PS/2 Controller OK\n");
+	kernel_log("PS/2 Controller OK");
 
 	// Sometimes testing the PS/2 controller causes it to be reset,
 	// so we need to initialise it again just to be sage.
@@ -148,7 +147,7 @@ void pcps2_init_hardware(ps2ctrl_t* dev)
 		kernel_panic("PS/2 Data Stuck Low");
 	else if (data == 4)
 		kernel_panic("PS/2 Data Stuck High");
-	kprintf("PS/2 Port 1 OK\n");
+	kernel_log("PS/2 Port 1 OK");
 
 	// Enable Port 1
 	pcps2_write_command(DEV(dev), 0xAE);
@@ -168,7 +167,7 @@ void pcps2_init_hardware(ps2ctrl_t* dev)
 		else if (resp == 0xFE)
 			pcps2_write_data(DEV(dev), 0xFF);
 	}
-	kprintf("PS/2 Device 1 Ready\n");
+	kernel_log("PS/2 Device 1 Ready");
 }
 
 void pcps2_init(void)
