@@ -93,8 +93,9 @@ int pcps2_dev_req(dev_req_t* req)
 {
 	if (req->type == INTERRUPT)
 	{
-		interrupt_accept(req->arg2);
+		//interrupt_accept(req->arg2);
 		//lock_signal(&dev->lock);
+		return INT_ACCEPT;
 	}
 	else
 		kernel_panic("PS2: Unknown request type");
