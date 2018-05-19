@@ -29,11 +29,11 @@ void thread_start()
 
 void thread_switch(thread_t* thread)
 {
-	//interrupt_disable();
+	interrupt_disable();
 	thread_save(current_thread->data);
 	current_thread = thread;
 	thread_enter(thread->data);
-	//interrupt_enable();
+	interrupt_enable();
 }
 
 /**
@@ -79,6 +79,7 @@ void thread_free(thread_t* thread)
 void thread_leave()
 {
 	thread_switch(threads);
+	interrupt_enable();
 }
 
 void thread_init()

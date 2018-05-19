@@ -18,8 +18,6 @@ typedef struct int_handler int_handler;
 
 device_t** handlers[256]; /* Contains an array of pointers to devices (handlers) for each interrupt */
 int num_handlers[256]; /* Contains the number of handlers registered for each interrupt */
-int int_count = 0; /* A counter that can be used to individually track interrupts */
-int last_handled = -1; /* The id of the last handled interrupt */
 
 void interrupt_register(device_t* dev, int interrupt)
 {
@@ -40,39 +38,51 @@ void interrupt_init()
 	arch_interrupt_init();
 }
 
-void interrupt_handle(int irq, int code)
+void interrupt_handle(int int_num, int code)
 {
-	if (irq == 0x6) // Invalid opcode
+	irq_t irq = {
+		.num = int_num,
+		.error_code = code,
+		.finished = false
+	};
+
+	if (irq.num == 0x6) // Invalid opcode
 	{
 		kernel_panic("Invalid opcode - This ain't pizza?");
 	}
-	else if (irq == 0xD) // General protection fault
+	else if (irq.num == 0xD) // General protection fault
 	{
 		kernel_panic("General Protection Fault (error: 0x%X) - Forgot how to eat pizza?", code);
 	}
-	else if (irq == 0xE) // Page fault
+	else if (irq.num == 0xE) // Page fault
 	{
 		kernel_panic("Page Fault (error: 0x%X) - No pizza on this plate", code);
 	}
 	else
 	{
-		int id = int_count++;
-		device_t** devices = handlers[irq];
-		int num_devices = num_handlers[irq];
+		device_t** devices = handlers[irq.num];
+		int num_devices = num_handlers[irq.num];
 		for (int i = 0; i < num_devices; i++)
 		{
 			device_t* dev = devices[i];
-			device_invoke2(dev, INTERRUPT, irq, id);
-			if (last_handled == id)
+			irq_status_t status = device_invoke1(dev, INTERRUPT, (int) &irq);
+			if (status == INT_ACCEPT)
+			{
+				interrupt_finish(&irq);
 				return;
+			}
 		}
 		kprintf("Unhandled interrupt 0x%X\n", irq);
 	}
 }
 
-void interrupt_accept(int interrupt_id)
+void interrupt_finish(irq_t* irq)
 {
-	last_handled = interrupt_id;
+	if (!irq->finished)
+	{
+		irq->finished = true;
+		arch_interrupt_finish(irq);
+	}
 }
 
 
