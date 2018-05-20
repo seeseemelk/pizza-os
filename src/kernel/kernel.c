@@ -13,6 +13,7 @@
 #include "sched.h"
 #include "cpu.h"
 #include "vfs.h"
+#include "thread/mutex.h"
 
 #include "dev/tmpfs.h"
 
@@ -142,11 +143,19 @@ void kernel_init_paging()
 	page_enable();
 }
 
+mutex_t mutex;
+void thread_print(int i)
+{
+	mutex_lock(&mutex);
+	kernel_log("Hello from %d", i);
+	mutex_unlock(&mutex);
+}
+
 void thread1()
 {
 	while (1)
 	{
-		kprintf("Hello from %d\n", 1);
+		thread_print(1);
 	}
 }
 
@@ -154,7 +163,7 @@ void thread2()
 {
 	while (1)
 	{
-		kprintf("Hello from %d\n", 1);
+		thread_print(2);
 	}
 }
 
@@ -241,6 +250,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	//asm("int $0x20");
 
 	//kprintf("Ok\n");
+	mutex_new(&mutex);
 	pit_init();
 	pcps2_init();
 

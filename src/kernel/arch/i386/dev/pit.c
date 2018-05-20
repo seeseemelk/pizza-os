@@ -62,8 +62,8 @@ void pit_init()
 	kernel_log("Setting to mode 0x%X", *(u8*)&cmd);
 	// Use 59635 for 50 milliseconds exact
 	// This is just shy of 1 millisecond
-	//unsigned short divisor = 1193;
-	unsigned short divisor = 50;
+	unsigned short divisor = 1193;
+	//unsigned short divisor = 50;
 	dev.delay = (1000000ULL * divisor) / 1193180;
 	outb(COMMAND, *(u8*)&cmd);
 	outb(PORT0, (divisor) & 0xFF);

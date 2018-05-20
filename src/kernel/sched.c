@@ -16,9 +16,12 @@ unsigned long long time_since_last_switch = 0;
 void sched_notify(irq_t* irq, unsigned long long interval)
 {
 	time_since_last_switch += interval;
-	//if (time_since_last_switch > 20000)
-	if (time_since_last_switch > 100)
+	//kernel_log("Time: %d", time_since_last_switch);
+	//if (time_since_last_switch > 0)
+	//if (true)
+	if (time_since_last_switch > 2000000)
 	{
+		kernel_log("Interval: %l, time_since_last_switch: %l", interval, time_since_last_switch);
 		time_since_last_switch = 0;
 		interrupt_finish(irq);
 		thread_leave();

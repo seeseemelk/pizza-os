@@ -88,9 +88,9 @@ void* list_remove(list_t* list, size_t index)
 	if (index < list->size)
 	{
 		void* item = list->contents + index;
-		for (size_t i = index; i < list->size-1; i++)
-			list->contents[i] = list->contents[i+1];
 		list->size--;
+		for (size_t i = index; i < list->size; i++)
+			list->contents[i] = list->contents[i+1];
 		return item;
 	}
 	else
