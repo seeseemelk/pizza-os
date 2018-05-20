@@ -23,18 +23,6 @@ typedef struct
 	ps2_bus_t bus;
 } ps2ctrl_t;
 
-/**
- * Locks the device.
- * Note that operations can still be performed as normal.
- * The only use it has is to prevent race conditions when
- * using ps2_wait().
- */
-void pcps2_lock(device_t* dev)
-{
-	UNUSED(dev);
-	//lock_lock(&CTRL(dev)->lock);
-}
-
 unsigned char pcps2_read_status(device_t* dev)
 {
 	UNUSED(dev);
@@ -78,18 +66,6 @@ void pcps2_write_ram(device_t* dev, unsigned char i, unsigned char val)
 	outb(PS2_CMD, 0x60 + i);
 	while ((inb(PS2_STA) & 2) == 1);
 	outb(PS2_DAT, val);
-}
-
-void pcps2_signal_wait(device_t* dev)
-{
-	UNUSED(dev);
-}
-
-void pcps2_wait(device_t* dev)
-{
-	UNUSED(dev);
-	//lock_wait(&CTRL(dev)->lock);
-	//lock_lock(&CTRL(dev)->lock);
 }
 
 int pcps2_dev_req(dev_req_t* req)
@@ -193,7 +169,6 @@ void pcps2_init(void)
 	ctrl->bus.read_data = pcps2_read_data;
 	ctrl->bus.write_data = pcps2_write_data;
 	ctrl->bus.write_command = pcps2_write_command;
-	ctrl->bus.wait = pcps2_signal_wait;
 
 	// Initialises the hardware.
 	pcps2_init_hardware(ctrl);
@@ -201,7 +176,6 @@ void pcps2_init(void)
 	// Wait for it to be initialised.
 	pcps2_wait(DEV(ctrl));
 
-	//ps2_register(ctrl, &ctrl->bus);
 	device_register_bus(DEV(ctrl), PS2, &ctrl->bus);
 }
 

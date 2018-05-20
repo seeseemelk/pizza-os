@@ -6,6 +6,7 @@
 #ifndef DEV_DEVICES_H_
 #define DEV_DEVICES_H_
 #include "bus.h"
+#include "thread/mutex.h"
 #include <stddef.h>
 
 typedef enum module_type module_type;
@@ -52,7 +53,8 @@ struct module_t
 struct device_t
 {
 	const module_t* module; /**< A pointer to the module that handles this device. */
-	unsigned short minor; /** The minor number. This number will uniquely specific a specific device. */
+	unsigned short minor; /**< The minor number. This number will uniquely specific a specific device. */
+	mutex_t mutex; /**< This mutex provides the ability for software to lock the device. */
 };
 
 /**
@@ -141,6 +143,20 @@ int device_invoke3(device_t* device, request_type type, int arg1, int arg2, int 
 int device_invoke2(device_t* device, request_type type, int arg1, int arg2);
 int device_invoke1(device_t* device, request_type type, int arg1);
 int device_invoke(device_t* device, request_type type);
+
+/**
+ * Locks the device.
+ * This functions behaves exactly as a mutex.
+ * @param device The device to lock.
+ */
+void device_lock(device_t* device);
+
+/**
+ * Unlocks the device.
+ * This functions behaves exactly as a mutex.
+ * @param device The device to unlock.
+ */
+void device_unlock(device_t* device);
 
 /*
  * Functions for allocating and deallocating memory.

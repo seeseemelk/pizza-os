@@ -16,7 +16,6 @@ struct ps2_bus_t
 	u8(*read_data)(device_t* dev);
 	void(*write_data)(device_t* dev, u8 data);
 	void(*write_command)(device_t* dev, u8 data);
-	void(*wait)(device_t* dev);
 };
 
 /**

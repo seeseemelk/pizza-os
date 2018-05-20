@@ -43,6 +43,7 @@ void device_register(device_t* device, module_t* module)
 	device->module = module;
 	device->minor = module->num_devices_loaded;
 	module->num_devices_loaded++;
+	mutex_new(&device->mutex);
 }
 
 void device_register_bus(device_t* device, bus_t type, void* bus)
@@ -163,6 +164,16 @@ int device_invoke1(device_t* device, request_type type, int arg1)
 int device_invoke(device_t* device, request_type type)
 {
 	return device_invoke4(device, type, 0, 0, 0, 0);
+}
+
+void device_lock(device_t* device)
+{
+	mutex_lock(&device->mutex);
+}
+
+void device_unlock(device_t* device)
+{
+	mutex_unlock(&device->mutex);
 }
 
 /**
