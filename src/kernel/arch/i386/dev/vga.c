@@ -9,9 +9,9 @@
 #include "io.h"
 #include "bus.h"
 #include "bus/vga.h"
+#include "kernel.h"
 
 #include <string.h>
-#include <stdio.h>
 
 #define R_ADDR 0x3B4
 #define R_DATA 0x3B5
@@ -35,53 +35,13 @@ vga_t vga_dev = { .width = 80, .height = 25, .cursor_x = 0, .cursor_y = 0 };
 static void vga_write_cursor_address(vga_t* vga)
 {
 	int cursor_index = vga->cursor_x + vga->cursor_y * vga->width;
+	if (cursor_index > vga->width * vga->height)
+		kernel_panic("VGA Cursor index out of range");
 	outb(R_ADDR, 0x0E); // Write the high eight bits of the cursor location
 	outb(R_DATA, (cursor_index >> 8) & 0xFF);
 	outb(R_ADDR, 0x0F); // Write the low eight bits of the cursor location
 	outb(R_DATA, cursor_index & 0xFF);
 }
-/*
- int vga_dev_request(dev_req_t* request)
- {
- //GET_CHAR, SET_CHAR, GET_WIDTH, GET_HEIGHT, GET_CURSOR_X, GET_CURSOR_Y, SET_CURSOR, SCROLL
- switch (request->type)
- {
- case GET_WIDTH:
- return width;
- case GET_HEIGHT:
- return height;
- case GET_CHAR:
- return vga_memory[(request->arg1 + request->arg2 * width) * 2];
- case SET_CHAR:
- vga_memory[(request->arg1 + request->arg2 * width) * 2] = request->arg3;
- return 0;
- case GET_CURSOR_X:
- return cursor_x;
- case GET_CURSOR_Y:
- return cursor_y;
- case SET_CURSOR:
- cursor_x = request->arg1;
- cursor_y = request->arg2;
- vga_write_cursor_address();
- return 0;
- case SCROLL:
- //memcpy(vga_memory, vga_memory + (width * request->arg1)*2, width * (height-request->arg1) *2);
- if (request->arg1 > 0)
- {
- int lines = request->arg1;
- memcpy(vga_memory, vga_memory + (width * 2 * lines),
- width * (height - lines) * 2);
- for (int i = 0; i < width * lines; i++) // We can't use memset because it will mess with the colours
- vga_memory[(width * height - i - lines) * 2] = vga_memory[(width
- * height - i) * 2];
- cursor_y -= lines;
- vga_write_cursor_address();
- }
- return 0;
- default:
- return 0;
- }
- }*/
 
 void dvga_get_size(device_t* dev, int* x, int* y)
 {
