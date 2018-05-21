@@ -9,7 +9,7 @@ void signal_new(signal_t* signal)
 	signal->signal = false;
 }
 
-void signal_unset(signal_t* signal)
+void signal_clear(signal_t* signal)
 {
 	signal->owner = current_thread;
 	signal->signal = false;

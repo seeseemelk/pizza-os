@@ -35,7 +35,7 @@ void signal_new(signal_t* signal);
  * This can be used to discord a call to signal.
  * @param signal The signal to unset.
  */
-void signal_unset(signal_t* signal);
+void signal_clear(signal_t* signal);
 
 /**
  * Waits until the signal is signaled.
