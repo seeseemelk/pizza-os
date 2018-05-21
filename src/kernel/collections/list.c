@@ -49,7 +49,7 @@ void list_add(list_t* list, void* item)
 	if (list->size == list->max_size)
 	{
 		list->max_size *= 2;
-		list->contents = realloc(list->contents, list->max_size);
+		list->contents = realloc(list->contents, sizeof(void*) * list->max_size);
 	}
 
 	list->contents[list->size] = item;
@@ -88,9 +88,9 @@ void* list_remove(list_t* list, size_t index)
 	if (index < list->size)
 	{
 		void* item = list->contents + index;
+		list->size--;
 		for (size_t i = index; i < list->size; i++)
 			list->contents[i] = list->contents[i+1];
-		list->size--;
 		return item;
 	}
 	else

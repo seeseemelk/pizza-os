@@ -36,9 +36,9 @@ endif()
 
 # Set flags and linker script
 set(CMAKE_ASM_NASM_FLAGS "${CMAKE_ASM_NASM_FLAGS} -f elf32")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror -Wextra -ffreestanding -std=gnu99 -nostdlib")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror -Wextra -ffreestanding -std=gnu11 -nostdlib")
 set(LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/src/kernel/linker.ld")
-set(CMAKE_EXE_LINKER_FLAGS "-T ${LINKER_SCRIPT} -ffreestanding -std=gnu99 -nostdlib -static-libgcc")
+set(CMAKE_EXE_LINKER_FLAGS "-T ${LINKER_SCRIPT} -ffreestanding -std=gnu11 -nostdlib -static-libgcc")
 
 include_directories("${CMAKE_SOURCE_DIR}/src/kernel" "${CMAKE_SOURCE_DIR}/src/libc")
 

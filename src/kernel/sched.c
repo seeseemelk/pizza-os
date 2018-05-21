@@ -8,7 +8,21 @@
 #include "threads.h"
 #include "kernel.h"
 #include "cpu.h"
+#include "interrupt.h"
 #include <stdio.h>
+
+unsigned long long time_since_last_switch = 0;
+
+void sched_notify(irq_t* irq, unsigned long long interval)
+{
+	time_since_last_switch += interval;
+	if (time_since_last_switch > 20000)
+	{
+		time_since_last_switch = 0;
+		interrupt_finish(irq);
+		thread_leave();
+	}
+}
 
 void sched_main()
 {

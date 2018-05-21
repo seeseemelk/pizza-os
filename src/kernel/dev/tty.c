@@ -1,48 +1,46 @@
-/*
- * tty.c
- *
- *  Created on: Jan 2, 2018
- *      Author: seeseemelk
- */
 #include "dev/tty.h"
+#include "bus/vga.h"
 #include <stddef.h>
 
-device_t* tty;
+vga_bus_t* tty;
 int width;
 int height;
 int max_index;
 
-void tty_set_tty(device_t* dev)
+void tty_set_tty(vga_bus_t* dev)
 {
 	tty = dev;
-	width = device_invoke(tty, GET_WIDTH);
-	height = device_invoke(tty, GET_HEIGHT);
+	vga_get_size(dev, &width, &height);
 	max_index = width * height;
 }
 
 char tty_get_char(const int x, const int y)
 {
-	return device_invoke2(tty, GET_CHAR, x, y);
+	return vga_get_char(tty, x, y);
 }
 
 void tty_set_char(const int x, const int y, char c)
 {
-	device_invoke3(tty, SET_CHAR, x, y, c);
+	vga_set_char(tty, x, y, c);
 }
 
 void tty_set_cursor(const int x, const int y)
 {
-	device_invoke2(tty, SET_CURSOR, x, y);
+	vga_set_cursor(tty, x, y);
 }
 
 int tty_get_cursor_x()
 {
-	return device_invoke(tty, GET_CURSOR_X);
+	int x, y;
+	vga_get_cursor(tty, &x, &y);
+	return x;
 }
 
 int tty_get_cursor_y()
 {
-	return device_invoke(tty, GET_CURSOR_Y);
+	int x, y;
+	vga_get_cursor(tty, &x, &y);
+	return y;
 }
 
 static void tty_advance_line()
@@ -61,12 +59,13 @@ static void tty_advance_line()
 
 static void tty_advance_cursor()
 {
-	int cursor_x = tty_get_cursor_x() + 1;
-	int cursor_y = tty_get_cursor_y();
+	int cursor_x, cursor_y;
+	vga_get_cursor(tty, &cursor_x, &cursor_y);
+
 	if (cursor_x >= width)
 		tty_advance_line();
 	else
-		tty_set_cursor(cursor_x, cursor_y);
+		tty_set_cursor(cursor_x+1, cursor_y);
 }
 
 void tty_put_char(const char c)
@@ -95,7 +94,7 @@ void tty_print(const char* str)
 
 void tty_scroll(const int lines)
 {
-	device_invoke1(tty, SCROLL, lines);
+	vga_scroll(tty, lines);
 }
 
 void tty_clear()

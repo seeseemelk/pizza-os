@@ -1,3 +1,4 @@
+#include <dev/pcps2.h>
 #include <threads.h>
 #include "interrupt.h"
 #include "kernel.h"
@@ -12,11 +13,13 @@
 #include "sched.h"
 #include "cpu.h"
 #include "vfs.h"
+#include "thread/mutex.h"
 
 #include "dev/tmpfs.h"
 
 #if TARGET==i386
 #include "arch/i386/dev/vga.h"
+#include "arch/i386/dev/pit.h"
 #endif
 
 #include <stddef.h>
@@ -38,15 +41,54 @@ multiboot_info_t* multiboot;
 size_t memory_available = 0;
 size_t mb_minimum_addr;
 
-void kernel_panic(const char* format, ...)
+unsigned int runtime_us = 0;
+unsigned long long runtime_s = 0;
+
+long long kernel_time()
+{
+	return runtime_s;
+}
+
+int kernel_time_us()
+{
+	return runtime_us;
+}
+
+void kernel_time_add(unsigned long long us)
+{
+	unsigned long long new_us = us + runtime_us;
+	runtime_us = new_us;
+	runtime_s += new_us / 1000000;
+	runtime_us %= 1000000;
+
+}
+
+void kernel_log(const char* format, ...)
 {
 	va_list args;
 	va_start(args, format);
 
-	kprintf("Panicking!!! (is the pizza gone?)\n");
+	// We do it like this because kprintf does not support leading zeroes yet.
+	int c1 = (runtime_us / 100000) % 10;
+	int c2 = (runtime_us / 10000) % 10;
+	int c3 = (runtime_us / 1000) % 10;
+	int c4 = (runtime_us / 100) % 10;
+	int c5 = (runtime_us / 10) % 10;
+	int c6 = (runtime_us / 1) % 10;
+
+	kprintf("[%l.%d%d%d%d%d%d] ", runtime_s, c1, c2, c3, c4, c5, c6);
 	kvprintf(format, args);
 	kputchar('\n');
+	va_end(args);
+}
 
+void kernel_panic(const char* format, ...)
+{
+	kernel_log("Panicking!!! (is the pizza gone?)\n");
+
+	va_list args;
+	va_start(args, format);
+	kvprintf(format, args);
 	va_end(args);
 
 	asm volatile ("cli");
@@ -101,6 +143,36 @@ void kernel_init_paging()
 	page_enable();
 }
 
+mutex_t mutex;
+void thread_print(int i)
+{
+	mutex_lock(&mutex);
+	kernel_log("Hello from %d", i);
+	mutex_unlock(&mutex);
+}
+
+void thread1()
+{
+	while (1)
+	{
+		thread_print(1);
+	}
+}
+
+void thread2()
+{
+	while (1)
+	{
+		thread_print(2);
+	}
+}
+
+void thread_test()
+{
+	thread_create(thread1);
+	thread_create(thread2);
+}
+
 void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 {
 	UNUSED(magic);
@@ -129,19 +201,19 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 
 	// Enable VGA output if possible
 	#ifdef ENABLE_VGA
-	device_t* vga_dev = vga_init();
-	tty_set_tty(vga_dev);
+	vga_init();
+	tty_set_tty(device_get_first(VGA));
 	#endif
 	tty_clear();
 
 	// Show startup screen.
-	kprintf("Starting pizza-os (yum!)...\n");
+	kernel_log("Starting pizza-os (yum!)...");
 	if (memory_available < MB(4))
-		kprintf("Memory detected: %u KiB\n", memory_available / KB(1));
+		kernel_log("Memory detected: %u KiB", memory_available / KB(1));
 	else
-		kprintf("Memory detected: %u MiB\n", memory_available / MB(1));
+		kernel_log("Memory detected: %u MiB", memory_available / MB(1));
 
-	kprintf("Kernel range: 0x%p to 0x%p\n", KERNEL_START, KERNEL_END);
+	kernel_log("Kernel range: 0x%p to 0x%p", KERNEL_START, KERNEL_END);
 
 	/*printf("Init mem... ");
 	mem_init();
@@ -178,14 +250,21 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	//asm("int $0x20");
 
 	//kprintf("Ok\n");
+	mutex_new(&mutex);
+	pit_init();
+	//pcps2_init();
+
+	/*
 	kprintf("Initialising VFS\n");
 #ifdef ENABLE_TMPFS
 	tmpfs_init();
 #endif
 	vfs_init();
 	kprintf("Done\n");
+	*/
 
 	//while (1);
+	thread_test();
 	sched_main();
 	while (1);
 
