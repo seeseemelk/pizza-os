@@ -11,12 +11,12 @@
 
 struct pit_mod
 {
-	module_t* mod;
+	module_t mod;
 };
 
 struct pit_dev
 {
-	device_t* dev;
+	device_t dev;
 	unsigned long long delay;
 };
 
@@ -46,9 +46,9 @@ int pit_req(dev_req_t* req)
 
 void pit_init()
 {
-	module_register(mod.mod, "pit", NULL, pit_req);
-	device_register(dev.dev, mod.mod);
-	interrupt_register(dev.dev, 0x20);
+	module_register(&mod.mod, "pit", NULL, pit_req);
+	device_register(&dev.dev, &mod.mod);
+	interrupt_register(&dev.dev, 0x20);
 
 	interrupt_disable();
 	// Setup channel 0

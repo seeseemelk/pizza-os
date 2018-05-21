@@ -174,7 +174,7 @@ void pcps2_init(void)
 	pcps2_init_hardware(ctrl);
 
 	// Wait for it to be initialised.
-	pcps2_wait(DEV(ctrl));
+	//pcps2_wait(DEV(ctrl));
 
 	device_register_bus(DEV(ctrl), PS2, &ctrl->bus);
 }

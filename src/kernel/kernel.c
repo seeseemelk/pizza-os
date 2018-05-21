@@ -252,7 +252,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	//kprintf("Ok\n");
 	mutex_new(&mutex);
 	pit_init();
-	pcps2_init();
+	//pcps2_init();
 
 	/*
 	kprintf("Initialising VFS\n");

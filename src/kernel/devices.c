@@ -48,6 +48,8 @@ void device_register(device_t* device, module_t* module)
 
 void device_register_bus(device_t* device, bus_t type, void* bus)
 {
+	if (type != VGA && device->module->fn_dev_req == NULL)
+		kernel_log("Device %s registered bus without fn_dev_req", device->module->name);
 	dev_bus_t* dev_bus = busses[type] + num_bus_loaded[type];
 	num_bus_loaded[type]++;
 	dev_bus->dev = device;

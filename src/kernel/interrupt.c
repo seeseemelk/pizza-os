@@ -21,6 +21,9 @@ int num_handlers[256]; /* Contains the number of handlers registered for each in
 
 void interrupt_register(device_t* dev, int interrupt)
 {
+	if (dev->module->fn_dev_req == NULL)
+		kernel_log("Module %s registered int 0x%X without fn_dev_req", dev->module->name, interrupt);
+
 	if (num_handlers[interrupt] < MAX_NUM_INT_HANDLERS)
 		handlers[interrupt][num_handlers[interrupt]++] = dev;
 	else
