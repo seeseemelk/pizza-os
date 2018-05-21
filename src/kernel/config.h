@@ -28,10 +28,20 @@
 /** The minimum block size that the physical memory allocator can allocate */
 #define PMEM_BLOCK_SIZE KB(4)
 
-/** Should VGA be enabled */
-#define ENABLE_VGA
+/**
+ * How often the scheduler should preempt a thread in milliseconds.
+ * Note that it can only be as accurate as the interval of the PIT.
+ */
+#define SCHED_PREEMPT_INTERVAL 20000
 
-/** Should TMPFS be enabled */
+/* These enable specific drivers */
+#define ENABLE_VGA
 #define ENABLE_TMPFS
+#define ENABLE_PS2
+#define ENABLE_PS2KBD
+
+#if TARGET == i386
+#include "arch/i386/config.h"
+#endif
 
 #endif /* CONFIG_H_ */

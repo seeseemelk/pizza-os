@@ -8,6 +8,7 @@
 #include "thread/signal.h"
 #include "thread/mutex.h"
 #include <stdlib.h>
+#include <stdbool.h>
 
 #define PS2_DAT 0x60
 #define PS2_STA 0x64
@@ -21,6 +22,9 @@ typedef struct
 	device_t* dev;
 	int num_ports;
 	ps2_bus_t bus;
+	signal_t signal;
+	bool wait_interrupt; /* Setting this to true will make this driver accept interrupts,
+							setting it to false will cause it to ignore interrupts. */
 } ps2ctrl_t;
 
 unsigned char pcps2_read_status(device_t* dev)
@@ -72,9 +76,15 @@ int pcps2_dev_req(dev_req_t* req)
 {
 	if (req->type == INTERRUPT)
 	{
-		//interrupt_accept(req->arg2);
-		//lock_signal(&dev->lock);
-		return INT_ACCEPT;
+		ps2ctrl_t* ctrl = CTRL(req->device);
+		if (ctrl->wait_interrupt)
+		{
+			signal_signal(&ctrl->signal);
+			ctrl->wait_interrupt = false;
+			return INT_ACCEPT;
+		}
+		else
+			return INT_IGNORE;
 	}
 	else
 		kernel_panic("PS2: Unknown request type");
@@ -95,11 +105,13 @@ void pcps2_st_init(ps2ctrl_t* dev)
 	unsigned char config = pcps2_read_ram(DEV(dev), 0);
 	dev->num_ports = ((config & (1<<5)) == 1) + 1;
 	config &= 0b10111100;
+
 	pcps2_write_ram(DEV(dev), 0, config);
 }
 
 void pcps2_init_hardware(ps2ctrl_t* dev)
 {
+	signal_t* signal = &dev->signal;
 	// Initializes the PS/2 Device
 	pcps2_st_init(dev);
 
@@ -113,7 +125,7 @@ void pcps2_init_hardware(ps2ctrl_t* dev)
 	kernel_log("PS/2 Controller OK");
 
 	// Sometimes testing the PS/2 controller causes it to be reset,
-	// so we need to initialise it again just to be sage.
+	// so we need to initialise it again just to be safe.
 	pcps2_st_init(dev);
 
 	// Test 1st PS/2 Port
@@ -138,6 +150,8 @@ void pcps2_init_hardware(ps2ctrl_t* dev)
 	pcps2_write_ram(DEV(dev), 0, config);
 
 	// Reset Device
+	dev->wait_interrupt = true;
+	signal_clear(signal);
 	pcps2_write_data(DEV(dev), 0xFF);
 	unsigned char resp;
 	while ((resp = pcps2_read_data(DEV(dev))) != 0xFA)
@@ -146,12 +160,15 @@ void pcps2_init_hardware(ps2ctrl_t* dev)
 			kernel_panic("PS/2 Device 1 Reset Failure");
 		else if (resp == 0xFE)
 			pcps2_write_data(DEV(dev), 0xFF);
+		dev->wait_interrupt = true;
 	}
-	kernel_log("PS/2 Device 1 Ready");
+	signal_wait(signal);
+	kernel_log("PS/2 Device 1 Reset and ready");
 }
 
 void pcps2_init(void)
 {
+	kernel_log("Initialising PS2 controller");
 	/*
 	 * If ACPI was supported we would have to check if such a controller
 	 * is present. ACPI was, however, introduced in 1999, after the release
@@ -160,6 +177,10 @@ void pcps2_init(void)
 	 */
 	module_t* mod = malloc(sizeof(module_t));
 	ps2ctrl_t* ctrl = malloc(sizeof(ps2ctrl_t));
+	signal_new(&ctrl->signal);
+	ctrl->num_ports = 0;
+	ctrl->wait_interrupt = false;
+
 	module_register(mod, "ps2", NULL, &pcps2_dev_req);
 	device_register(DEV(ctrl), mod);
 
@@ -177,6 +198,7 @@ void pcps2_init(void)
 	//pcps2_wait(DEV(ctrl));
 
 	device_register_bus(DEV(ctrl), PS2, &ctrl->bus);
+	kernel_log("Initialised PS2 controller");
 }
 
 

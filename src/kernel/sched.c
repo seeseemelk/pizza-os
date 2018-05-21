@@ -9,6 +9,7 @@
 #include "kernel.h"
 #include "cpu.h"
 #include "interrupt.h"
+#include "config.h"
 #include <stdio.h>
 
 unsigned long long time_since_last_switch = 0;
@@ -16,9 +17,9 @@ unsigned long long time_since_last_switch = 0;
 void sched_notify(irq_t* irq, unsigned long long interval)
 {
 	time_since_last_switch += interval;
-	if (time_since_last_switch > 20000)
+	if (time_since_last_switch > SCHED_PREEMPT_INTERVAL)
 	{
-		time_since_last_switch = 0;
+		time_since_last_switch -= SCHED_PREEMPT_INTERVAL;
 		interrupt_finish(irq);
 		thread_leave();
 	}

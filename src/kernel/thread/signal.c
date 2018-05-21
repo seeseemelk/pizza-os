@@ -38,8 +38,6 @@ void signal_signal(signal_t* signal)
 		signal->signal = true;
 		thread_set_paused(signal->owner, false);
 	}
-	else
-		kernel_panic("Signaling un-owned signal - Can't wait until finished eating pizza if not eating pizza");
 	interrupt_enable();
 }
 

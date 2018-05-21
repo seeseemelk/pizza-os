@@ -12,7 +12,7 @@ typedef enum bus_t bus_t;
 
 enum bus_t
 {
-	PS2, VGA,
+	PS2, VGA, KEYBOARD,
 	BUSCOUNT
 };
 

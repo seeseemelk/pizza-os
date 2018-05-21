@@ -5,20 +5,21 @@
 #include "cdefs.h"
 #include "sched.h"
 #include "io.h"
+#include "config.h"
 
 #define PORT0 0x40
 #define COMMAND 0x43
 
-struct pit_mod
+typedef struct
 {
 	module_t mod;
-};
+} pit_mod;
 
-struct pit_dev
+typedef struct
 {
 	device_t dev;
 	unsigned long long delay;
-};
+} pit_dev;
 
 typedef struct __attribute__((packed))
 {
@@ -28,8 +29,8 @@ typedef struct __attribute__((packed))
 	char channel : 2;
 } command_t;
 
-struct pit_mod mod;
-struct pit_dev dev;
+static pit_mod mod;
+static pit_dev dev;
 
 int pit_req(dev_req_t* req)
 {
@@ -62,7 +63,7 @@ void pit_init()
 	kernel_log("Setting to mode 0x%X", *(u8*)&cmd);
 	// Use 59635 for 50 milliseconds exact
 	// This is just shy of 1 millisecond
-	unsigned short divisor = 1193;
+	unsigned short divisor = PIT_INTERVAL;
 	//unsigned short divisor = 50;
 	dev.delay = (1000000ULL * divisor) / 1193180;
 	outb(COMMAND, *(u8*)&cmd);
