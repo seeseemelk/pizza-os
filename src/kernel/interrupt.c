@@ -76,6 +76,7 @@ void interrupt_handle(int int_num, int code)
 			}
 		}
 		kernel_log("Unhandled interrupt 0x%X", irq.num);
+		interrupt_finish(&irq);
 	}
 }
 

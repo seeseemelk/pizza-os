@@ -7,6 +7,7 @@
 #include "pckbd.h"
 #include "threads.h"
 #include "thread/signal.h"
+#include "io.h"
 #include <stdlib.h>
 
 #define DEV(obj) ((device_t*)obj)
@@ -56,11 +57,12 @@ int pckbd_req(dev_req_t* req)
 
 void pckbd_test()
 {
+	kernel_log("Waiting for scancodes");
 	while (1)
 	{
-		kernel_log("Waiting for scancode");
 		scancode_t scancode;
 		pckbd_wait_scancode(DEV(&kbd), &scancode);
+		kernel_log("Found 0x%X", kbd.scancode);
 	}
 }
 
@@ -81,15 +83,16 @@ void pckbd_init(ps2_bus_t* bus)
 	// Can't wait for interrupt here. Call reset code in pcps2.c
 
 	kernel_log("B");
-	signal_clear(&kbd.signal);
 	ps2_write_data(bus, 0xF0);
 	ps2_write_data(bus, 2);
-	signal_wait(&kbd.signal);
 
 	kernel_log("C");
-	signal_clear(&kbd.signal);
 	ps2_write_data(bus, 0xF4);
-	signal_wait(&kbd.signal);
+	/*for (int i = 0; i < 10; i++)
+		ps2_read_data(kbd.bus);*/
+	u8 status;
+	while (((status = inb(0x64)) & 1) == 1)
+		inb(0x60);
 
 	kernel_log("D");
 	thread_create(&pckbd_test);

@@ -68,7 +68,7 @@ void pcps2_write_ram(device_t* dev, unsigned char i, unsigned char val)
 {
 	UNUSED(dev);
 	outb(PS2_CMD, 0x60 + i);
-	while ((inb(PS2_STA) & 2) == 1);
+	while ((inb(PS2_STA) & 2) > 0);
 	outb(PS2_DAT, val);
 }
 
@@ -103,7 +103,7 @@ void pcps2_st_init(ps2ctrl_t* dev)
 
 	// Set Controller Configuration Byte
 	unsigned char config = pcps2_read_ram(DEV(dev), 0);
-	dev->num_ports = ((config & (1<<5)) == 1) + 1;
+	dev->num_ports = ((config & (1<<5)) > 0) + 1;
 	config &= 0b10111100;
 
 	pcps2_write_ram(DEV(dev), 0, config);
