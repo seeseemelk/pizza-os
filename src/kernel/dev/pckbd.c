@@ -1,5 +1,6 @@
 #include "bus/ps2.h"
 #include "bus/keyboard.h"
+#include "api/keymap.h"
 #include "cdefs.h"
 #include "devices.h"
 #include "interrupt.h"
@@ -32,6 +33,49 @@ void pckbd_wait_scancode(device_t* dev, scancode_t* scancode)
 	KBD(dev)->waiting = true;
 	signal_wait(&KBD(dev)->signal);
 	KBD(dev)->scancode = ps2_read_data(KBD(dev)->bus);
+}
+
+void pckbd_parse_keycode(pckbd_t* dev)
+{
+	scancode_t scancode = {
+		.action = SA_PRESSED
+	};
+	bool finished = false;
+	while (!finished)
+	{
+		u8 data = ps2_read_data(dev->bus);
+		if (data == 0xF0)
+			scancode.action = SA_RELEASED;
+		else
+		{
+			scancode.code = data;
+			finished = true;
+		}
+	}
+	UNUSED(scancode);
+}
+
+void pckbd_send_packet(pckbd_t* kbd, u8* commands, int length)
+{
+	bool finished = false;
+
+	while (!finished)
+	{
+		kbd->waiting = true;
+		signal_clear(&kbd->signal);
+		for (int i = 0; i < length; i++)
+		{
+			ps2_write_data(kbd->bus, commands[i]);
+		}
+		signal_wait(&kbd->signal);
+
+		u8 status;
+		while ((status = ps2_read_status(kbd->bus)) != 0xFA)
+		{
+			// This needs to be improved
+			kernel_panic("Keyboard returned status 0x%X", status);
+		}
+	}
 }
 
 int pckbd_req(dev_req_t* req)
