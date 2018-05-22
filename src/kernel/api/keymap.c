@@ -1,5 +1,7 @@
 #include "keymap.h"
 #include "thread/signal.h"
+#include "keymaps/enUS.h"
+#include "kernel.h"
 #include <stdbool.h>
 
 static bool scancodes[256];
@@ -17,9 +19,9 @@ void keyboard_init()
 	signal_new(&signal);
 }
 
-void keyboard_get_char(SCANCODE code)
+u8 keyboard_get_char(SCANCODE code)
 {
-
+	return (keymapNormal[code]);
 }
 
 void keyboard_register_event(scancode_t scancode)
@@ -31,7 +33,6 @@ void keyboard_register_event(scancode_t scancode)
 		if (buf_size < BUF_LENGTH)
 		{
 			buf[buf_write_index] = keyboard_get_char(scancode.code);
-			keyboard_buf_next();
 			buf_write_index = (buf_write_index + 1) % BUF_LENGTH;
 			buf_size++;
 			signal_signal(&signal);
@@ -43,7 +44,7 @@ void keyboard_register_event(scancode_t scancode)
 	}
 }
 
-void keyboard_wait()
+static void keyboard_wait()
 {
 	signal_wait(&signal);
 }

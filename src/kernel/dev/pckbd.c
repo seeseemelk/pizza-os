@@ -19,7 +19,7 @@ typedef struct
 	device_t dev;
 	keyboard_t kbd;
 	ps2_bus_t* bus;
-	bool waiting;
+	bool parse_codes;
 	signal_t signal;
 	u8 scancode;
 } pckbd_t;
@@ -27,32 +27,30 @@ typedef struct
 static module_t mod;
 static pckbd_t kbd;
 
-void pckbd_wait_scancode(device_t* dev, scancode_t* scancode)
+void pckbd_parse_keycode(pckbd_t* kbd)
 {
-	UNUSED(scancode);
-	KBD(dev)->waiting = true;
-	signal_wait(&KBD(dev)->signal);
-	KBD(dev)->scancode = ps2_read_data(KBD(dev)->bus);
-}
-
-void pckbd_parse_keycode(pckbd_t* dev)
-{
+	kbd->parse_codes = false;
 	scancode_t scancode = {
 		.action = SA_PRESSED
 	};
 	bool finished = false;
 	while (!finished)
 	{
-		u8 data = ps2_read_data(dev->bus);
+		signal_clear(&kbd->signal);
+		u8 data = ps2_read_data(kbd->bus);
 		if (data == 0xF0)
+		{
 			scancode.action = SA_RELEASED;
+			signal_wait(&kbd->signal);
+		}
 		else
 		{
 			scancode.code = data;
 			finished = true;
 		}
 	}
-	UNUSED(scancode);
+	keyboard_register_event(scancode);
+	kbd->parse_codes = true;
 }
 
 void pckbd_send_packet(pckbd_t* kbd, u8* commands, int length)
@@ -61,7 +59,6 @@ void pckbd_send_packet(pckbd_t* kbd, u8* commands, int length)
 
 	while (!finished)
 	{
-		kbd->waiting = true;
 		signal_clear(&kbd->signal);
 		for (int i = 0; i < length; i++)
 		{
@@ -83,14 +80,15 @@ int pckbd_req(dev_req_t* req)
 	if (req->type == INTERRUPT)
 	{
 		pckbd_t* kbd = KBD(req->device);
-		/*if (kbd->waiting)
+		interrupt_finish((irq_t*) req->arg1);
+		if (kbd->parse_codes)
 		{
-			kbd->waiting = false;*/
-			signal_signal(&kbd->signal);
+			kbd->parse_codes = true;
+			pckbd_parse_keycode(KBD(req->device));
 			return INT_ACCEPT;
-		/*}
-		else
-			return INT_IGNORE;*/
+		}
+		signal_signal(&kbd->signal);
+		return INT_ACCEPT;
 	}
 	else
 	{
@@ -104,9 +102,10 @@ void pckbd_test()
 	kernel_log("Waiting for scancodes");
 	while (1)
 	{
-		scancode_t scancode;
-		pckbd_wait_scancode(DEV(&kbd), &scancode);
-		kernel_log("Found 0x%X", kbd.scancode);
+		//scancode_t scancode;
+		//pckbd_wait_scancode(DEV(&kbd), &scancode);
+		char c = keyboard_read_char();
+		kernel_log("Found [%c]", c);
 	}
 }
 
@@ -117,8 +116,7 @@ void pckbd_init(ps2_bus_t* bus)
 	device_register_bus(&kbd.dev, KEYBOARD, &kbd.kbd);
 	interrupt_register(&kbd.dev, 0x21);
 	kbd.bus = bus;
-	kbd.kbd.wait_scancode = pckbd_wait_scancode;
-	kbd.waiting = false;
+	kbd.parse_codes = false;
 	signal_new(&kbd.signal);
 
 	kernel_log("A");
@@ -132,13 +130,13 @@ void pckbd_init(ps2_bus_t* bus)
 
 	kernel_log("C");
 	ps2_write_data(bus, 0xF4);
-	/*for (int i = 0; i < 10; i++)
-		ps2_read_data(kbd.bus);*/
+
 	u8 status;
 	while (((status = inb(0x64)) & 1) == 1)
 		inb(0x60);
 
 	kernel_log("D");
+	kbd.parse_codes = true;
 	thread_create(&pckbd_test);
 }
 

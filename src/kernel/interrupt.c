@@ -86,6 +86,7 @@ void interrupt_finish(irq_t* irq)
 	{
 		irq->finished = true;
 		arch_interrupt_finish(irq);
+		interrupt_enable();
 	}
 }
 
