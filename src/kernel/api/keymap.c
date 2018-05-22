@@ -1,8 +1,9 @@
 #include "keymap.h"
 #include "thread/signal.h"
-#include "keymaps/enUS.h"
 #include "kernel.h"
 #include <stdbool.h>
+
+#include "keymaps/nlBE.h"
 
 static bool scancodes[256];
 static signal_t signal;

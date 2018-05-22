@@ -31,6 +31,7 @@ void pckbd_parse_keycode(pckbd_t* kbd)
 {
 	kbd->parse_codes = false;
 	scancode_t scancode = {
+		.code = 0,
 		.action = SA_PRESSED
 	};
 	bool finished = false;
@@ -43,9 +44,14 @@ void pckbd_parse_keycode(pckbd_t* kbd)
 			scancode.action = SA_RELEASED;
 			signal_wait(&kbd->signal);
 		}
+		else if (data == 0xE0)
+		{
+			scancode.code = 0x80;
+			signal_wait(&kbd->signal);
+		}
 		else
 		{
-			scancode.code = data;
+			scancode.code |= data;
 			finished = true;
 		}
 	}
@@ -105,7 +111,7 @@ void pckbd_test()
 		//scancode_t scancode;
 		//pckbd_wait_scancode(DEV(&kbd), &scancode);
 		char c = keyboard_read_char();
-		kernel_log("Found [%c]", c);
+		kernel_log("Found '%c'", c);
 	}
 }
 
