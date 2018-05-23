@@ -19,64 +19,68 @@ typedef struct
 	device_t dev;
 	keyboard_t kbd;
 	ps2_bus_t* bus;
-	bool parse_codes;
-	signal_t signal;
-	u8 scancode;
+	enum {
+		S_NEWKEY,
+		S_EXTRAKEY,
+	} state;
+	bool enabled;
+	bool accept_ints;
+	scancode_t scancode;
 } pckbd_t;
 
 static module_t mod;
-static pckbd_t kbd;
+static pckbd_t kbd = {
+	.enabled = false,
+	.accept_ints = false
+};
 
-void pckbd_parse_keycode(pckbd_t* kbd)
+void pckbd_reset_state(pckbd_t* kbd)
 {
-	kbd->parse_codes = false;
-	scancode_t scancode = {
-		.code = 0,
-		.action = SA_PRESSED
-	};
-	bool finished = false;
-	while (!finished)
+	kbd->scancode.code = 0;
+	kbd->scancode.action = SA_PRESSED;
+	kbd->state = S_NEWKEY;
+}
+
+void pckbd_state(pckbd_t* kbd)
+{
+	if (kbd->state == S_NEWKEY)
 	{
-		signal_clear(&kbd->signal);
 		u8 data = ps2_read_data(kbd->bus);
 		if (data == 0xF0)
 		{
-			scancode.action = SA_RELEASED;
-			signal_wait(&kbd->signal);
+			kbd->scancode.action = SA_RELEASED;
+			kbd->state = S_EXTRAKEY;
 		}
 		else if (data == 0xE0)
 		{
-			scancode.code = 0x80;
-			signal_wait(&kbd->signal);
+			kbd->scancode.code = 0x80;
+			kbd->state = S_EXTRAKEY;
 		}
 		else
 		{
-			scancode.code |= data;
-			finished = true;
+			kbd->scancode.code = data;
+			keyboard_register_event(kbd->scancode);
+			pckbd_reset_state(kbd);
 		}
 	}
-	keyboard_register_event(scancode);
-	kbd->parse_codes = true;
-}
-
-void pckbd_send_packet(pckbd_t* kbd, u8* commands, int length)
-{
-	bool finished = false;
-
-	while (!finished)
+	else if (kbd->state == S_EXTRAKEY)
 	{
-		signal_clear(&kbd->signal);
-		for (int i = 0; i < length; i++)
+		u8 data = ps2_read_data(kbd->bus);
+		if (data == 0xF0)
 		{
-			ps2_write_data(kbd->bus, commands[i]);
+			kbd->scancode.action = SA_RELEASED;
+			kbd->state = S_EXTRAKEY;
 		}
-		signal_wait(&kbd->signal);
-
-		u8 status;
-		while ((status = ps2_read_status(kbd->bus)) != 0xFA)
+		else if (data == 0xE0)
 		{
-			// This needs to be improved
-			kernel_panic("Keyboard returned status 0x%X", status);
+			kbd->scancode.code = 0x80;
+			kbd->state = S_EXTRAKEY;
+		}
+		else
+		{
+			kbd->scancode.code |= data;
+			keyboard_register_event(kbd->scancode);
+			pckbd_reset_state(kbd);
 		}
 	}
 }
@@ -86,15 +90,15 @@ int pckbd_req(dev_req_t* req)
 	if (req->type == INTERRUPT)
 	{
 		pckbd_t* kbd = KBD(req->device);
-		interrupt_finish((irq_t*) req->arg1);
-		if (kbd->parse_codes)
+		if (kbd->enabled)
 		{
-			kbd->parse_codes = true;
-			pckbd_parse_keycode(KBD(req->device));
+			pckbd_state(kbd);
 			return INT_ACCEPT;
 		}
-		signal_signal(&kbd->signal);
-		return INT_ACCEPT;
+		else
+		{
+			return kbd->accept_ints ? INT_ACCEPT : INT_IGNORE;
+		}
 	}
 	else
 	{
@@ -108,8 +112,6 @@ void pckbd_test()
 	kernel_log("Waiting for scancodes");
 	while (1)
 	{
-		//scancode_t scancode;
-		//pckbd_wait_scancode(DEV(&kbd), &scancode);
 		char c = keyboard_read_char();
 		kernel_log("Found '%c'", c);
 	}
@@ -122,27 +124,23 @@ void pckbd_init(ps2_bus_t* bus)
 	device_register_bus(&kbd.dev, KEYBOARD, &kbd.kbd);
 	interrupt_register(&kbd.dev, 0x21);
 	kbd.bus = bus;
-	kbd.parse_codes = false;
-	signal_new(&kbd.signal);
+	pckbd_reset_state(&kbd);
 
-	kernel_log("A");
-	signal_clear(&kbd.signal);
 	ps2_write_data(bus, 0xFF);
 	// Can't wait for interrupt here. Call reset code in pcps2.c
 
-	kernel_log("B");
 	ps2_write_data(bus, 0xF0);
 	ps2_write_data(bus, 2);
 
-	kernel_log("C");
 	ps2_write_data(bus, 0xF4);
 
+	kbd.accept_ints = true;
 	u8 status;
-	while (((status = inb(0x64)) & 1) == 1)
-		inb(0x60);
+	while (((status = ps2_read_status(bus)) & 1) == 1)
+		ps2_read_data(bus);
+	kbd.accept_ints = false;
 
-	kernel_log("D");
-	kbd.parse_codes = true;
+	kbd.enabled = true;
 	thread_create(&pckbd_test);
 }
 
