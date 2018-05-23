@@ -2,8 +2,8 @@
  * Contains keyboard scancode definitions
  */
 
-#ifndef API_KEYSCAN_H_
-#define API_KEYSCAN_H_
+#ifndef API_SCANCODES_H_
+#define API_SCANCODES_H_
 
 #include "cdefs.h"
 
@@ -160,7 +160,7 @@ struct scancode_t
 // And so on and so forth
 // https://wiki.osdev.org/PS/2_Keyboard
 
-#endif /* API_KEYSCAN_H_ */
+#endif /* API_SCANCODES_H_ */
 
 
 

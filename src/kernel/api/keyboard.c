@@ -1,10 +1,12 @@
-#include "keymap.h"
+#include "keyboard.h"
+
 #include "thread/signal.h"
 #include "thread/mutex.h"
 #include "kernel.h"
+#include "config.h"
 #include <stdbool.h>
 
-#include "keymaps/nlBE.h"
+#include KEYBOARD_LAYOUT
 
 static bool scancodes[256];
 static signal_t signal;
@@ -15,12 +17,12 @@ static volatile char buf[BUF_LENGTH];
 static int buf_read_index = 0;
 static int buf_write_index = 0;
 static volatile int buf_size = 0;
-static mutex_t mutex;
+static mutex_t buf_lock;
 
 void keyboard_init()
 {
 	signal_new(&signal);
-	mutex_new(&mutex);
+	mutex_new(&buf_lock);
 }
 
 u8 keyboard_get_char(SCANCODE code)
@@ -41,7 +43,7 @@ void keyboard_register_event(scancode_t scancode)
 		// This line can be uncommented when building keymaps
 		//kernel_log("Scancode: 0x%X", scancode.code);
 
-		mutex_lock(&mutex);
+		mutex_lock(&buf_lock);
 		if (buf_size < BUF_LENGTH)
 		{
 			buf[buf_write_index] = keyboard_get_char(scancode.code);
@@ -52,7 +54,7 @@ void keyboard_register_event(scancode_t scancode)
 				signal_signal(&signal);
 			}
 		}
-		mutex_unlock(&mutex);
+		mutex_unlock(&buf_lock);
 	}
 	else
 	{
@@ -74,11 +76,11 @@ bool keyboard_is_down(SCANCODE scan)
 char keyboard_read_char()
 {
 	keyboard_wait();
-	mutex_lock(&mutex);
+	mutex_lock(&buf_lock);
 	char c = buf[buf_read_index];
 	buf_read_index = (buf_read_index + 1) % BUF_LENGTH;
 	buf_size--;
-	mutex_unlock(&mutex);
+	mutex_unlock(&buf_lock);
 	return c;
 }
 

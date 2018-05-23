@@ -8,7 +8,7 @@
 #ifndef API_KEYMAPS_NLBE_H_
 #define API_KEYMAPS_NLBE_H_
 
-#include "api/keyscan.h"
+#include "../scancodes.h"
 
 // Hexadecimal numbers are taken from Code Page 437
 // https://en.wikipedia.org/wiki/Code_page_437

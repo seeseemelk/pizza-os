@@ -28,6 +28,10 @@
 /** The minimum block size that the physical memory allocator can allocate */
 #define PMEM_BLOCK_SIZE KB(4)
 
+/** Selects the required keyboard layout */
+//#define KEYBOARD_LAYOUT "api/keymaps/enUS.h"
+#define KEYBOARD_LAYOUT "api/keymaps/nlBE.h"
+
 /**
  * How often the scheduler should preempt a thread in milliseconds.
  * Note that it can only be as accurate as the interval of the PIT.

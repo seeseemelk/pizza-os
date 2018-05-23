@@ -1,6 +1,4 @@
 #include "bus/ps2.h"
-#include "bus/keyboard.h"
-#include "api/keymap.h"
 #include "cdefs.h"
 #include "devices.h"
 #include "interrupt.h"
@@ -10,6 +8,7 @@
 #include "thread/signal.h"
 #include "io.h"
 #include <stdlib.h>
+#include "../api/keyboard.h"
 
 #define DEV(obj) ((device_t*)obj)
 #define KBD(obj) ((pckbd_t*)obj)
@@ -17,7 +16,6 @@
 typedef struct
 {
 	device_t dev;
-	keyboard_t kbd;
 	ps2_bus_t* bus;
 	bool enabled;
 	bool accept_ints;
@@ -97,7 +95,6 @@ void pckbd_init(ps2_bus_t* bus)
 {
 	module_register(&mod, "pckbd", NULL, &pckbd_req);
 	device_register(&kbd.dev, &mod);
-	device_register_bus(&kbd.dev, KEYBOARD, &kbd.kbd);
 	interrupt_register(&kbd.dev, 0x21);
 	kbd.bus = bus;
 

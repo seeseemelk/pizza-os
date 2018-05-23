@@ -1,6 +1,8 @@
 #include "threads.h"
 #include "interrupt.h"
 #include "kernel.h"
+
+#include "api/keyboard.h"
 #include "multiboot.h"
 #include "config.h"
 #include "pmem.h"
@@ -10,8 +12,6 @@
 #include "sched.h"
 #include "cpu.h"
 #include "vfs.h"
-
-#include "api/keymap.h"
 
 #include "thread/mutex.h"
 
