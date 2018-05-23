@@ -35,7 +35,7 @@ void signal_new(signal_t* signal);
  * This can be used to discord a call to signal.
  * @param signal The signal to unset.
  */
-void signal_unset(signal_t* signal);
+void signal_clear(signal_t* signal);
 
 /**
  * Waits until the signal is signaled.
@@ -51,9 +51,16 @@ void signal_wait(signal_t* signal);
 void signal_signal(signal_t* signal);
 
 /**
- * Checks if a thread is currently signaled by the signal.
+ * Checks if there is a thread waiting for this thread.
  * @param signal The signal to check for.
- * @return `true` if a thread is signaled by it, `false` if there is no signaled thread.
+ * #returns `true` if a thread is waiting on the signal, `false` if no thread is waiting on it.
+ */
+bool signal_is_waiting(signal_t* signal);
+
+/**
+ * Checks if the thread is currently set.
+ * @param signal The signal to check for.
+ * @return `true` if the signal is set, `false` if it is cleared.
  */
 bool signal_is_set(signal_t* signal);
 

@@ -1,20 +1,24 @@
-#include <dev/pcps2.h>
-#include <threads.h>
+#include "threads.h"
 #include "interrupt.h"
 #include "kernel.h"
+
+#include "api/keyboard.h"
 #include "multiboot.h"
 #include "config.h"
 #include "pmem.h"
 #include "mem.h"
-#include "devices.h"
-#include "dev/tty.h"
 #include "page.h"
 #include "threads.h"
 #include "sched.h"
 #include "cpu.h"
 #include "vfs.h"
+
 #include "thread/mutex.h"
 
+#include "devices.h"
+#include "dev/pcps2.h"
+#include "dev/pckbd.h"
+#include "dev/tty.h"
 #include "dev/tmpfs.h"
 
 #if TARGET==i386
@@ -151,28 +155,6 @@ void thread_print(int i)
 	mutex_unlock(&mutex);
 }
 
-void thread1()
-{
-	while (1)
-	{
-		thread_print(1);
-	}
-}
-
-void thread2()
-{
-	while (1)
-	{
-		thread_print(2);
-	}
-}
-
-void thread_test()
-{
-	thread_create(thread1);
-	thread_create(thread2);
-}
-
 void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 {
 	UNUSED(magic);
@@ -250,9 +232,17 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	//asm("int $0x20");
 
 	//kprintf("Ok\n");
-	mutex_new(&mutex);
+
+	keyboard_init();
+
 	pit_init();
-	//pcps2_init();
+
+	#ifdef ENABLE_PS2
+	pcps2_init();
+	#endif
+	#ifdef ENABLE_PS2KBD
+	pckbd_init(device_get_first(PS2));
+	#endif
 
 	/*
 	kprintf("Initialising VFS\n");
@@ -263,8 +253,6 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	kprintf("Done\n");
 	*/
 
-	//while (1);
-	thread_test();
 	sched_main();
 	while (1);
 

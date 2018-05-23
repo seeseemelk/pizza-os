@@ -115,6 +115,25 @@ void arch_interrupt_init()
 
 void cpu_int_handler(int irq, int error_code)
 {
+	if (irq == 0x27)
+	{
+		if (!pic_is_served(irq))
+		{
+			kernel_log("Spurious interrupt on master");
+			return;
+		}
+	}
+	else if (irq == 0x2F)
+	{
+		if (!pic_is_served(irq))
+		{
+			// This will still send an EOI to the master PIC, but not the slave.
+			pic_send_eoi(7);
+			kernel_log("Spurious interrupt on slave");
+			return;
+		}
+	}
+
 	interrupt_handle(irq, error_code);
 }
 
