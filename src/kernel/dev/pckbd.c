@@ -19,10 +19,6 @@ typedef struct
 	device_t dev;
 	keyboard_t kbd;
 	ps2_bus_t* bus;
-	enum {
-		S_NEWKEY,
-		S_EXTRAKEY,
-	} state;
 	bool enabled;
 	bool accept_ints;
 	scancode_t scancode;
@@ -31,57 +27,35 @@ typedef struct
 static module_t mod;
 static pckbd_t kbd = {
 	.enabled = false,
-	.accept_ints = false
+	.accept_ints = false,
+	.scancode = {
+		.code = 0,
+		.action = SA_PRESSED
+	}
 };
-
-void pckbd_reset_state(pckbd_t* kbd)
-{
-	kbd->scancode.code = 0;
-	kbd->scancode.action = SA_PRESSED;
-	kbd->state = S_NEWKEY;
-}
 
 void pckbd_state(pckbd_t* kbd)
 {
-	if (kbd->state == S_NEWKEY)
+	u8 data = ps2_read_data(kbd->bus);
+	if (data == 0x00 || data == 0xFF)
+		return; // Key detect error
+
+	if (data == 0xF0)
 	{
-		u8 data = ps2_read_data(kbd->bus);
-		if (data == 0xF0)
-		{
-			kbd->scancode.action = SA_RELEASED;
-			kbd->state = S_EXTRAKEY;
-		}
-		else if (data == 0xE0)
-		{
-			kbd->scancode.code = 0x80;
-			kbd->state = S_EXTRAKEY;
-		}
-		else
-		{
-			kbd->scancode.code = data;
-			keyboard_register_event(kbd->scancode);
-			pckbd_reset_state(kbd);
-		}
+		kbd->scancode.action = SA_RELEASED;
 	}
-	else if (kbd->state == S_EXTRAKEY)
+	else if (data == 0xE0)
 	{
-		u8 data = ps2_read_data(kbd->bus);
-		if (data == 0xF0)
-		{
-			kbd->scancode.action = SA_RELEASED;
-			kbd->state = S_EXTRAKEY;
-		}
-		else if (data == 0xE0)
-		{
-			kbd->scancode.code = 0x80;
-			kbd->state = S_EXTRAKEY;
-		}
-		else
-		{
-			kbd->scancode.code |= data;
-			keyboard_register_event(kbd->scancode);
-			pckbd_reset_state(kbd);
-		}
+		kbd->scancode.code = 0x80;
+	}
+	else
+	{
+		kbd->scancode.code = data;
+		keyboard_register_event(kbd->scancode);
+
+		// Reset the state
+		kbd->scancode.code = 0;
+		kbd->scancode.action = SA_PRESSED;
 	}
 }
 
@@ -92,7 +66,9 @@ int pckbd_req(dev_req_t* req)
 		pckbd_t* kbd = KBD(req->device);
 		if (kbd->enabled)
 		{
-			pckbd_state(kbd);
+			u8 status;
+			while (((status = ps2_read_status(kbd->bus)) & 1) == 1)
+				pckbd_state(kbd);
 			return INT_ACCEPT;
 		}
 		else
@@ -124,7 +100,6 @@ void pckbd_init(ps2_bus_t* bus)
 	device_register_bus(&kbd.dev, KEYBOARD, &kbd.kbd);
 	interrupt_register(&kbd.dev, 0x21);
 	kbd.bus = bus;
-	pckbd_reset_state(&kbd);
 
 	ps2_write_data(bus, 0xFF);
 	// Can't wait for interrupt here. Call reset code in pcps2.c

@@ -8,9 +8,15 @@
 #ifndef API_KEYMAPS_ENUS_H_
 #define API_KEYMAPS_ENUS_H_
 
-static char keymapNormal[256] = {
+#include "api/keyscan.h"
+
+char keymapNormal[256] = {
 		[KB_Q] = 'q'
 };
+
+char keymapShift[256] = {};
+
+char keymapAlt[256] = {};
 
 /*
 static char keymapNormal[256] = {

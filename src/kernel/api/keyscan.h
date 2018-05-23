@@ -89,7 +89,8 @@ struct scancode_t
 #define KB_KPDOT 0x71
 #define KB_KPPLUS 0x79
 #define KB_KPMINUS 0x7B
-#define KB_KPSTAR 0x7C
+#define KB_KPMUL 0x7C
+#define KB_KPDIV 0xCA
 
 #define KB_TAB 0x0D
 #define KB_BACKTICK 0x0E
@@ -104,11 +105,11 @@ struct scancode_t
 #define KB_MINUS 0x4E
 #define KB_QUOTE 0x52
 #define KB_LBRACKET 0x54
+#define KB_RBRACKET 0x5B
 #define KB_EQUALS 0x55
 #define KB_CAPSLOCK 0x58
 #define KB_RSHIFT 0x59
 #define KB_ENTER 0x5A
-#define KB_RBRACKET 0x5B
 #define KB_BACKSLASH 0x5D
 #define KB_BACKSPACE 0x66
 #define KB_KPESCAPE 0x76
@@ -138,7 +139,6 @@ struct scancode_t
 #define KB_ACPISLEEP 0xBF
 #define KB_MMCOMPUTER 0xC0
 #define KB_MMEMAIL 0xC8
-#define KB_KPSLASH 0xCA
 #define KB_MMNEXT 0xCD
 #define KB_MMSELECT 0xD0
 #define KB_KPENTER 0xDA
@@ -153,6 +153,9 @@ struct scancode_t
 #define KB_CURUP 0xF5
 #define KB_PAGEDOWN 0xFA
 #define KB_PAGEUP 0xFD
+
+/* Extra keys */
+#define KB_EXTRA1 0x61
 
 // And so on and so forth
 // https://wiki.osdev.org/PS/2_Keyboard

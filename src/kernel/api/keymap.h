@@ -10,6 +10,7 @@
 #include "api/keyscan.h"
 #include <stdbool.h>
 
+void keyboard_init();
 void keyboard_register_event(scancode_t scancode);
 bool keyboard_is_down(SCANCODE scan);
 char keyboard_read_char();

@@ -10,13 +10,16 @@
 #include "sched.h"
 #include "cpu.h"
 #include "vfs.h"
+
+#include "api/keymap.h"
+
 #include "thread/mutex.h"
-#include "dev/tmpfs.h"
 
 #include "devices.h"
 #include "dev/pcps2.h"
 #include "dev/pckbd.h"
 #include "dev/tty.h"
+#include "dev/tmpfs.h"
 
 #if TARGET==i386
 #include "arch/i386/dev/vga.h"
@@ -229,6 +232,9 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	//asm("int $0x20");
 
 	//kprintf("Ok\n");
+
+	keyboard_init();
+
 	pit_init();
 
 	#ifdef ENABLE_PS2

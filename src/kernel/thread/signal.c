@@ -27,6 +27,7 @@ void signal_wait(signal_t* signal)
 		interrupt_disable();
 	}
 	signal->signal = false;
+	signal->owner = NULL;
 	interrupt_enable();
 }
 
@@ -42,6 +43,11 @@ void signal_signal(signal_t* signal)
 }
 
 bool signal_is_set(signal_t* signal)
+{
+	return signal->signal;
+}
+
+bool signal_is_waiting(signal_t* signal)
 {
 	return signal->owner != NULL;
 }
