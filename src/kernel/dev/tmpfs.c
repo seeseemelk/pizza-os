@@ -1,4 +1,5 @@
-#include "tmpfs.h"
+#include "dev/tmpfs.h"
+#include "bus/filesystem.h"
 #include "vfs.h"
 #include "devices.h"
 #include "cdefs.h"
@@ -8,7 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+/*
 module_t* tmpfs;
 
 #define MAX_NODES 256
@@ -33,18 +34,13 @@ typedef struct
 	node_t* inode;
 	unsigned int index;
 } dird_t;
-
+*/
 /*
- * READ, WRITE, FLUSH,
- * MOUNT, STAT,
- * DIRIT_NEW, DIRIT_NEXT
- */
-
 node_t* tmpfs_create_dir(dev_info_t* dev_info, node_t* parent, const char* name)
 {
 	unsigned int id = dev_info->next_id++;
 	node_t* dir = dev_info->nodes + id;
-	dir->type = EDIRECTORY;
+	//dir->type = EDIRECTORY;
 	dir->content = calloc(sizeof(unsigned int), MAX_CHILDREN);
 	dir->size = 0;
 	strncpy(dir->name, name, 256);
@@ -55,7 +51,7 @@ node_t* tmpfs_create_dir(dev_info_t* dev_info, node_t* parent, const char* name)
 
 int tmpfs_mod_req(mod_req_t* request)
 {
-	UNUSED(request);
+	UNUSED(request);*/
 	/*request_type type = request->type;
 	if (type == MOUNT) {
 		//device_t* device = device_register(tmpfs);
@@ -68,12 +64,12 @@ int tmpfs_mod_req(mod_req_t* request)
 		kernel_panic("Unknown request type on TMPFS module");
 		return 0;
 	}*/
-	return 0;
+	/*return 0;
 }
 
 int tmpfs_dev_req(dev_req_t* request)
 {
-	UNUSED(request);
+	UNUSED(request);*/
 	/*dev_info_t* dev = (dev_info_t*) request->device->data;
 
 	request_type type = request->type;
@@ -103,9 +99,9 @@ int tmpfs_dev_req(dev_req_t* request)
 		kernel_panic("Unknown request type on TMPFS module");
 		return 0;
 	}*/
-	return 0;
+	/*return 0;
 }
-
+*/
 void tmpfs_init()
 {
 	//tmpfs = module_register("tmpfs", FILESYSTEM, &tmpfs_mod_req, &tmpfs_dev_req);
