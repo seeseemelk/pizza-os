@@ -6,6 +6,7 @@
 #include "config.h"
 #include "kernel.h"
 #include "collections/list.h"
+#include "../fstypes.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -32,6 +33,24 @@ typedef struct
 module_t mod;
 fs_t dev;
 
+inode_t* tmpfs_find_subdir(inode_t* inode, const char* path, size_t start, size_t end)
+{
+	list_t* children = inode->ref;
+	size_t length = list_size(children);
+	path += start;
+	end -= start;
+
+	inode_t* child;
+	for (size_t i = 0; i < length; i++)
+	{
+		child = list_get(children, i);
+		if (strncmp(child->name, path, end))
+			return child;
+	}
+	kernel_panic("Inode not found");
+	return NULL;
+}
+
 int tmpfs_get_inode(device_t* dev, const char* path)
 {
 	fs_t* fs = FS(dev);
@@ -39,14 +58,14 @@ int tmpfs_get_inode(device_t* dev, const char* path)
 	path_begin(path, &start, &end);
 
 	inode_t* inode = &fs->root;
-	while (path_next_part(path, &start, &end) != 0)
+	while (path_next(path, &start, &end))
 	{
 		inode = tmpfs_find_subdir(inode, path, start, end);
 	}
 	return inode->id;
 }
 
-void tmpfs_init()
+filesystem_t* tmpfs_init()
 {
 	dev.bus.get_inode = tmpfs_get_inode;
 
@@ -55,6 +74,7 @@ void tmpfs_init()
 	module_register(&mod, "tmpfs", NULL, NULL);
 	device_register(&dev.dev, &mod);
 	device_register_bus(&dev.dev, FILESYSTEM, &dev.bus);
+	return &dev.bus;
 }
 
 
