@@ -33,9 +33,13 @@ typedef struct
 module_t mod;
 fs_t dev;
 
-inode_t* tmpfs_find_subdir(inode_t* inode, const char* path, size_t start, size_t end)
+inode_t* tmpfs_find_subdir(inode_t* inode, const char* path, const char* start, size_t end)
 {
-	list_t* children = inode->ref;
+	UNUSED(inode);
+	UNUSED(path);
+	UNUSED(start);
+	UNUSED(end);
+	/*list_t* children = inode->ref;
 	size_t length = list_size(children);
 	path += start;
 	end -= start;
@@ -47,20 +51,21 @@ inode_t* tmpfs_find_subdir(inode_t* inode, const char* path, size_t start, size_
 		if (strncmp(child->name, path, end))
 			return child;
 	}
-	kernel_panic("Inode not found");
+	kernel_panic("Inode not found");*/
 	return NULL;
 }
 
 int tmpfs_get_inode(device_t* dev, const char* path)
 {
 	fs_t* fs = FS(dev);
-	size_t start, end;
-	path_begin(path, &start, &end);
+	const char* start = NULL;
+	size_t length = 0;
+	path_begin(path, &start, &length);
 
 	inode_t* inode = &fs->root;
-	while (path_next(path, &start, &end))
+	while (path_next(path, &start, &length))
 	{
-		inode = tmpfs_find_subdir(inode, path, start, end);
+		inode = tmpfs_find_subdir(inode, path, start, length);
 	}
 	return inode->id;
 }

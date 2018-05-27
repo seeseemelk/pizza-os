@@ -8,6 +8,7 @@
 #ifndef FSTYPES_H_
 #define FSTYPES_H_
 
+#include <stddef.h>
 #include <stdbool.h>
 
 typedef size_t DIR;
@@ -36,11 +37,11 @@ typedef struct
 /**
  * Initialises the `begin` and `end` parameters for use with `path_next`.
  */
-void path_begin(const char* path, size_t* begin, size_t* end);
+void path_begin(const char* path, const char** begin, size_t* length);
 
 /**
  * Walks over each part in a path string.
  */
-bool path_next(const char* path, size_t* begin, size_t* end);
+bool path_next(const char* path, const char** begin, size_t* length);
 
 #endif /* FSTYPES_H_ */

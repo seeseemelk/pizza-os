@@ -1,20 +1,27 @@
 #include "fstypes.h"
+#include "cdefs.h"
+#include <stddef.h>
 
-void path_begin(const char* path, size_t* begin, size_t* end)
+void path_begin(const char* path, const char** begin, size_t* length)
 {
-	*begin = 0;
-	*end = 1;
+	*begin = path;
+	*length = 0;
 }
 
-bool path_next(const char* path, size_t* begin, size_t* end)
+bool path_next(const char* path, const char** begin, size_t* length)
 {
-	size_t len = sizeof(path);
-	if (len == *end)
+	UNUSED(path);
+	size_t len = sizeof(begin);
+	if (len == *length)
 		return false;
 
-	*begin = *end + 1;
-	while (path[*end] != '/' && *end < len)
-		(*end)++;
+	*begin = *begin + *length;
+	if ((*begin)[0] == '/')
+		(*begin)++;
+	*length = 0;
+
+	while ((*begin)[*length] != '/' && *length < len)
+		(*length)++;
 
 	return true;
 }
