@@ -1,8 +1,9 @@
 #include "dev/tty.h"
+#include "dev/eserial.h"
 #include "bus/vga.h"
 #include <stddef.h>
 
-vga_bus_t* tty;
+vga_bus_t* tty = NULL;
 int width;
 int height;
 int max_index;
@@ -72,14 +73,21 @@ void tty_put_char(const char c)
 {
 	if (c == '\n')
 	{
-		tty_advance_line();
+		//eserial_putchar('\n');
+		//eserial_putchar('\r'); // Needed for cu
+		if (tty != NULL)
+			tty_advance_line();
 	}
 	else
 	{
-		int cursor_x = tty_get_cursor_x();
-		int cursor_y = tty_get_cursor_y();
-		tty_set_char(cursor_x, cursor_y, c);
-		tty_advance_cursor();
+		//eserial_putchar(c);
+		if (tty != NULL)
+		{
+			int cursor_x = tty_get_cursor_x();
+			int cursor_y = tty_get_cursor_y();
+			tty_set_char(cursor_x, cursor_y, c);
+			tty_advance_cursor();
+		}
 	}
 }
 

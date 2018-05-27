@@ -10,4 +10,6 @@
 
 #include "i386_interrupt.h"
 
+void interrupt_debug_jmp(int exceptionNumber, void* target);
+
 #endif /* ARCH_I386_I386_INTERRUPT_H_ */

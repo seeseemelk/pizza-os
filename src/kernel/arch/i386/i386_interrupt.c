@@ -155,7 +155,23 @@ void interrupt_disable()
 	cli();
 }
 
+void interrupt_debug_jmp(int exceptionNumber, void* target)
+{
+	/*u8* opcode = (u8*) (handlers + INT_HANDLER_SIZE * exceptionNumber);*/
 
+	/* MOV EAX, target */
+	/*opcode[0] = 0xB8;
+	*((u32*) (opcode+1)) = (size_t) target;
+	opcode += 5;*/
+
+	/* JMP EAX */
+	/*opcode[0] = 0x66;
+	opcode[1] = 0xFF;
+	opcode[2] = 0xE0;*/
+
+	int_descriptor* entry = idt + exceptionNumber;
+	idt_set_address(entry, target, 8);
+}
 
 
 
