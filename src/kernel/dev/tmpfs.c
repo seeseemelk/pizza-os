@@ -33,26 +33,29 @@ typedef struct
 module_t mod;
 fs_t dev;
 
+/**
+ * Takes an inode and searches for a child entry in that
+ * inode that has a name equal to path.
+ */
 inode_t* tmpfs_find_subdir(inode_t* inode, path_t* path)
 {
-	UNUSED(inode);
-	UNUSED(path);
-	/*list_t* children = inode->ref;
+	list_t* children = inode->ref;
 	size_t length = list_size(children);
-	path += start;
-	end -= start;
 
 	inode_t* child;
 	for (size_t i = 0; i < length; i++)
 	{
 		child = list_get(children, i);
-		if (strncmp(child->name, path, end))
+		if (pcmp(child->name, path) == 0)
 			return child;
 	}
-	kernel_panic("Inode not found");*/
+	kernel_panic("Inode not found");
 	return NULL;
 }
 
+/**
+ * Turns a path into an inode number.
+ */
 int tmpfs_get_inode(device_t* dev, const char* path)
 {
 	fs_t* fs = FS(dev);

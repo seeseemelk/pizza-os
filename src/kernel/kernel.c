@@ -202,7 +202,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	mem_init();
 	printf("DONE\n");*/
 
-	path_t path = path_begin("/path/dir/file");
+	/*path_t path = path_begin("/path/dir/file");
 	while (path_next(&path))
 	{
 		char name[path.length + 1];
@@ -212,7 +212,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	}
 
 	__asm__ ("cli");
-	while (1);
+	while (1);*/
 
 	thread_init();
 

@@ -10,6 +10,7 @@
 
 #include <stddef.h>
 #include <stdbool.h>
+#include <string.h>
 
 typedef size_t DIR;
 typedef size_t FILE;
@@ -49,5 +50,14 @@ path_t path_begin(const char* path);
  * Walks over each part in a path string.
  */
 bool path_next(path_t* path);
+
+/**
+ * Compares a string to a path.
+ * Usable as a shorthand for `strncmp` when using paths.
+ */
+static inline int pcmp(const char* str, path_t* path)
+{
+	return strncmp(str, path->path, path->length);
+}
 
 #endif /* FSTYPES_H_ */
