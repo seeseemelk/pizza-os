@@ -35,6 +35,7 @@ void vfs_mount(const char* path, filesystem_t* fs)
 	mp->fs = fs;
 	strcpy(mp->path, path);
 	list_add(mountpoints, mp);
+	kernel_log("Mounted %s at %s", fs->dev->module->name, path);
 }
 
 mountpoint_t* vfs_find_mountpoint(const char* path)
@@ -45,7 +46,7 @@ mountpoint_t* vfs_find_mountpoint(const char* path)
 	{
 		mountpoint_t* mp = list_get(mountpoints, i);
 		size_t mp_length = strlen(mp->path);
-		if (path_length > mp_length && strncmp(path, mp->path, mp_length))
+		if (path_length >= mp_length && strncmp(path, mp->path, mp_length) == 0)
 		{
 			return mp;
 		}

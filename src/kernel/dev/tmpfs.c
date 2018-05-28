@@ -30,8 +30,8 @@ typedef struct
 	inode_t root;
 } fs_t;
 
-module_t mod;
-fs_t dev;
+static module_t mod;
+static fs_t dev;
 
 /**
  * Takes an inode and searches for a child entry in that
@@ -78,6 +78,7 @@ filesystem_t* tmpfs_init()
 	module_register(&mod, "tmpfs", NULL, NULL);
 	device_register(&dev.dev, &mod);
 	device_register_bus(&dev.dev, FILESYSTEM, &dev.bus);
+	dev.bus.dev = &dev.dev;
 	return &dev.bus;
 }
 

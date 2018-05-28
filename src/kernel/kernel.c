@@ -246,6 +246,12 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 
 	//kprintf("Ok\n");
 
+	vfs_init();
+	filesystem_t* tmpfs = tmpfs_init();
+	vfs_mount("/", tmpfs);
+
+	vfs_open_dir("/");
+
 	keyboard_init();
 
 	pit_init();
