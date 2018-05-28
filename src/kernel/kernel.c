@@ -12,7 +12,7 @@
 #include "sched.h"
 #include "cpu.h"
 #include "vfs.h"
-#include "fstypes.c"
+#include "fstypes.h"
 
 #include "thread/mutex.h"
 
@@ -202,17 +202,16 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	mem_init();
 	printf("DONE\n");*/
 
-	const char* path = "/path/dir/file";
-	const char* subpath;
-	size_t length;
-	path_begin(path, &subpath, &length);
-	while (path_next(path, &subpath, &length))
+	path_t path = path_begin("/path/dir/file");
+	while (path_next(&path))
 	{
-		char name[length];
-		strncpy(name, path, length);
+		char name[path.length + 1];
+		strncpy(name, path.path, path.length);
+		name[path.length] = 0;
 		kernel_log("Part: '%s'", name);
 	}
 
+	__asm__ ("cli");
 	while (1);
 
 	thread_init();

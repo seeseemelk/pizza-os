@@ -34,14 +34,20 @@ typedef struct
 	char name[256];
 } dirent_t;
 
+typedef struct
+{
+	const char* path;
+	size_t length;
+} path_t;
+
 /**
  * Initialises the `begin` and `end` parameters for use with `path_next`.
  */
-void path_begin(const char* path, const char** begin, size_t* length);
+path_t path_begin(const char* path);
 
 /**
  * Walks over each part in a path string.
  */
-bool path_next(const char* path, const char** begin, size_t* length);
+bool path_next(path_t* path);
 
 #endif /* FSTYPES_H_ */

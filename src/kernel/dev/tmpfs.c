@@ -6,7 +6,7 @@
 #include "config.h"
 #include "kernel.h"
 #include "collections/list.h"
-#include "../fstypes.h"
+#include "fstypes.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -33,12 +33,10 @@ typedef struct
 module_t mod;
 fs_t dev;
 
-inode_t* tmpfs_find_subdir(inode_t* inode, const char* path, const char* start, size_t end)
+inode_t* tmpfs_find_subdir(inode_t* inode, path_t* path)
 {
 	UNUSED(inode);
 	UNUSED(path);
-	UNUSED(start);
-	UNUSED(end);
 	/*list_t* children = inode->ref;
 	size_t length = list_size(children);
 	path += start;
@@ -58,14 +56,12 @@ inode_t* tmpfs_find_subdir(inode_t* inode, const char* path, const char* start, 
 int tmpfs_get_inode(device_t* dev, const char* path)
 {
 	fs_t* fs = FS(dev);
-	const char* start = NULL;
-	size_t length = 0;
-	path_begin(path, &start, &length);
+	path_t p = path_begin(path);
 
 	inode_t* inode = &fs->root;
-	while (path_next(path, &start, &length))
+	while (path_next(&p))
 	{
-		inode = tmpfs_find_subdir(inode, path, start, length);
+		inode = tmpfs_find_subdir(inode, &p);
 	}
 	return inode->id;
 }
