@@ -250,7 +250,9 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	filesystem_t* tmpfs = tmpfs_init();
 	vfs_mount("/", tmpfs);
 
-	vfs_open_dir("/");
+	DIR dir = vfs_open_dir("/");
+	dirent_t dirent;
+	while (vfs_next_dir(dir, &dirent) )
 
 	keyboard_init();
 

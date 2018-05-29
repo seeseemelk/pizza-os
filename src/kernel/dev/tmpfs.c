@@ -12,12 +12,13 @@
 #include <string.h>
 
 #define FS(dev) ((fs_t*) dev)
+#define MAX_FILENAME 16
 
 /* A general node structure. */
 typedef struct
 {
 	int id;
-	char name[16];
+	char name[MAX_FILENAME];
 	file_t type;
 } node_t;
 
@@ -29,7 +30,7 @@ typedef struct
 	 * Contains a list to all the inodes that are
 	 * in this directory.
 	 */
-	list_t* ref;
+	list_t* contents;
 } dirnode_t;
 
 /* Node structure for files. */
@@ -47,7 +48,7 @@ typedef struct
 {
 	device_t dev;
 	filesystem_t bus;
-	node_t root;
+	dirnode_t root;
 	/* Contains the list of all inodes in numeric order
 	 * The inodes are indexed by their inode number.
 	 * When inodes are free, they are set to `NULL`.
@@ -64,19 +65,29 @@ static fs_t dev;
  * Takes an inode and searches for a child entry in that
  * inode that has a name equal to path.
  */
-inode_t* tmpfs_find_subdir(inode_t* inode, path_t* path)
+dirnode_t* tmpfs_find_subdir(dirnode_t* node, path_t* path)
 {
-	list_t* children = inode->ref;
+	list_t* children = node->contents;
 	size_t length = list_size(children);
 
-	inode_t* child;
+	node_t* child;
 	for (size_t i = 0; i < length; i++)
 	{
 		child = list_get(children, i);
 		if (pcmp(child->name, path) == 0)
-			return child;
+		{
+			if (child->type == FDIR)
+			{
+				return (dirnode_t*) child;
+			}
+			else
+			{
+				kernel_panic("Node is not a directory");
+				return NULL;
+			}
+		}
 	}
-	kernel_panic("Inode not found");
+	kernel_panic("Node not found");
 	return NULL;
 }
 
@@ -90,27 +101,30 @@ int tmpfs_get_inode(device_t* dev, const char* path)
 	fs_t* fs = FS(dev);
 	path_t p = path_begin(path);
 
-	inode_t* inode = &fs->root;
+	dirnode_t* node = &fs->root;
 	while (path_next(&p))
 	{
-		inode = tmpfs_find_subdir(inode, &p);
+		node = tmpfs_find_subdir(node, &p);
 	}
-	return inode->id;
+	return node->node.id;
 }
 
 /**
  * Finds a free unused inode in the device's
  * node list.
  */
-int tmpfs_find_unused_inode(device_t* device)
+int tmpfs_get_unused_inode(fs_t* fs)
 {
-	if (device->freeNodes > 0)
+	/* If there are free nodes, we'll find one and use it.
+	 * If there aren't any free nodes, we'll add a new one.
+	 */
+	if (fs->freeNodes > 0)
 	{
 		size_t index = 0;
-		size_t size = list_size(device->nodes);
+		size_t size = list_size(fs->nodes);
 		for (size_t i = 0; i < size; i++)
 		{
-			if (list_get(i) == NULL)
+			if (list_get(fs->nodes, i) == NULL)
 			{
 				index = i;
 				break;
@@ -120,8 +134,8 @@ int tmpfs_find_unused_inode(device_t* device)
 	}
 	else
 	{
-		list_add(device->nodes, NULL);
-		return list_size(device->nodes);
+		list_add(fs->nodes, NULL);
+		return list_size(fs->nodes);
 	}
 }
 
@@ -129,9 +143,13 @@ int tmpfs_find_unused_inode(device_t* device)
  * Stores a newly generated node into the device's
  * node list.
  */
-void tmpfs_store_node(device_t* device, node_t* child, const char* name)
+void tmpfs_store_node(fs_t* fs, node_t* child, const char* name)
 {
 	/* Find a free spot in the list */
+	int inode = tmpfs_get_unused_inode(fs);
+	list_set(fs->nodes, inode, child);
+	child->id = inode;
+	strncpy(child->name, name, MAX_FILENAME);
 }
 
 void tmpfs_free_inode(device_t* dev, int inode)
@@ -142,21 +160,21 @@ void tmpfs_free_inode(device_t* dev, int inode)
 	list_set(fs->nodes, inode, NULL);
 }
 
-void tmpfs_mkdir(device_t* dev, int parentInode, const char* name)
+int tmpfs_mkdir(device_t* dev, int parentInode, const char* name)
 {
 	fs_t* fs = FS(dev);
-	node_t* parent = list_get(fs->nodes, inode);
+	dirnode_t* parent = list_get(fs->nodes, parentInode);
 	dirnode_t* child = malloc(sizeof(dirnode_t));
-	list_add(parent->refs, child);
-	tmpfs_store_node(child, name);
-	return child->id;
+	list_add(parent->contents, child);
+	tmpfs_store_node(fs, (node_t*) child, name);
+	return child->node.id;
 }
 
 filesystem_t* tmpfs_init()
 {
 	dev.bus.get_inode = tmpfs_get_inode;
 
-	dev.root.ref = list_new();
+	dev.root.contents = list_new();
 	dev.freeNodes = 0;
 
 	module_register(&mod, "tmpfs", NULL, NULL);
