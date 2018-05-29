@@ -67,7 +67,7 @@ DIR vfs_open_dir(const char* path)
 	filesystem_t* fs = mp->fs;
 	const char* subpath = vfs_get_sub_path(mp, path);
 	int inode = fs->get_inode(fs->dev, subpath);
-	void* dirit = fs->open_dir(fs->dev, inode);
+	void* dirit = fs->dir_open(fs->dev, inode);
 	list_add(dir_desc_it, dirit);
 	list_add(dir_desc_fs, fs);
 	DIR dir = list_size(dir_desc_fs);
@@ -78,7 +78,7 @@ void vfs_close_dir(DIR dir)
 {
 	filesystem_t* fs = list_get(dir_desc_fs, dir);
 	void* dirit = list_get(dir_desc_fs, dir);
-	fs->close_dir(fs->dev, dirit);
+	fs->dir_close(fs->dev, dirit);
 }
 
 void vfs_next_dir(DIR dir, dirent_t* dirent)

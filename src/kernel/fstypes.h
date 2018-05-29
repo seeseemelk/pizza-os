@@ -41,6 +41,11 @@ typedef struct
 	size_t length;
 } path_t;
 
+typedef enum
+{
+	FSEEK_REL, FSEEK_BEGIN, FSEEK_END
+} fseek_t;
+
 /**
  * Initialises the `begin` and `end` parameters for use with `path_next`.
  */
