@@ -17,9 +17,9 @@ typedef struct
 	int(*get_inode)(device_t* dev, const char* path);
 	void(*free_inode)(device_t* dev, int inode);
 
-	void(*mkdir)(device_t* dev, int parent, const char* name);
-	void(*mkfile)(device_t* dev, int parent, const char* name);
-	void(*mklink)(device_t* dev, int parent, const char* name, const char* target);
+	int(*mkdir)(device_t* dev, int parent, const char* name);
+	int(*mkfile)(device_t* dev, int parent, const char* name);
+	int(*mklink)(device_t* dev, int parent, const char* name, const char* target);
 
 	void(*rm)(device_t* dev, int inode);
 	void(*stat)(device_t* dev, int inode);
