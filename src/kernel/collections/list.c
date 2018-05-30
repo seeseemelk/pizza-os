@@ -46,6 +46,9 @@ void list_set(list_t* list, size_t index, void* item)
 
 void list_add(list_t* list, void* item)
 {
+	if (list == NULL)
+		kernel_panic("List argument is NULL");
+
 	if (list->size == list->max_size)
 	{
 		list->max_size *= 2;

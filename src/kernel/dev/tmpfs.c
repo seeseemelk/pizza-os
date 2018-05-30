@@ -12,7 +12,7 @@
 #include <string.h>
 
 #define FS(dev) ((fs_t*) dev)
-#define MAX_FILENAME 16
+#define MAX_FILENAME 256
 
 /* A general node structure. */
 typedef struct
@@ -58,6 +58,13 @@ typedef struct
 	size_t freeNodes;
 } fs_t;
 
+/* Represents an opened directory. */
+typedef struct
+{
+	dirnode_t* node;
+	size_t pointer;
+} opendir_t;
+
 static module_t mod;
 static fs_t dev;
 
@@ -102,8 +109,12 @@ int tmpfs_get_inode(device_t* dev, const char* path)
 	path_t p = path_begin(path);
 
 	dirnode_t* node = &fs->root;
+	/* TODO: Either path_next or path_store seems to have a bug. */
 	while (path_next(&p))
 	{
+		char name[p.length];
+		path_store(&p, name);
+		kernel_log("Entered path `%s`", name);
 		node = tmpfs_find_subdir(node, &p);
 	}
 	return node->node.id;
@@ -135,7 +146,7 @@ int tmpfs_get_unused_inode(fs_t* fs)
 	else
 	{
 		list_add(fs->nodes, NULL);
-		return list_size(fs->nodes);
+		return list_size(fs->nodes) - 1;
 	}
 }
 
@@ -163,19 +174,71 @@ void tmpfs_free_inode(device_t* dev, int inode)
 int tmpfs_mkdir(device_t* dev, int parentInode, const char* name)
 {
 	fs_t* fs = FS(dev);
+
+	/* Find the parent */
 	dirnode_t* parent = list_get(fs->nodes, parentInode);
+
+	/* Allocate and prepare the child */
 	dirnode_t* child = malloc(sizeof(dirnode_t));
+	child->contents = list_new();
+
+	/* Store the child. This will fill in several fields of the child too. */
 	list_add(parent->contents, child);
 	tmpfs_store_node(fs, (node_t*) child, name);
 	return child->node.id;
 }
 
+void* tmpfs_dir_open(device_t* dev, int inode)
+{
+	fs_t* fs = FS(dev);
+	dirnode_t* node = list_get(fs->nodes, inode);
+	opendir_t* od = malloc(sizeof(opendir_t));
+	od->node = node;
+	od->pointer = 0;
+	return od;
+}
+
+void tmpfs_dir_close(device_t* dev, void* dirit)
+{
+	UNUSED(dev);
+	free(dirit);
+}
+
+bool tmpfs_dir_next(device_t* dev, void* dirit, dirent_t* dirent)
+{
+	UNUSED(dev);
+	opendir_t* od = (opendir_t*) dirit;
+
+	if (od->pointer < list_size(od->node->contents))
+	{
+		node_t* child = list_get(od->node->contents, od->pointer);
+		od->pointer++;
+
+		dirent->type = child->type;
+		strncpy(dirent->name, child->name, MAX_FILENAME);
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
 filesystem_t* tmpfs_init()
 {
 	dev.bus.get_inode = tmpfs_get_inode;
+	dev.bus.mkdir = tmpfs_mkdir;
+	dev.bus.dir_open = tmpfs_dir_open;
+	dev.bus.dir_close = tmpfs_dir_close;
+	dev.bus.dir_next = tmpfs_dir_next;
 
+	dev.root.node.id = 0;
+	dev.root.node.name[0] = '\0';
+	dev.root.node.type = FDIR;
 	dev.root.contents = list_new();
 	dev.freeNodes = 0;
+	dev.nodes = list_new();
+	list_add(dev.nodes, &dev.root);
 
 	module_register(&mod, "tmpfs", NULL, NULL);
 	device_register(&dev.dev, &mod);

@@ -10,6 +10,7 @@
 
 #include "devices.h"
 #include "fstypes.h"
+#include <stdbool.h>
 
 typedef struct
 {
@@ -26,7 +27,7 @@ typedef struct
 
 	void*(*dir_open)(device_t* dev, int inode);
 	void(*dir_close)(device_t* dev, void* dirit);
-	void(*dir_next)(device_t* dev, void* dirit, dirent_t* dirent);
+	bool(*dir_next)(device_t* dev, void* dirit, dirent_t* dirent);
 
 	void*(*file_open)(device_t* dev, int inode);
 	void(*file_close)(device_t* dev, void* fd);

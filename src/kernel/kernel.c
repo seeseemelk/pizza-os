@@ -246,13 +246,30 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 
 	//kprintf("Ok\n");
 
+	/*const char* path = "/df";
+	char* sdir = path_parent(path);
+	kernel_log("Dir: '%s'", sdir);
+	char* file = path_filename(path);
+	kernel_log("File: '%s'", file);*/
+
 	vfs_init();
 	filesystem_t* tmpfs = tmpfs_init();
 	vfs_mount("/", tmpfs);
 
+	vfs_mkdir("/dir");
+	vfs_mkdir("/b");
+	vfs_mkdir("/nezdir");
+	vfs_mkdir("/b/fe");
+
+	kernel_log("Listing /");
 	DIR dir = vfs_open_dir("/");
 	dirent_t dirent;
-	while (vfs_next_dir(dir, &dirent) )
+	while (vfs_next_dir(dir, &dirent))
+	{
+		kernel_log("'/%s'", dirent.name);
+	}
+	vfs_close_dir(dir);
+	kernel_log("Finished listing /");
 
 	keyboard_init();
 

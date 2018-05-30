@@ -20,10 +20,13 @@
  */
 void vfs_init();
 void vfs_mount(const char* path, filesystem_t* fs);
+
+void vfs_stat(const char* path);
+void vfs_mkdir(const char* path);
+
 DIR vfs_open_dir(const char* path);
 void vfs_close_dir(DIR dir);
-void vfs_next_dir(DIR dir, dirent_t* dirent);
-void vfs_stat(const char* path);
+bool vfs_next_dir(DIR dir, dirent_t* dirent);
 
 #endif /* VFS_H_ */
 

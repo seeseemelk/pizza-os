@@ -61,6 +61,19 @@ const char* vfs_get_sub_path(mountpoint_t* mp, const char* path)
 	return path + fs_len - 1;
 }
 
+void vfs_mkdir(const char* path)
+{
+	mountpoint_t* mp = vfs_find_mountpoint(path);
+	filesystem_t* fs = mp->fs;
+	const char* subpath = vfs_get_sub_path(mp, path);
+	//fs->mkdir(fs->dev, subpath);
+	char* parent = path_parent(subpath);
+	char* filename = path_filename(subpath);
+	int parent_inode = fs->get_inode(fs->dev, parent);
+	fs->mkdir(fs->dev, parent_inode, filename);
+	free(parent);
+}
+
 DIR vfs_open_dir(const char* path)
 {
 	mountpoint_t* mp = vfs_find_mountpoint(path);
@@ -70,22 +83,22 @@ DIR vfs_open_dir(const char* path)
 	void* dirit = fs->dir_open(fs->dev, inode);
 	list_add(dir_desc_it, dirit);
 	list_add(dir_desc_fs, fs);
-	DIR dir = list_size(dir_desc_fs);
+	DIR dir = list_size(dir_desc_fs) - 1;
 	return dir;
 }
 
 void vfs_close_dir(DIR dir)
 {
 	filesystem_t* fs = list_get(dir_desc_fs, dir);
-	void* dirit = list_get(dir_desc_fs, dir);
+	void* dirit = list_get(dir_desc_it, dir);
 	fs->dir_close(fs->dev, dirit);
 }
 
-void vfs_next_dir(DIR dir, dirent_t* dirent)
+bool vfs_next_dir(DIR dir, dirent_t* dirent)
 {
 	filesystem_t* fs = list_get(dir_desc_fs, dir);
-	void* dirit = list_get(dir_desc_fs, dir);
-	fs->dir_next(fs->dev, dirit, dirent);
+	void* dirit = list_get(dir_desc_it, dir);
+	return fs->dir_next(fs->dev, dirit, dirent);
 }
 
 void vfs_stat(const char* path)

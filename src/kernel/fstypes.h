@@ -57,6 +57,28 @@ path_t path_begin(const char* path);
 bool path_next(path_t* path);
 
 /**
+ * Stores the name of the currently selected part of the path
+ * in a buffer. The buffer will always be `null` terminated.
+ * Note that the buf does need to be at least path->length in size.
+ */
+void path_store(path_t* path, char* buf);
+
+/**
+ * Gets the parent directory of a path.
+ * Returns a `null` terminated string with no leading '/' at the end.
+ * Note that the returned string has to be freed manually.
+ */
+char* path_parent(const char* path);
+
+/**
+ * Similar to `path_parent`, but gets the filename instead of the
+ * parent directory.
+ * Will never contain any '/' whatsoever.
+ * Note that the returned string has to be freed manually.
+ */
+char* path_filename(const char* path);
+
+/**
  * Compares a string to a path.
  * Usable as a shorthand for `strncmp` when using paths.
  */
