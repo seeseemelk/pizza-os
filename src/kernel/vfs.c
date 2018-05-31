@@ -8,25 +8,36 @@
 #include <string.h>
 #include <stdbool.h>
 
-// Contains a list of all mountpoints
+/* Contains a list of all mountpoints */
 list_t* mountpoints;
 
-// Data structure stored in mountpoints list
+/* Data structure stored in mountpoints list */
 typedef struct
 {
 	char path[256];
 	filesystem_t* fs;
 } mountpoint_t;
 
-// Contains a list of all directory descriptors
+/* Contains a list of all directory descriptors */
 list_t* dir_desc_fs;
 list_t* dir_desc_it;
+
+/* Contains a list of all open file descriptors */
+/*typedef struct 
+{
+	filesystem_t* fs;
+	void* fd;
+} open_file_t;*/
+list_t* open_files_fs;
+list_t* open_files_data;
 
 void vfs_init()
 {
 	mountpoints = list_new();
 	dir_desc_fs = list_new();
 	dir_desc_it = list_new();
+	open_files_fs = list_new();
+	open_files_data = list_new();
 }
 
 void vfs_mount(const char* path, filesystem_t* fs)
@@ -74,6 +85,8 @@ void vfs_mkdir(const char* path)
 	free(parent);
 }
 
+/* Functions that operate on opened directories */
+
 DIR vfs_open_dir(const char* path)
 {
 	mountpoint_t* mp = vfs_find_mountpoint(path);
@@ -100,6 +113,42 @@ bool vfs_next_dir(DIR dir, dirent_t* dirent)
 	void* dirit = list_get(dir_desc_it, dir);
 	return fs->dir_next(fs->dev, dirit, dirent);
 }
+
+/* Functions that operate on opened files */
+
+size_t vfs_find_free_descriptor(list_t* list)
+{
+	size_t len = list_size(list);
+	for (size_t i = 0; i < len; i++)
+	{
+		if (list_get(list, i) == NULL)
+			return i;
+	}
+
+	/* None were found, so we make one */
+	list_add(list, NULL);
+	return list_size(list) - 1;
+}
+
+FILE vfs_open_file(const char* path, mode_t mode)
+{
+	mountpoint_t* mp = vfs_find_mountpoint(path);
+	filesystem_t* fs = mp->fs;
+	const char* subpath = vfs_get_sub_path(mp, path);
+
+	/* Needs a way to check if the inode exists.
+	 * If it does it should be opened,
+	 * if it doesn't it may need to be created.
+	 */
+
+	int inode = fs->get_inode(fs->dev, subpath);
+	//void* data = fs->file_open(fs->dev, inode
+
+	FILE desc = vfs_find_free_descriptor(open_files_fs);
+	//open_files_fs
+}
+
+/* Functions that operate on closed files */
 
 void vfs_stat(const char* path)
 {

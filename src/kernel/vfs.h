@@ -28,6 +28,11 @@ DIR vfs_open_dir(const char* path);
 void vfs_close_dir(DIR dir);
 bool vfs_next_dir(DIR dir, dirent_t* dirent);
 
+FILE vfs_open_file(const char* path, mode_t mode);
+void vfs_close_file(FILE file);
+size_t vfs_read_file(FILE file, char* buf, size_t len);
+size_t vfs_write_file(FILE file, const char* buf, size_t len);
+
 #endif /* VFS_H_ */
 
 
