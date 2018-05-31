@@ -81,8 +81,8 @@ DIR vfs_open_dir(const char* path)
 	const char* subpath = vfs_get_sub_path(mp, path);
 	int inode = fs->get_inode(fs->dev, subpath);
 	void* dirit = fs->dir_open(fs->dev, inode);
-	list_add(dir_desc_it, dirit);
 	list_add(dir_desc_fs, fs);
+	list_add(dir_desc_it, dirit);
 	DIR dir = list_size(dir_desc_fs) - 1;
 	return dir;
 }

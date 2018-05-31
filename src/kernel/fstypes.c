@@ -33,7 +33,7 @@ bool path_next(path_t* path)
 
 void path_store(path_t* path, char* buf)
 {
-	strncpy(buf, path->path, path->length - 1);
+	strncpy(buf, path->path, path->length);
 	buf[path->length] = '\0';
 }
 

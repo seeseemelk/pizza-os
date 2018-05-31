@@ -148,12 +148,24 @@ void kernel_init_paging()
 	page_enable();
 }
 
-mutex_t mutex;
-void thread_print(int i)
+void list_dir(const char* path)
 {
-	mutex_lock(&mutex);
-	kernel_log("Hello from %d", i);
-	mutex_unlock(&mutex);
+	DIR dir = vfs_open_dir(path);
+	dirent_t dirent;
+	while (vfs_next_dir(dir, &dirent))
+	{
+		size_t path_length = strlen(path);
+		size_t filelength = strlen(dirent.name);
+		char* cat = malloc(path_length + filelength + 1);
+		strcpy(cat, path);
+		if (path_length > 1)
+			cat[path_length++] = '/';
+		strcpy(cat+path_length, dirent.name);
+		kernel_log("%s", cat);
+		list_dir(cat);
+		free(cat);
+	}
+	vfs_close_dir(dir);
 }
 
 void kernel_main(multiboot_info_t* mbd, unsigned int magic)
@@ -256,12 +268,18 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	filesystem_t* tmpfs = tmpfs_init();
 	vfs_mount("/", tmpfs);
 
-	vfs_mkdir("/dir");
-	vfs_mkdir("/b");
-	vfs_mkdir("/nezdir");
-	vfs_mkdir("/b/fe");
+	vfs_mkdir("/dirA");
+	vfs_mkdir("/dirB");
+	vfs_mkdir("/dirB/subDirA");
+	vfs_mkdir("/dirB/subDirB");
+	//vfs_mkdir("/b/mom");
+	//vfs_mkdir("/b/mom/iscool");
 
-	kernel_log("Listing /");
+	kernel_log("Listing root");
+	list_dir("/");
+	kernel_log("Finished");
+
+	/*kernel_log("Listing /");
 	DIR dir = vfs_open_dir("/");
 	dirent_t dirent;
 	while (vfs_next_dir(dir, &dirent))
@@ -269,7 +287,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 		kernel_log("'/%s'", dirent.name);
 	}
 	vfs_close_dir(dir);
-	kernel_log("Finished listing /");
+	kernel_log("Finished listing /");*/
 
 	keyboard_init();
 

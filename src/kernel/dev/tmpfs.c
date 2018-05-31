@@ -114,7 +114,7 @@ int tmpfs_get_inode(device_t* dev, const char* path)
 	{
 		char name[p.length];
 		path_store(&p, name);
-		kernel_log("Entered path `%s`", name);
+		//kernel_log("Entered path `%s`", name);
 		node = tmpfs_find_subdir(node, &p);
 	}
 	return node->node.id;
@@ -181,6 +181,7 @@ int tmpfs_mkdir(device_t* dev, int parentInode, const char* name)
 	/* Allocate and prepare the child */
 	dirnode_t* child = malloc(sizeof(dirnode_t));
 	child->contents = list_new();
+	child->node.type = FDIR;
 
 	/* Store the child. This will fill in several fields of the child too. */
 	list_add(parent->contents, child);
