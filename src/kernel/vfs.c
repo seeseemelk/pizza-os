@@ -23,21 +23,19 @@ list_t* dir_desc_fs;
 list_t* dir_desc_it;
 
 /* Contains a list of all open file descriptors */
-/*typedef struct 
+typedef struct
 {
 	filesystem_t* fs;
-	void* fd;
-} open_file_t;*/
-list_t* open_files_fs;
-list_t* open_files_data;
+	void* data;
+} open_file_t;
+list_t* open_files;
 
 void vfs_init()
 {
 	mountpoints = list_new();
 	dir_desc_fs = list_new();
 	dir_desc_it = list_new();
-	open_files_fs = list_new();
-	open_files_data = list_new();
+	open_files = list_new();
 }
 
 void vfs_mount(const char* path, filesystem_t* fs)
@@ -105,6 +103,8 @@ void vfs_close_dir(DIR dir)
 	filesystem_t* fs = list_get(dir_desc_fs, dir);
 	void* dirit = list_get(dir_desc_it, dir);
 	fs->dir_close(fs->dev, dirit);
+	list_set(dir_desc_fs, dir, NULL);
+	list_set(dir_desc_it, dir, NULL);
 }
 
 bool vfs_next_dir(DIR dir, dirent_t* dirent)
@@ -142,10 +142,51 @@ FILE vfs_open_file(const char* path, mode_t mode)
 	 */
 
 	int inode = fs->get_inode(fs->dev, subpath);
-	//void* data = fs->file_open(fs->dev, inode
+	if (inode == 0) /* The node does not exist. Create it. */
+	{
+		char* parent = path_parent(subpath);
+		char* filename = path_filename(subpath);
+		inode = fs->get_inode(fs->dev, parent);
+		fs->mkfile(fs->dev, inode, filename);
+		free(parent);
+		free(filename);
+		inode = fs->get_inode(fs->dev, subpath);
+	}
 
-	FILE desc = vfs_find_free_descriptor(open_files_fs);
+	/* Open the file */
+	void* data = fs->file_open(fs->dev, inode, mode);
+
+	/* Save the descriptor */
+	FILE desc = vfs_find_free_descriptor(open_files);
+	open_file_t* of = malloc(sizeof(open_file_t));
+	of->fs = fs;
+	of->data = data;
+	list_set(open_files, desc, of);
+
+	return desc;
 	//open_files_fs
+}
+
+void vfs_close_file(FILE file)
+{
+	open_file_t* of = list_get(open_files, file);
+	filesystem_t* fs = of->fs;
+	fs->file_close(fs->dev, of->data);
+	list_set(open_files, file, NULL);
+}
+
+size_t vfs_write_file(FILE file, const char* buf, size_t len)
+{
+	open_file_t* of = list_get(open_files, file);
+	filesystem_t* fs = of->fs;
+	return fs->file_write(fs->dev, of->data, buf, len);
+}
+
+size_t vfs_read_file(FILE file, char* buf, size_t len)
+{
+	open_file_t* of = list_get(open_files, file);
+	filesystem_t* fs = of->fs;
+	return fs->file_read(fs->dev, of->data, buf, len);
 }
 
 /* Functions that operate on closed files */

@@ -29,10 +29,10 @@ typedef struct
 	void(*dir_close)(device_t* dev, void* dirit);
 	bool(*dir_next)(device_t* dev, void* dirit, dirent_t* dirent);
 
-	void*(*file_open)(device_t* dev, int inode);
+	void*(*file_open)(device_t* dev, int inode, mode_t mode);
 	void(*file_close)(device_t* dev, void* fd);
-	int(*file_read)(device_t* dev, void* fd, char* buf, int amount);
-	int(*file_write)(device_t* dev, void* fd, char* buf, int amount);
+	size_t(*file_read)(device_t* dev, void* fd, char* buf, size_t amount);
+	size_t(*file_write)(device_t* dev, void* fd, const char* buf, size_t amount);
 	int(*file_seek)(device_t* dev, void* fd, int amount, fseek_t relative);
 } filesystem_t;
 

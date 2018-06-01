@@ -161,7 +161,10 @@ void list_dir(const char* path)
 		if (path_length > 1)
 			cat[path_length++] = '/';
 		strcpy(cat+path_length, dirent.name);
-		kernel_log("%s", cat);
+		if (dirent.type == FDIR)
+			kernel_log("D %s", cat);
+		else
+			kernel_log("F %s", cat);
 		list_dir(cat);
 		free(cat);
 	}
@@ -272,6 +275,21 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	vfs_mkdir("/dirB");
 	vfs_mkdir("/dirB/subDirA");
 	vfs_mkdir("/dirB/subDirB");
+
+	kernel_log("Writing file");
+	FILE file = vfs_open_file("/file", O_WRITE);
+	size_t amount = vfs_write_file(file, "Hello, world!", 14);
+	kernel_log("Wrote %d bytes", amount);
+	vfs_close_file(file);
+	kernel_log("Done. Reading it");
+
+	file = vfs_open_file("/file", O_READ);
+	char buf[32];
+	amount = vfs_read_file(file, buf, 32);
+	kernel_log("Read %d bytes", amount);
+	vfs_close_file(file);
+
+	kernel_log("Content: '%s'", buf);
 	//vfs_mkdir("/b/mom");
 	//vfs_mkdir("/b/mom/iscool");
 

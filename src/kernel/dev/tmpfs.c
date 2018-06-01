@@ -12,7 +12,11 @@
 #include <string.h>
 
 #define FS(dev) ((fs_t*) dev)
+#define NODE(n) ((node_t*) n)
+#define DIR(n) ((dirnode_t*) n)
+#define FILE(n) ((filenode_t*) n)
 #define MAX_FILENAME 256
+#define CHUNK_SIZE 512
 
 /* A general node structure. */
 typedef struct
@@ -41,6 +45,7 @@ typedef struct
 	 * hold the file data.
 	 */
 	list_t* contents;
+	long long size;
 } filenode_t;
 
 // Contains the device structure
@@ -65,6 +70,13 @@ typedef struct
 	size_t pointer;
 } opendir_t;
 
+typedef struct
+{
+	filenode_t* node;
+	mode_t mode;
+	size_t pointer;
+} openfile_t;
+
 static module_t mod;
 static fs_t dev;
 
@@ -72,7 +84,7 @@ static fs_t dev;
  * Takes an inode and searches for a child entry in that
  * inode that has a name equal to path.
  */
-dirnode_t* tmpfs_find_subdir(dirnode_t* node, path_t* path)
+node_t* tmpfs_find_child(dirnode_t* node, path_t* path)
 {
 	list_t* children = node->contents;
 	size_t length = list_size(children);
@@ -82,19 +94,8 @@ dirnode_t* tmpfs_find_subdir(dirnode_t* node, path_t* path)
 	{
 		child = list_get(children, i);
 		if (pcmp(child->name, path) == 0)
-		{
-			if (child->type == FDIR)
-			{
-				return (dirnode_t*) child;
-			}
-			else
-			{
-				kernel_panic("Node is not a directory");
-				return NULL;
-			}
-		}
+			return child;
 	}
-	kernel_panic("Node not found");
 	return NULL;
 }
 
@@ -108,16 +109,23 @@ int tmpfs_get_inode(device_t* dev, const char* path)
 	fs_t* fs = FS(dev);
 	path_t p = path_begin(path);
 
-	dirnode_t* node = &fs->root;
+	node_t* node = NODE(&fs->root);
 	/* TODO: Either path_next or path_store seems to have a bug. */
 	while (path_next(&p))
 	{
 		char name[p.length];
 		path_store(&p, name);
 		//kernel_log("Entered path `%s`", name);
-		node = tmpfs_find_subdir(node, &p);
+		if (node->type == FDIR)
+		{
+			node = tmpfs_find_child(DIR(node), &p);
+			if (node == NULL)
+				return 0;
+		}
+		else
+			kernel_panic("Tried to go into file");
 	}
-	return node->node.id;
+	return node->id;
 }
 
 /**
@@ -159,14 +167,22 @@ void tmpfs_store_node(fs_t* fs, node_t* child, const char* name)
 	/* Find a free spot in the list */
 	int inode = tmpfs_get_unused_inode(fs);
 	list_set(fs->nodes, inode, child);
-	child->id = inode;
+	child->id = inode + 1;
 	strncpy(child->name, name, MAX_FILENAME);
+}
+
+/**
+ * Gets a specific inode from a filesystem.
+ */
+node_t* tmpfs_get_node(fs_t* fs, int inode)
+{
+	return list_get(fs->nodes, inode - 1);
 }
 
 void tmpfs_free_inode(device_t* dev, int inode)
 {
 	fs_t* fs = FS(dev);
-	node_t* node = list_get(fs->nodes, inode);
+	node_t* node = NODE(tmpfs_get_node(fs, inode));
 	free(node);
 	list_set(fs->nodes, inode, NULL);
 }
@@ -176,7 +192,7 @@ int tmpfs_mkdir(device_t* dev, int parentInode, const char* name)
 	fs_t* fs = FS(dev);
 
 	/* Find the parent */
-	dirnode_t* parent = list_get(fs->nodes, parentInode);
+	dirnode_t* parent = DIR(tmpfs_get_node(fs, parentInode));
 
 	/* Allocate and prepare the child */
 	dirnode_t* child = malloc(sizeof(dirnode_t));
@@ -189,10 +205,29 @@ int tmpfs_mkdir(device_t* dev, int parentInode, const char* name)
 	return child->node.id;
 }
 
+int tmpfs_mkfile(device_t* dev, int parentInode, const char* name)
+{
+	fs_t* fs = FS(dev);
+
+	/* Find the parent */
+	dirnode_t* parent = DIR(tmpfs_get_node(fs, parentInode));
+
+	/* Allocate and prepare the child */
+	filenode_t* child = malloc(sizeof(filenode_t));
+	child->contents = list_new();
+	child->size = 0;
+	child->node.type = FFILE;
+
+	/* Store the child. This will fill in several fields of the child too. */
+	list_add(parent->contents, child);
+	tmpfs_store_node(fs, (node_t*) child, name);
+	return child->node.id;
+}
+
 void* tmpfs_dir_open(device_t* dev, int inode)
 {
 	fs_t* fs = FS(dev);
-	dirnode_t* node = list_get(fs->nodes, inode);
+	dirnode_t* node = (dirnode_t*) tmpfs_get_node(fs, inode);
 	opendir_t* od = malloc(sizeof(opendir_t));
 	od->node = node;
 	od->pointer = 0;
@@ -225,15 +260,125 @@ bool tmpfs_dir_next(device_t* dev, void* dirit, dirent_t* dirent)
 	}
 }
 
+void* tmpfs_file_open(device_t* dev, int inode, mode_t mode)
+{
+	fs_t* fs = FS(dev);
+	openfile_t* of = malloc(sizeof(openfile_t));
+	of->node = (filenode_t*) tmpfs_get_node(fs, inode);
+	of->pointer = 0;
+	of->mode = mode;
+	return of;
+}
+
+void tmpfs_file_close(device_t* dev, void* data)
+{
+	UNUSED(dev);
+	free(data);
+}
+
+char* tmpfs_file_get_chunk(openfile_t* of, size_t* chunk_size)
+{
+	size_t chunk_index = of->pointer / CHUNK_SIZE;
+	size_t chunk_offset = of->pointer % CHUNK_SIZE;
+	*chunk_size = CHUNK_SIZE - chunk_offset;
+
+	//if (chunk_offset == 0)
+	if (chunk_index >= list_size(of->node->contents))
+	{
+		char* filebuf = malloc(CHUNK_SIZE);
+		list_add(of->node->contents, filebuf);
+		return filebuf;
+	}
+	else
+	{
+		char* filebuf = list_get(of->node->contents, chunk_index);
+		return filebuf + chunk_offset;
+	}
+}
+
+size_t tmpfs_file_write(device_t* dev, void* data, const char* buf, size_t len)
+{
+	UNUSED(dev);
+	//fs_t* fs = FS(dev);
+	openfile_t* of = data;
+	if ((of->mode & O_WRITE) == 0)
+		kernel_panic("Tried to write to non-write descriptor");
+
+	size_t left = len;
+	size_t chunk_size;
+	size_t amount;
+
+	while (left > 0)
+	{
+		char* chunk_buf = tmpfs_file_get_chunk(of, &chunk_size);
+		amount = (chunk_size < left) ? chunk_size : left;
+		memcpy(chunk_buf, buf, amount);
+		left -= amount;
+		of->pointer += amount;
+		buf += amount;
+	}
+
+	if (of->pointer > of->node->size)
+		of->node->size = of->pointer;
+	return len - left;
+}
+
+size_t tmpfs_file_read(device_t* dev, void* data, char* buf, size_t len)
+{
+	UNUSED(dev);
+	//fs_t* fs = FS(dev);
+	openfile_t* of = data;
+	if ((of->mode & O_READ) == 0)
+		kernel_panic("Tried to read from non-read descriptor");
+
+	//filenode_t* node = of->node;
+
+	if (len + of->pointer > of->node->size)
+		len = of->node->size - of->pointer;
+
+	size_t left = len;
+	while (left > 0)
+	{
+		size_t chunk_size;
+		char* chunk_buf = tmpfs_file_get_chunk(of, &chunk_size);
+		size_t amount = (chunk_size < left) ? chunk_size : left;
+		memcpy(buf, chunk_buf, amount);
+		left -= amount;
+		of->pointer += amount;
+		buf += amount;
+	}
+	return len - left;
+
+	/*size_t read = 0;
+	while (read < len)
+	{
+		size_t cindex = of->pointer / CHUNK_SIZE;
+		size_t coffset = of->pointer % CHUNK_SIZE;
+		size_t csize = CHUNK_SIZE - coffset;
+		if (csize > len - read)
+			csize = len - read;
+		char* filebuf = list_get(node->contents, cindex);
+		memcpy(buf + read, filebuf + coffset, csize);
+		read += csize;
+		of->pointer += csize;
+	}*/
+	//return read;
+}
+
 filesystem_t* tmpfs_init()
 {
 	dev.bus.get_inode = tmpfs_get_inode;
 	dev.bus.mkdir = tmpfs_mkdir;
+	dev.bus.mkfile = tmpfs_mkfile;
 	dev.bus.dir_open = tmpfs_dir_open;
 	dev.bus.dir_close = tmpfs_dir_close;
 	dev.bus.dir_next = tmpfs_dir_next;
+	dev.bus.file_open = tmpfs_file_open;
+	dev.bus.file_close = tmpfs_file_close;
+	dev.bus.file_write = tmpfs_file_write;
+	dev.bus.file_read = tmpfs_file_read;
 
-	dev.root.node.id = 0;
+	dev.root.node.id = 1;
 	dev.root.node.name[0] = '\0';
 	dev.root.node.type = FDIR;
 	dev.root.contents = list_new();

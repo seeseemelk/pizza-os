@@ -46,6 +46,14 @@ typedef enum
 	FSEEK_REL, FSEEK_BEGIN, FSEEK_END
 } fseek_t;
 
+typedef enum
+{
+	O_READ = 0x01,
+	O_WRITE = 0x02,
+	O_APPEND = 0x04,
+	O_CREATE = 0x08
+} mode_t;
+
 /**
  * Initialises the `begin` and `end` parameters for use with `path_next`.
  */
