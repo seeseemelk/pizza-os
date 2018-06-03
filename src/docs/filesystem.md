@@ -31,3 +31,5 @@ The clusters can only be permanently freed after `free_inode` has been called.
 At that point the inode can be reused again by `get_inode`, and any filesystem
 calls that use the freed inode (unless it has been reused) should be considered
 bugs in the VFS.
+Also note that a call to `free_inode` does not mean that the inode has been deleted.
+It only means that the kernel no longer has any references to the specific inode.

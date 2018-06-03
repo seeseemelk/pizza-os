@@ -8,6 +8,8 @@
 #ifndef FSTYPES_H_
 #define FSTYPES_H_
 
+#include "config.h"
+#include "devices.h"
 #include <stddef.h>
 #include <stdbool.h>
 #include <string.h>
@@ -22,17 +24,15 @@ typedef enum
 
 typedef struct stat_t
 {
-	//device_t* dev;
-	//ino_t ino;
+	device_t* device;
 	file_t type;
+	char name[MAX_FILENAME];
 } stat_t;
 
 typedef struct
 {
-	//devi_t dev;
-	//ino_t inode;
 	file_t type;
-	char name[256];
+	char name[MAX_FILENAME];
 } dirent_t;
 
 typedef struct

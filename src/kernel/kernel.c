@@ -290,6 +290,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	vfs_close_file(file);
 
 	kernel_log("Content: '%s'", buf);
+	vfs_rm("/file");
 	//vfs_mkdir("/b/mom");
 	//vfs_mkdir("/b/mom/iscool");
 

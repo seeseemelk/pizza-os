@@ -23,7 +23,7 @@ typedef struct
 	int(*mklink)(device_t* dev, int parent, const char* name, const char* target);
 
 	void(*rm)(device_t* dev, int inode);
-	void(*stat)(device_t* dev, int inode);
+	void(*stat)(device_t* dev, int inode, stat_t* stat);
 
 	void*(*dir_open)(device_t* dev, int inode);
 	void(*dir_close)(device_t* dev, void* dirit);

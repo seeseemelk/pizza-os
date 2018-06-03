@@ -12,8 +12,11 @@
 #define __STDC_LIMIT_MACROS
 #endif
 #include <stdint.h>
+#ifndef SIZE_MAX
+#define SIZE_MAX 4
+#endif
 
-void* memcpy(void* dest, void* src, size_t num)
+void* memcpy(void* dest, const void* src, size_t num)
 {
 	char* c_dest = (char*) dest;
 	char* c_src = (char*) src;
@@ -27,6 +30,7 @@ void* memcpy(void* dest, void* src, size_t num)
 	{
 		for (size_t i = num-1; i > 0; i--)
 			c_dest[i] = c_src[i];
+		c_dest[0] = c_src[0];
 	}
 	return dest;
 }
