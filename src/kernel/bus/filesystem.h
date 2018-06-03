@@ -12,6 +12,10 @@
 #include "fstypes.h"
 #include <stdbool.h>
 
+/**
+ * The `filesystem_t` bus can be used to register a mounted filesystem.
+ * It should be registered by a device as a bus of type `FILESYSTEM`
+ */
 typedef struct
 {
 	device_t* dev;
@@ -35,5 +39,16 @@ typedef struct
 	size_t(*file_write)(device_t* dev, void* fd, const char* buf, size_t amount);
 	int(*file_seek)(device_t* dev, void* fd, int amount, fseek_t relative);
 } filesystem_t;
+
+/**
+ * The `filesystem_t` bus can be used to allow the system to mount a filesystem.
+ * It should be registered by a module as a bus of type `FILESYSTEM`
+ */
+typedef struct
+{
+	module_t* mod;
+	filesystem_t*(*mount)(module_t* mod, const char* path, int argc, const char** argv);
+	bool(*can_mount)(module_t* mod, const char* path, int argc, const char** argv);
+} filesystem_mount_t;
 
 #endif /* BUS_FILESYSTEM_H_ */

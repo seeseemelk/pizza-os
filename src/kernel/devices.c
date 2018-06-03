@@ -17,13 +17,24 @@ typedef struct
 	void* bus;
 } dev_bus_t;
 
+typedef struct
+{
+	module_t* mod;
+	void* bus;
+} mod_bus_t;
+
 module_t* modules[MAX_MODULES];
 device_t* devices[MAX_DEVICES];
 int num_modules_loaded = 0;
 int num_devices_loaded = 0;
 
-int num_bus_loaded[BUSCOUNT] = {0};
-dev_bus_t busses[BUSCOUNT][MAX_DEVICES];
+/* Contains all modules that registered busses */
+int num_mbus_loaded[BUSCOUNT] = {0};
+mod_bus_t mbusses[BUSCOUNT][MAX_MODULES];
+
+/* Contains all devices that registered busses */
+int num_dbus_loaded[BUSCOUNT] = {0};
+dev_bus_t dbusses[BUSCOUNT][MAX_DEVICES];
 
 void module_register(module_t* module, const char* name,
 		fn_module_request* fn_mod_req, fn_device_request* fn_dev_req)
@@ -35,6 +46,16 @@ void module_register(module_t* module, const char* name,
 	module->major = num_modules_loaded;
 	module->num_devices_loaded = 0;
 	num_modules_loaded++;
+}
+
+void module_register_bus(module_t* module, bus_t type, void* bus)
+{
+	if (type != VGA && module->fn_dev_req == NULL)
+		kernel_log("Module %s registered bus without fn_dev_req", module->name);
+	mod_bus_t* mod_bus = mbusses[type] + num_mbus_loaded[type];
+	num_mbus_loaded[type]++;
+	mod_bus->mod = module;
+	mod_bus->bus = bus;
 }
 
 void device_register(device_t* device, module_t* module)
@@ -50,10 +71,22 @@ void device_register_bus(device_t* device, bus_t type, void* bus)
 {
 	if (type != VGA && device->module->fn_dev_req == NULL)
 		kernel_log("Device %s registered bus without fn_dev_req", device->module->name);
-	dev_bus_t* dev_bus = busses[type] + num_bus_loaded[type];
-	num_bus_loaded[type]++;
+	dev_bus_t* dev_bus = dbusses[type] + num_dbus_loaded[type];
+	num_dbus_loaded[type]++;
 	dev_bus->dev = device;
 	dev_bus->bus = bus;
+}
+
+/*
+ * Functions for finding a module for a specific bus.
+ */
+void* module_get_first(bus_t type)
+{
+	int loaded = num_mbus_loaded[type];
+	if (loaded > 0)
+		return mbusses[type][0].bus;
+	else
+		return NULL;
 }
 
 /*
@@ -61,9 +94,9 @@ void device_register_bus(device_t* device, bus_t type, void* bus)
  */
 void* device_get_first(bus_t type)
 {
-	int loaded = num_bus_loaded[type];
+	int loaded = num_dbus_loaded[type];
 	if (loaded > 0)
-		return busses[type][0].bus;
+		return dbusses[type][0].bus;
 	else
 		return NULL;
 }

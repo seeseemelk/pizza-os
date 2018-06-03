@@ -97,6 +97,11 @@ struct mod_req_t
 void module_register(module_t* module, const char* name, fn_module_request* fn_mod_req, fn_device_request* fn_dev_req);
 
 /**
+ * Registers a module as a bus.
+ */
+void module_register_bus(module_t*, bus_t type, void* bus);
+
+/**
  * Registers a new device.
  */
 void device_register(device_t* device, module_t* module);
@@ -105,6 +110,11 @@ void device_register(device_t* device, module_t* module);
  * Registers a device as a bus.
  */
 void device_register_bus(device_t*, bus_t type, void* bus);
+
+/*
+ * Functions for finding a specific module.
+ */
+void* module_get_first(bus_t type);
 
 /*
  * Functions for finding a specific device.
