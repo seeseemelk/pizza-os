@@ -213,59 +213,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 
 	kernel_log("Kernel range: 0x%p to 0x%p", KERNEL_START, KERNEL_END);
 
-	/*printf("Init mem... ");
-	mem_init();
-	printf("DONE\n");*/
-
-	/*path_t path = path_begin("/path/dir/file");
-	while (path_next(&path))
-	{
-		char name[path.length + 1];
-		strncpy(name, path.path, path.length);
-		name[path.length] = 0;
-		kernel_log("Part: '%s'", name);
-	}
-
-	__asm__ ("cli");
-	while (1);*/
-
 	thread_init();
-
-
-	/*register u32 *ebp asm("esp");
-	kprintf("Stack: 0x%X\n", ebp);
-	//while (1);
-
-	kprintf("Testing memory...\n");
-	void* mem_one = mem_alloc(1);*/
-	/*void* mem_two = malloc(8192);
-	void* mem_three = mem_alloc(128);*/
-	/*kprintf("  ONE 0x%X\n", (size_t)mem_one);
-	void* mem_two = malloc(8192);
-	kprintf("  TWO 0x%X\n", (size_t)mem_two);
-	void* mem_three = mem_alloc(128);
-	kprintf("  THR 0x%X\n", (size_t)mem_three);*/
-
-	/*mem_free(mem_two);
-	mem_two = mem_alloc(4096);
-	void* mem_four = mem_alloc(512);
-
-	printf("  TWO 0x%X\n", mem_two);
-	printf(" FOUR 0x%X\n", mem_four);
-	while(1);
-
-	printf("THREE 0x%X\n", (size_t)mem_three);*/
-	//printf("THREE 0x%X 0x%X 0x%X\n", mem_three, mem_three, mem_three);
-
-	//asm("int $0x20");
-
-	//kprintf("Ok\n");
-
-	/*const char* path = "/df";
-	char* sdir = path_parent(path);
-	kernel_log("Dir: '%s'", sdir);
-	char* file = path_filename(path);
-	kernel_log("File: '%s'", file);*/
 
 	vfs_init();
 	filesystem_t* tmpfs = tmpfs_init();
@@ -291,22 +239,11 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 
 	kernel_log("Content: '%s'", buf);
 	vfs_rm("/file");
-	//vfs_mkdir("/b/mom");
-	//vfs_mkdir("/b/mom/iscool");
 
 	kernel_log("Listing root");
 	list_dir("/");
 	kernel_log("Finished");
 
-	/*kernel_log("Listing /");
-	DIR dir = vfs_open_dir("/");
-	dirent_t dirent;
-	while (vfs_next_dir(dir, &dirent))
-	{
-		kernel_log("'/%s'", dirent.name);
-	}
-	vfs_close_dir(dir);
-	kernel_log("Finished listing /");*/
 
 	keyboard_init();
 
@@ -319,62 +256,9 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	pckbd_init(device_get_first(PS2));
 	#endif
 
-	/*
-	kprintf("Initialising VFS\n");
-#ifdef ENABLE_TMPFS
-	tmpfs_init();
-#endif
-	vfs_init();
-	kprintf("Done\n");
-	*/
-
 	sched_main();
-	while (1);
 
-	// Init paging
-	//page_init();
-	//while(1) ;
-
-	// Make sure that the memory allocator added it's page entries
-	//mem_paging_enabled();
-
-	// Initialise the memory allocator
-	/*mem_init(KERNEL_LOCATION + MB(16), MB(10));
-	void* test_ptr = mem_alloc(1);
-	printf("Allocated test_ptr at 0x%p\n", test_ptr);
-	void* test_ptr2 = mem_alloc(1);
-	printf("Allocated test_ptr2 at 0x%p\n", test_ptr2);
-	mem_free(test_ptr);
-	printf("Freed test_ptr\n");
-	void* test_ptr3 = mem_alloc(10);
-	printf("Allocated test_ptr3 at 0x%p\n", test_ptr3);
-	void* test_ptr4 = mem_alloc(512);
-	printf("Allocated test_ptr4 at 0x%p\n", test_ptr4);
-	mem_free(test_ptr);
-	printf("Freed test_ptr\n");
-	void* test_ptr5 = mem_alloc(8192);
-	printf("Allocated test_ptr5 at 0x%p\n", test_ptr5);
-
-	printf("Eating all the memory\n");
-	while (1)
-	{
-		mem_alloc(4096);
-	}*/
-
-	// Initialise the CPU
-	cpu_init();
-
-	// Initialise paging
-	//page_init();
-
-	// Do other stuff
-	kprintf("Hello world!\n");
-	kprintf("Percent test %%\n");
-	kprintf("Decimal test %d\n", 1385ul);
-	kprintf("Hexadecimal test 0x%x\n", 0xc0ffee);
-	kprintf("Hexadecimal test 0x%X\n", 0xc0ffee);
-
-	kprintf("Reached end of kernel_main()\n");
+	kernel_panic("Reached end of kernel_main()\n");
 }
 
 
