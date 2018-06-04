@@ -19,8 +19,13 @@ typedef size_t FILE;
 
 typedef enum
 {
-	FDIR, FFILE
+	FDIR, FFILE, FCHAR, FBLOCK
 } file_t;
+
+typedef enum
+{
+	SEEK_SET, SEEK_CUR, SEEK_END
+} seek_t;
 
 typedef struct stat_t
 {

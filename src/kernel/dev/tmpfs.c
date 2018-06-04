@@ -20,6 +20,7 @@
 typedef struct node_t node_t;
 typedef struct dirnode_t dirnode_t;
 typedef struct filenode_t filenode_t;
+typedef struct devnode_t devnode_t;
 
 /* A general node structure. */
 struct node_t
@@ -50,6 +51,14 @@ struct filenode_t
 	 */
 	list_t* contents;
 	long long size;
+};
+
+/* Node structure for special files */
+struct devnode_t
+{
+	node_t node;
+	MAJOR major;
+	MINOR minor;
 };
 
 // Contains the device structure
@@ -244,6 +253,26 @@ int tmpfs_mkfile(device_t* dev, int parentInode, const char* name)
 	child->size = 0;
 	child->node.type = FFILE;
 	child->node.parent = parent;
+
+	/* Store the child. This will fill in several fields of the child too. */
+	list_add(parent->contents, child);
+	tmpfs_store_node(fs, (node_t*) child, name);
+	return child->node.id;
+}
+
+int tmpfs_mknode(device_t* dev, int parentInode, const char* name, file_t file, MAJOR major, MINOR minor)
+{
+	fs_t* fs = FS(dev);
+
+	/* Find the parent */
+	dirnode_t* parent = DIR(tmpfs_get_node(fs, parentInode));
+
+	/* Allocate and prepare the child */
+	devnode_t* child = malloc(sizeof(devnode_t));
+	child->node.type = file;
+	child->node.parent = parent;
+	child->major = major;
+	child->minor = minor;
 
 	/* Store the child. This will fill in several fields of the child too. */
 	list_add(parent->contents, child);
@@ -455,34 +484,8 @@ void tmpfs_init()
 	fsmounter.name = "tmpfs";
 	fsmounter.mount = tmpfs_mount;
 
-	/*dev.bus.get_inode = tmpfs_get_inode;
-	dev.bus.free_inode = tmpfs_free_inode;
-	dev.bus.mkdir = tmpfs_mkdir;
-	dev.bus.mkfile = tmpfs_mkfile;
-	dev.bus.rm = tmpfs_rm;
-	dev.bus.stat = tmpfs_stat;
-	dev.bus.dir_open = tmpfs_dir_open;
-	dev.bus.dir_close = tmpfs_dir_close;
-	dev.bus.dir_next = tmpfs_dir_next;
-	dev.bus.file_open = tmpfs_file_open;
-	dev.bus.file_close = tmpfs_file_close;
-	dev.bus.file_write = tmpfs_file_write;
-	dev.bus.file_read = tmpfs_file_read;
-
-	dev.root.node.id = 1;
-	dev.root.node.name[0] = '\0';
-	dev.root.node.type = FDIR;
-	dev.root.contents = list_new();
-	dev.freeNodes = 0;
-	dev.nodes = list_new();
-	list_add(dev.nodes, &dev.root);*/
-
 	module_register(&mod, "tmpfs", NULL, NULL);
 	module_register_bus(&mod, FILESYSTEM, &fsmounter);
-	/*device_register(&dev.dev, &mod);
-	device_register_bus(&dev.dev, FILESYSTEM, &dev.bus);
-	dev.bus.dev = &dev.dev;
-	return &dev.bus;*/
 }
 
 

@@ -22,7 +22,7 @@ typedef struct
 typedef struct
 {
 	filesystem_t* fs;
-	int inode;
+	size_t inode;
 	void* data;
 } open_dir_t;
 list_t* open_dirs;
@@ -31,7 +31,14 @@ list_t* open_dirs;
 typedef struct
 {
 	filesystem_t* fs;
-	int inode;
+	file_t type;
+	union {
+		/* The file is just a common file descriptor */
+		size_t inode;
+
+		/* The file is an opened special file */
+		filecharop_t* fop;
+	};
 	void* data;
 } open_file_t;
 list_t* open_files;
@@ -100,7 +107,7 @@ const char* vfs_get_sub_path(mountpoint_t* mp, const char* path)
  * Checks if the inode can be freed.
  * If it can be freed it will call `free_inode` to the filesystem.
  */
-void vfs_update_freed(filesystem_t* fs, int inode)
+void vfs_update_freed(filesystem_t* fs, size_t inode)
 {
 	size_t len;
 	/* Check if a directory entry is using the inode. */
@@ -255,46 +262,94 @@ FILE vfs_open_file(const char* path, mode_t mode)
 		vfs_update_freed(fs, inode);
 		free(parent);
 		free(filename);
-		//inode = fs->get_inode(fs->dev, subpath);
 	}
 
-	/* Open the file */
-	void* data = fs->file_open(fs->dev, inode, mode);
-
-	/* Save the descriptor */
+	/* Create descriptors */
 	FILE desc = vfs_find_free_descriptor(open_files);
 	open_file_t* of = malloc(sizeof(open_file_t));
 	of->fs = fs;
-	of->inode = inode;
-	of->data = data;
 	list_set(open_files, desc, of);
 
-	return desc;
+	/* Test the file type */
+	stat_t stat;
+	fs->stat(fs->dev, inode, &stat);
+	of->type = stat.type;
+	if (stat.type == FFILE)
+	{
+		/* File is just a normal file. Open it. */
+		void* data = fs->file_open(fs->dev, inode, mode);
+
+		of->inode = inode;
+		of->data = data;
+
+		return desc;
+	}
+	else if (stat.type == FCHAR || stat.type == FBLOCK)
+	{
+		/* File is a special file. So handle it specially. */
+		filecharop_t* fop = device_get_bus(stat.device, FILEOP);
+		of->fop = fop;
+		of->data = fop->open(fop->dev);
+		return desc;
+	}
+	else
+	{
+		kernel_panic("Bad fs: stat.type was not filled in correctly");
+		return 0;
+	}
+
 	//open_files_fs
 }
 
 void vfs_close_file(FILE file)
 {
 	open_file_t* of = list_get(open_files, file);
-	filesystem_t* fs = of->fs;
-	fs->file_close(fs->dev, of->data);
 	list_set(open_files, file, NULL);
-	vfs_update_freed(fs, of->inode);
+	if (of->type == FFILE)
+	{
+		/* Normal file */
+		filesystem_t* fs = of->fs;
+		fs->file_close(fs->dev, of->data);
+		vfs_update_freed(fs, of->inode);
+	}
+	else
+	{
+		/* Special file */
+		filecharop_t* fop = of->fop;
+		fop->close(fop->dev, of->data);
+	}
+	/* Cleanup descriptor */
 	free(of);
 }
 
 size_t vfs_write_file(FILE file, const char* buf, size_t len)
 {
 	open_file_t* of = list_get(open_files, file);
-	filesystem_t* fs = of->fs;
-	return fs->file_write(fs->dev, of->data, buf, len);
+	if (of->type == FFILE)
+	{
+		filesystem_t* fs = of->fs;
+		return fs->file_write(fs->dev, of->data, buf, len);
+	}
+	else
+	{
+		filecharop_t* fop = of->fop;
+		return fop->write(fop->dev, of->data, buf, len);
+	}
 }
 
 size_t vfs_read_file(FILE file, char* buf, size_t len)
 {
 	open_file_t* of = list_get(open_files, file);
-	filesystem_t* fs = of->fs;
-	return fs->file_read(fs->dev, of->data, buf, len);
+	if (of->type == FFILE)
+	{
+		filesystem_t* fs = of->fs;
+		return fs->file_read(fs->dev, of->data, buf, len);
+	}
+	else
+	{
+		filecharop_t* fop = of->fop;
+		return fop->read(fop->dev, of->data, buf, len);
+	}
 }
 
 /* Functions that operate on closed files */

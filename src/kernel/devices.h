@@ -16,6 +16,8 @@ typedef struct dev_req_t dev_req_t;
 typedef struct module_t module_t;
 typedef struct device_t device_t;
 typedef struct bus_it bus_it;
+typedef unsigned char MAJOR;
+typedef unsigned char MINOR;
 
 /**
  * The function signature of a module request function.
@@ -41,7 +43,7 @@ enum request_type
  */
 struct module_t
 {
-	unsigned short major; /**< The major number contains the uniquely identifying number for the module. */
+	MAJOR major; /**< The major number contains the uniquely identifying number for the module. */
 	const char* name; /**< The name is a simple string that will be displayed in logs. */
 	fn_module_request* fn_mod_req; /**< A pointer to a function that will handle all the request for the module. */
 	fn_device_request* fn_dev_req; /**< A pointer to a function that will handle all the request for devices owned by the module. */
@@ -54,7 +56,7 @@ struct module_t
 struct device_t
 {
 	const module_t* module; /**< A pointer to the module that handles this device. */
-	unsigned short minor; /**< The minor number. This number will uniquely specific a specific device. */
+	MINOR minor; /**< The minor number. This number will uniquely specific a specific device. */
 	mutex_t mutex; /**< This mutex provides the ability for software to lock the device. */
 };
 
@@ -133,6 +135,16 @@ void* module_get_first(bus_t type);
 void* device_get_first(bus_t type);
 
 /**
+ * Finds a specific registered bus of a module.
+ */
+void* module_get_bus(module_t* mod, bus_t type);
+
+/**
+ * Finds a specific registered bus of a device.
+ */
+void* device_get_bus(device_t* dev, bus_t type);
+
+/**
  * Gets a module by its name.
  * @param name The name of the module to get.
  * @return The module or `NULL` if no such module exists.
@@ -145,7 +157,7 @@ module_t* module_get(const char* name);
  * @param minor The minor number of the device.
  * @return The device, or `null` if there is no device with the given major/minor number.
  */
-device_t* device_get_by_minor(unsigned short major, unsigned short minor);
+device_t* device_get_by_minor(MAJOR major, MINOR minor);
 
 void module_it_begin(bus_it* bus, bus_t type);
 void device_it_begin(bus_it* bus, bus_t type);

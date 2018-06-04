@@ -82,7 +82,7 @@ void device_register_bus(device_t* device, bus_t type, void* bus)
  */
 void* module_get_first(bus_t type)
 {
-	int loaded = num_mbus_loaded[type];
+	size_t loaded = num_mbus_loaded[type];
 	if (loaded > 0)
 		return mbusses[type][0].bus;
 	else
@@ -94,11 +94,37 @@ void* module_get_first(bus_t type)
  */
 void* device_get_first(bus_t type)
 {
-	int loaded = num_dbus_loaded[type];
+	size_t loaded = num_dbus_loaded[type];
 	if (loaded > 0)
 		return dbusses[type][0].bus;
 	else
 		return NULL;
+}
+
+void* module_get_bus(module_t* mod, bus_t type)
+{
+	size_t loaded = num_mbus_loaded[type];
+	for (size_t i = 0; i < loaded; i++)
+	{
+		mod_bus_t* bus = mbusses[type] + i;
+		if (bus->mod == mod)
+			return bus;
+	}
+	kernel_panic("Bus not found");
+	return NULL;
+}
+
+void* device_get_bus(device_t* dev, bus_t type)
+{
+	size_t loaded = num_dbus_loaded[type];
+	for (size_t i = 0; i < loaded; i++)
+	{
+		dev_bus_t* bus = dbusses[type] + i;
+		if (bus->dev == dev)
+			return bus;
+	}
+	kernel_panic("Bus not found");
+	return NULL;
 }
 
 module_t* module_get(const char* name)
@@ -112,7 +138,7 @@ module_t* module_get(const char* name)
 	return NULL;
 }
 
-device_t* device_get_by_minor(unsigned short major, unsigned short minor)
+device_t* device_get_by_minor(MAJOR major, MINOR minor)
 {
 	for (size_t i = 0; i < num_devices_loaded++; i++)
 	{
