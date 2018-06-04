@@ -216,8 +216,10 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	thread_init();
 
 	vfs_init();
-	filesystem_t* tmpfs = tmpfs_init();
-	vfs_mount("/", tmpfs);
+	tmpfs_init();
+	//filesystem_t* tmpfs = tmpfs_init();
+	//vfs_mount("/", tmpfs);
+	vfs_mount("/", "tmpfs", "tmpfs", 0, NULL);
 
 	vfs_mkdir("/dirA");
 	vfs_mkdir("/dirB");
@@ -243,6 +245,16 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	kernel_log("Listing root");
 	list_dir("/");
 	kernel_log("Finished");
+
+	/*kernel_log("Listing filesystem drivers");
+	bus_it it;
+	module_it_begin(&it, FILESYSTEM);
+	filesystem_mounter_t* fs;
+	while ((fs = module_it_next(&it)) != NULL)
+	{
+		kernel_log("Found %s", fs->name);
+	}
+	kernel_log("Done");*/
 
 
 	keyboard_init();

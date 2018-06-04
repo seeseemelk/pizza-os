@@ -81,8 +81,9 @@ typedef struct
 	size_t pointer;
 } openfile_t;
 
+static filesystem_mounter_t fsmounter;
 static module_t mod;
-static fs_t dev;
+//static fs_t dev;
 
 /**
  * Takes an inode and searches for a child entry in that
@@ -407,9 +408,54 @@ size_t tmpfs_file_read(device_t* dev, void* data, char* buf, size_t len)
 	return len - left;
 }
 
-filesystem_t* tmpfs_init()
+filesystem_t* tmpfs_mount(module_t* mod, const char* path, int argc, const char** argv)
 {
-	dev.bus.get_inode = tmpfs_get_inode;
+	/*UNUSED(mod);
+	UNUSED(path);
+	UNUSED(argc);
+	UNUSED(argv);
+	kernel_panic("Operation not supported");*/
+
+	UNUSED(path);
+	UNUSED(argc);
+	UNUSED(argv);
+
+	fs_t* dev = malloc(sizeof(fs_t));
+	dev->bus.dev = &dev->dev;
+	dev->bus.get_inode = tmpfs_get_inode;
+	dev->bus.free_inode = tmpfs_free_inode;
+	dev->bus.mkdir = tmpfs_mkdir;
+	dev->bus.mkfile = tmpfs_mkfile;
+	dev->bus.rm = tmpfs_rm;
+	dev->bus.stat = tmpfs_stat;
+	dev->bus.dir_open = tmpfs_dir_open;
+	dev->bus.dir_close = tmpfs_dir_close;
+	dev->bus.dir_next = tmpfs_dir_next;
+	dev->bus.file_open = tmpfs_file_open;
+	dev->bus.file_close = tmpfs_file_close;
+	dev->bus.file_write = tmpfs_file_write;
+	dev->bus.file_read = tmpfs_file_read;
+
+	dev->root.node.id = 1;
+	dev->root.node.name[0] = '\0';
+	dev->root.node.type = FDIR;
+	dev->root.contents = list_new();
+	dev->freeNodes = 0;
+	dev->nodes = list_new();
+	list_add(dev->nodes, &dev->root);
+
+	device_register(&dev->dev, mod);
+	device_register_bus(&dev->dev, FILESYSTEM, &dev->bus);
+	return &dev->bus;
+}
+
+void tmpfs_init()
+{
+	fsmounter.mod = &mod;
+	fsmounter.name = "tmpfs";
+	fsmounter.mount = tmpfs_mount;
+
+	/*dev.bus.get_inode = tmpfs_get_inode;
 	dev.bus.free_inode = tmpfs_free_inode;
 	dev.bus.mkdir = tmpfs_mkdir;
 	dev.bus.mkfile = tmpfs_mkfile;
@@ -429,13 +475,14 @@ filesystem_t* tmpfs_init()
 	dev.root.contents = list_new();
 	dev.freeNodes = 0;
 	dev.nodes = list_new();
-	list_add(dev.nodes, &dev.root);
+	list_add(dev.nodes, &dev.root);*/
 
 	module_register(&mod, "tmpfs", NULL, NULL);
-	device_register(&dev.dev, &mod);
+	module_register_bus(&mod, FILESYSTEM, &fsmounter);
+	/*device_register(&dev.dev, &mod);
 	device_register_bus(&dev.dev, FILESYSTEM, &dev.bus);
 	dev.bus.dev = &dev.dev;
-	return &dev.bus;
+	return &dev.bus;*/
 }
 
 

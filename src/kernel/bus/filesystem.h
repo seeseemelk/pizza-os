@@ -47,8 +47,9 @@ typedef struct
 typedef struct
 {
 	module_t* mod;
+	const char* name;
 	filesystem_t*(*mount)(module_t* mod, const char* path, int argc, const char** argv);
 	bool(*can_mount)(module_t* mod, const char* path, int argc, const char** argv);
-} filesystem_mount_t;
+} filesystem_mounter_t;
 
 #endif /* BUS_FILESYSTEM_H_ */

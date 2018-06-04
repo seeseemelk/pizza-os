@@ -19,7 +19,8 @@
  * Initialises the VFS.
  */
 void vfs_init();
-void vfs_mount(const char* path, filesystem_t* fs);
+void vfs_mount_direct(const char* path, filesystem_t* fs);
+void vfs_mount(const char* path, const char* fs, const char* block, int argc, const char** argv);
 
 bool vfs_rm(const char* path);
 bool vfs_stat(const char* path, stat_t* stat);

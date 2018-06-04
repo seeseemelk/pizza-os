@@ -15,6 +15,7 @@ typedef struct mod_req_t mod_req_t;
 typedef struct dev_req_t dev_req_t;
 typedef struct module_t module_t;
 typedef struct device_t device_t;
+typedef struct bus_it bus_it;
 
 /**
  * The function signature of a module request function.
@@ -83,6 +84,16 @@ struct mod_req_t
 	int arg4;
 };
 
+/**
+ * An iterator that iterates over registered busses.
+ */
+struct bus_it
+{
+	void* bus;
+	size_t* size;
+	size_t index;
+};
+
 /*
  * Functions for registering modules and devices
  */
@@ -135,6 +146,11 @@ module_t* module_get(const char* name);
  * @return The device, or `null` if there is no device with the given major/minor number.
  */
 device_t* device_get_by_minor(unsigned short major, unsigned short minor);
+
+void module_it_begin(bus_it* bus, bus_t type);
+void device_it_begin(bus_it* bus, bus_t type);
+void* module_it_next(bus_it* bus);
+#define device_it_next module_it_next
 
 /*
  * Functions for communicating with a module.

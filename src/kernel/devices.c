@@ -13,27 +13,27 @@
 
 typedef struct
 {
-	device_t* dev;
 	void* bus;
+	device_t* dev;
 } dev_bus_t;
 
 typedef struct
 {
-	module_t* mod;
 	void* bus;
+	module_t* mod;
 } mod_bus_t;
 
 module_t* modules[MAX_MODULES];
 device_t* devices[MAX_DEVICES];
-int num_modules_loaded = 0;
-int num_devices_loaded = 0;
+size_t num_modules_loaded = 0;
+size_t num_devices_loaded = 0;
 
 /* Contains all modules that registered busses */
-int num_mbus_loaded[BUSCOUNT] = {0};
+size_t num_mbus_loaded[BUSCOUNT] = {0};
 mod_bus_t mbusses[BUSCOUNT][MAX_MODULES];
 
 /* Contains all devices that registered busses */
-int num_dbus_loaded[BUSCOUNT] = {0};
+size_t num_dbus_loaded[BUSCOUNT] = {0};
 dev_bus_t dbusses[BUSCOUNT][MAX_DEVICES];
 
 void module_register(module_t* module, const char* name,
@@ -103,7 +103,7 @@ void* device_get_first(bus_t type)
 
 module_t* module_get(const char* name)
 {
-	for (int i = 0; i < num_modules_loaded; i++)
+	for (size_t i = 0; i < num_modules_loaded; i++)
 	{
 		module_t* module = modules[i];
 		if (strcmp(module->name, name) == 0)
@@ -114,13 +114,35 @@ module_t* module_get(const char* name)
 
 device_t* device_get_by_minor(unsigned short major, unsigned short minor)
 {
-	for (int i = 0; i < num_devices_loaded++; i++)
+	for (size_t i = 0; i < num_devices_loaded++; i++)
 	{
 		device_t* dev = devices[i];
 		if (dev->minor == minor && dev->module->major == major)
 			return dev;
 	}
 	return NULL;
+}
+
+void module_it_begin(bus_it* bus, bus_t type)
+{
+	bus->bus = mbusses[type];
+	bus->size = &num_mbus_loaded[type];
+	bus->index = 0;
+}
+
+void device_it_begin(bus_it* bus, bus_t type)
+{
+	bus->bus = dbusses[type];
+	bus->size = &num_dbus_loaded[type];
+	bus->index = 0;
+}
+
+void* module_it_next(bus_it* bus)
+{
+	if (bus->index < *bus->size)
+		return ((mod_bus_t*)bus->bus)[bus->index++].bus;
+	else
+		return NULL;
 }
 
 /*

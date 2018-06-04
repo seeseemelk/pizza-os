@@ -43,13 +43,34 @@ void vfs_init()
 	open_files = list_new();
 }
 
-void vfs_mount(const char* path, filesystem_t* fs)
+filesystem_mounter_t* vfs_get_mounter(const char* name)
+{
+	bus_it it;
+	filesystem_mounter_t* fs;
+	module_it_begin(&it, FILESYSTEM);
+	while ((fs = module_it_next(&it)) != NULL)
+	{
+		if (strcmp(name, fs->name) == 0)
+			return fs;
+	}
+	kernel_panic("No such filesystem mounter");
+	return NULL;
+}
+
+void vfs_mount_direct(const char* path, filesystem_t* fs)
 {
 	mountpoint_t* mp = malloc(sizeof(mp));
 	mp->fs = fs;
 	strcpy(mp->path, path);
 	list_add(mountpoints, mp);
 	kernel_log("Mounted %s at %s", fs->dev->module->name, path);
+}
+
+void vfs_mount(const char* path, const char* fs, const char* block, int argc, const char** argv)
+{
+	filesystem_mounter_t* mounter = vfs_get_mounter(fs);
+	filesystem_t* mounted = mounter->mount(mounter->mod, block, argc, argv);
+	vfs_mount_direct(path, mounted);
 }
 
 mountpoint_t* vfs_find_mountpoint(const char* path)

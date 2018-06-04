@@ -10,6 +10,6 @@
 
 #include "bus/filesystem.h"
 
-filesystem_t* tmpfs_init();
+void tmpfs_init();
 
 #endif /* DEV_TMPFS_H_ */
