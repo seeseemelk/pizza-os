@@ -25,6 +25,8 @@ void vfs_mount(const char* path, const char* fs, const char* block, int argc, co
 bool vfs_rm(const char* path);
 bool vfs_stat(const char* path, stat_t* stat);
 void vfs_mkdir(const char* path);
+void vfs_mkblock(const char* path, device_t* dev);
+void vfs_mkchar(const char* path, device_t* dev);
 
 DIR vfs_open_dir(const char* path);
 void vfs_close_dir(DIR dir);

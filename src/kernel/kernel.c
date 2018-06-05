@@ -162,11 +162,13 @@ void list_dir(const char* path)
 			cat[path_length++] = '/';
 		strcpy(cat+path_length, dirent.name);
 		if (dirent.type == FDIR)
+		{
 			kernel_log("D %s", cat);
+			list_dir(cat);
+			free(cat);
+		}
 		else
 			kernel_log("F %s", cat);
-		list_dir(cat);
-		free(cat);
 	}
 	vfs_close_dir(dir);
 }
@@ -221,7 +223,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	//vfs_mount("/", tmpfs);
 	vfs_mount("/", "tmpfs", "tmpfs", 0, NULL);
 
-	vfs_mkdir("/dirA");
+	vfs_mkdir("/dev");
 	vfs_mkdir("/dirB");
 	vfs_mkdir("/dirB/subDirA");
 	vfs_mkdir("/dirB/subDirB");
@@ -242,9 +244,6 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	kernel_log("Content: '%s'", buf);
 	vfs_rm("/file");
 
-	kernel_log("Listing root");
-	list_dir("/");
-	kernel_log("Finished");
 
 	/*kernel_log("Listing filesystem drivers");
 	bus_it it;
@@ -259,6 +258,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 
 	keyboard_init();
 
+
 	pit_init();
 
 	#ifdef ENABLE_PS2
@@ -267,6 +267,17 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	#ifdef ENABLE_PS2KBD
 	pckbd_init(device_get_first(PS2));
 	#endif
+
+	kernel_log("Listing root");
+	list_dir("/");
+	kernel_log("Finished");
+
+	FILE f = vfs_open_file("/dev/kbd", O_READ);
+	char kbuf[16];
+	size_t read = vfs_read_file(f, kbuf, 16);
+	kernel_log("Read %d", read);
+	kernel_log("%s", buf);
+	vfs_close_file(f);
 
 	sched_main();
 

@@ -15,6 +15,7 @@
 #define NODE(n) ((node_t*) n)
 #define DIR(n) ((dirnode_t*) n)
 #define FILE(n) ((filenode_t*) n)
+#define DEVN(n) ((devnode_t*) n)
 #define CHUNK_SIZE 512
 
 typedef struct node_t node_t;
@@ -312,6 +313,14 @@ void tmpfs_stat(device_t* dev, int inode, stat_t* stat)
 	/* Stat the file */
 	stat->type = node->type;
 	memcpy(stat->name, node->name, MAX_FILENAME);
+
+	if (stat->type == FDIR || stat->type == FFILE)
+		stat->device = dev;
+	else
+	{
+		devnode_t* devn = DEVN(node);
+		stat->device = device_get_by_minor(devn->major, devn->minor);
+	}
 }
 
 void* tmpfs_dir_open(device_t* dev, int inode)
@@ -455,6 +464,7 @@ filesystem_t* tmpfs_mount(module_t* mod, const char* path, int argc, const char*
 	dev->bus.free_inode = tmpfs_free_inode;
 	dev->bus.mkdir = tmpfs_mkdir;
 	dev->bus.mkfile = tmpfs_mkfile;
+	dev->bus.mknode = tmpfs_mknode;
 	dev->bus.rm = tmpfs_rm;
 	dev->bus.stat = tmpfs_stat;
 	dev->bus.dir_open = tmpfs_dir_open;

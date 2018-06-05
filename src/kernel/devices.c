@@ -121,7 +121,7 @@ void* device_get_bus(device_t* dev, bus_t type)
 	{
 		dev_bus_t* bus = dbusses[type] + i;
 		if (bus->dev == dev)
-			return bus;
+			return bus->bus;
 	}
 	kernel_panic("Bus not found");
 	return NULL;

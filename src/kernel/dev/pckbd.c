@@ -1,4 +1,6 @@
 #include "bus/ps2.h"
+#include "bus/filesystem.h"
+#include "vfs.h"
 #include "cdefs.h"
 #include "devices.h"
 #include "interrupt.h"
@@ -7,8 +9,8 @@
 #include "threads.h"
 #include "thread/signal.h"
 #include "io.h"
-#include <stdlib.h>
 #include "../api/keyboard.h"
+#include <stdlib.h>
 
 #define DEV(obj) ((device_t*)obj)
 #define KBD(obj) ((pckbd_t*)obj)
@@ -91,6 +93,32 @@ void pckbd_test()
 	}
 }
 
+static fileop_t fopt;
+
+void* pckbd_open(device_t* dev)
+{
+	UNUSED(dev);
+	kernel_log("Opened");
+	return NULL;
+}
+
+void pckbd_close(device_t* dev, void* data)
+{
+	UNUSED(dev);
+	UNUSED(data);
+}
+
+size_t pckbd_read(device_t* dev, void* data, char* buf, size_t len)
+{
+	UNUSED(dev);
+	UNUSED(data);
+
+	const char* str = "Hello";
+	len = (len < 5) ? len : 5;
+	memcpy(buf, str, len);
+	return len;
+}
+
 void pckbd_init(ps2_bus_t* bus)
 {
 	module_register(&mod, "pckbd", NULL, &pckbd_req);
@@ -114,6 +142,13 @@ void pckbd_init(ps2_bus_t* bus)
 
 	kbd.enabled = true;
 	thread_create(&pckbd_test);
+
+	fopt.dev = &kbd.dev;
+	fopt.open = pckbd_open;
+	fopt.close = pckbd_close;
+	fopt.read = pckbd_read;
+	device_register_bus(&kbd.dev, FILEOP, &fopt);
+	vfs_mkchar("/dev/kbd", &kbd.dev);
 }
 
 

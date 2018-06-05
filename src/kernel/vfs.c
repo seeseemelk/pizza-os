@@ -37,7 +37,7 @@ typedef struct
 		size_t inode;
 
 		/* The file is an opened special file */
-		filecharop_t* fop;
+		fileop_t* fop;
 	};
 	void* data;
 } open_file_t;
@@ -174,10 +174,38 @@ void vfs_mkdir(const char* path)
 	char* parent = path_parent(subpath);
 	char* filename = path_filename(subpath);
 	int parent_inode = fs->get_inode(fs->dev, parent);
+	if (parent_inode == 0)
+		kernel_panic("Parent directory of %s does not exist", path);
 	int inode = fs->mkdir(fs->dev, parent_inode, filename);
 	vfs_update_freed(fs, parent_inode);
 	vfs_update_freed(fs, inode);
 	free(parent);
+}
+
+void vfs_mkspecial(const char* path, device_t* dev, file_t type)
+{
+	mountpoint_t* mp = vfs_find_mountpoint(path);
+	filesystem_t* fs = mp->fs;
+	const char* subpath = vfs_get_sub_path(mp, path);
+	char* parent = path_parent(subpath);
+	char* filename = path_filename(subpath);
+	int parent_inode = fs->get_inode(fs->dev, parent);
+	if (parent_inode == 0)
+		kernel_panic("Parent directory of %s does not exist", path);
+	int inode = fs->mknode(fs->dev, parent_inode, filename, type, dev->module->major, dev->minor);
+	vfs_update_freed(fs, parent_inode);
+	vfs_update_freed(fs, inode);
+	free(parent);
+}
+
+void vfs_mkblock(const char* path, device_t* dev)
+{
+	vfs_mkspecial(path, dev, FBLOCK);
+}
+
+void vfs_mkchar(const char* path, device_t* dev)
+{
+	vfs_mkspecial(path, dev, FCHAR);
 }
 
 /* Functions that operate on opened directories */
@@ -287,7 +315,7 @@ FILE vfs_open_file(const char* path, mode_t mode)
 	else if (stat.type == FCHAR || stat.type == FBLOCK)
 	{
 		/* File is a special file. So handle it specially. */
-		filecharop_t* fop = device_get_bus(stat.device, FILEOP);
+		fileop_t* fop = device_get_bus(stat.device, FILEOP);
 		of->fop = fop;
 		of->data = fop->open(fop->dev);
 		return desc;
@@ -315,7 +343,7 @@ void vfs_close_file(FILE file)
 	else
 	{
 		/* Special file */
-		filecharop_t* fop = of->fop;
+		fileop_t* fop = of->fop;
 		fop->close(fop->dev, of->data);
 	}
 	/* Cleanup descriptor */
@@ -332,7 +360,7 @@ size_t vfs_write_file(FILE file, const char* buf, size_t len)
 	}
 	else
 	{
-		filecharop_t* fop = of->fop;
+		fileop_t* fop = of->fop;
 		return fop->write(fop->dev, of->data, buf, len);
 	}
 }
@@ -347,7 +375,7 @@ size_t vfs_read_file(FILE file, char* buf, size_t len)
 	}
 	else
 	{
-		filecharop_t* fop = of->fop;
+		fileop_t* fop = of->fop;
 		return fop->read(fop->dev, of->data, buf, len);
 	}
 }
