@@ -93,7 +93,7 @@ void pckbd_test()
 	}
 }
 
-static fileop_t fopt;
+static fileop_t fopt = {0};
 
 void* pckbd_open(device_t* dev)
 {
