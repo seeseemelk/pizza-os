@@ -13,6 +13,7 @@
 #endif
 
 #include <stddef.h>
+#include <stdbool.h>
 
 /**
  * Allocates free pages so that a total of bytes length worth of memory
@@ -59,4 +60,90 @@ void* page_get_phys_address(void* virt);
  */
 void page_set_phys_address(void* virt, void* phys);
 
+typedef unsigned char* phys_addr_t;
+typedef unsigned char* virt_addr_t;
+
+typedef enum action_t action_t;
+typedef struct query_t query_t;
+typedef struct page_t page_t;
+
+enum action_t
+{
+	PAGE_RESERVE = 0x01,
+	PAGE_ALLOC =   0x02,
+	PAGE_FREE =    0x04,
+	PAGE_LOWMEM =  0x08,
+	PAGE_USER =    0x0F,
+	PAGE_KERNEL =  0x10
+};
+
+struct query_t
+{
+	virt_addr_t begin;
+	size_t bytes;
+	action_t action;
+};
+
+struct page_t
+{
+	virt_addr_t begin;
+	unsigned int pages;
+	unsigned int bytes_per_page;
+};
+
+phys_addr_t page_phys_addr(virt_addr_t begin);
+bool page_query(page_t* page, query_t* query);
+void page_assign(virt_addr_t page, phys_addr_t phys_addr);
+
+/*
+void exampleCode()
+{
+	// Find memory and reserve it
+	query_t query;
+	page_t page;
+	query.bytes = 9000;
+	query.action = PAGE_ALLOC;
+	if (!page_query(&page, &query))
+		kernel_panic("Out of memory");
+
+	// Reserve extra after already commited
+	query.action = PAGE_RESERVE;
+	query.bytes = 400;
+	query.begin = page.begin + page.pages * page.bytes_per_page;
+	if (page_query(&page, &query))
+		kernel_log("We have to exted some other way");
+}
+*/
+
 #endif /* PAGE_H_ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

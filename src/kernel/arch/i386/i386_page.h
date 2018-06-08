@@ -17,7 +17,7 @@
 
 #define PAGE_PRESENT	0b001
 #define PAGE_RW			0b010
-#define PAGE_USER		0b100
+#define PAGE_USR		0b100
 
 typedef u32 page_entry;
 typedef page_entry page;
