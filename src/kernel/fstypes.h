@@ -31,6 +31,9 @@ typedef struct stat_t
 {
 	device_t* device;
 	file_t type;
+	size_t size;
+	size_t blocks;
+	size_t block_size;
 	char name[MAX_FILENAME];
 } stat_t;
 
@@ -45,11 +48,6 @@ typedef struct
 	const char* path;
 	size_t length;
 } path_t;
-
-typedef enum
-{
-	FSEEK_REL, FSEEK_BEGIN, FSEEK_END
-} fseek_t;
 
 typedef enum
 {

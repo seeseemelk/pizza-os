@@ -93,6 +93,7 @@ void pckbd_test()
 	}
 }
 
+/*
 static fileop_t fopt = {0};
 
 void* pckbd_open(device_t* dev)
@@ -118,6 +119,7 @@ size_t pckbd_read(device_t* dev, void* data, char* buf, size_t len)
 	memcpy(buf, str, len);
 	return len;
 }
+*/
 
 void pckbd_init(ps2_bus_t* bus)
 {
@@ -143,12 +145,14 @@ void pckbd_init(ps2_bus_t* bus)
 	kbd.enabled = true;
 	thread_create(&pckbd_test);
 
+	/*
 	fopt.dev = &kbd.dev;
 	fopt.open = pckbd_open;
 	fopt.close = pckbd_close;
 	fopt.read = pckbd_read;
 	device_register_bus(&kbd.dev, FILEOP, &fopt);
 	vfs_mkchar("/dev/kbd", &kbd.dev);
+	*/
 }
 
 

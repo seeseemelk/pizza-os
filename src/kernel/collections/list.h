@@ -92,6 +92,13 @@ void list_insert(list_t* list, size_t index, void* item);
  */
 void* list_remove(list_t* list, size_t index);
 
+/**
+ * Removes all contents from the list and sets
+ * the size back to 8.
+ * @param list The list to clear.
+ */
+void list_clear(list_t* list);
+
 #endif /* COLLECTIONS_LIST_H_ */
 
 

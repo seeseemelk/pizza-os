@@ -48,6 +48,10 @@ void vfs_init()
 	mountpoints = list_new();
 	open_dirs = list_new();
 	open_files = list_new();
+
+	/* This prevents the VFS from ever using descriptor 0. */
+	list_add(open_dirs, (void*) 0xFFFFFFFF);
+	list_add(open_files, (void*) 0xFFFFFFFF);
 }
 
 filesystem_mounter_t* vfs_get_mounter(const char* name)
@@ -84,6 +88,7 @@ mountpoint_t* vfs_find_mountpoint(const char* path)
 {
 	size_t path_length = strlen(path);
 	size_t mp_size = list_size(mountpoints);
+	/* TODO Check if the loop condition is correct. */
 	for (size_t i = mp_size-1; i < mp_size; i--)
 	{
 		mountpoint_t* mp = list_get(mountpoints, i);
@@ -112,7 +117,7 @@ void vfs_update_freed(filesystem_t* fs, size_t inode)
 	size_t len;
 	/* Check if a directory entry is using the inode. */
 	len = list_size(open_dirs);
-	for (size_t i = 0; i < len; i++)
+	for (size_t i = 1; i < len; i++)
 	{
 		open_dir_t* od = list_get(open_dirs, i);
 		if (od != NULL && od->inode == inode && od->fs == fs)
@@ -121,7 +126,7 @@ void vfs_update_freed(filesystem_t* fs, size_t inode)
 
 	/* The same but for files */
 	len = list_size(open_files);
-	for (size_t i = 0; i < len; i++)
+	for (size_t i = 1; i < len; i++)
 	{
 		open_file_t* of = list_get(open_files, i);
 		if (of != NULL && of->inode == inode && of->fs == fs)
@@ -130,6 +135,20 @@ void vfs_update_freed(filesystem_t* fs, size_t inode)
 
 	/* Free the inode */
 	fs->free_inode(fs->dev, inode);
+}
+
+size_t vfs_find_free_descriptor(list_t* list)
+{
+	size_t len = list_size(list);
+	for (size_t i = 1; i < len; i++)
+	{
+		if (list_get(list, i) == NULL)
+			return i;
+	}
+
+	/* None were found, so we make one */
+	list_add(list, NULL);
+	return list_size(list) - 1;
 }
 
 bool vfs_rm(const char* path)
@@ -230,8 +249,10 @@ DIR vfs_open_dir(const char* path)
 	od->data = data;
 
 	/* Store the descriptor */
-	list_add(open_dirs, od);
-	DIR dir = list_size(open_dirs) - 1;
+	/*list_add(open_dirs, od);
+	DIR dir = list_size(open_dirs) - 1;*/
+	DIR dir = vfs_find_free_descriptor(open_dirs);
+	list_set(open_dirs, dir, od);
 	return dir;
 }
 
@@ -254,20 +275,6 @@ bool vfs_next_dir(DIR dir, dirent_t* dirent)
 
 /* Functions that operate on opened files */
 
-size_t vfs_find_free_descriptor(list_t* list)
-{
-	size_t len = list_size(list);
-	for (size_t i = 0; i < len; i++)
-	{
-		if (list_get(list, i) == NULL)
-			return i;
-	}
-
-	/* None were found, so we make one */
-	list_add(list, NULL);
-	return list_size(list) - 1;
-}
-
 FILE vfs_open_file(const char* path, mode_t mode)
 {
 	mountpoint_t* mp = vfs_find_mountpoint(path);
@@ -280,16 +287,24 @@ FILE vfs_open_file(const char* path, mode_t mode)
 	 */
 
 	int inode = fs->get_inode(fs->dev, subpath);
-	if (inode == 0) /* The node does not exist. Create it. */
+	if (inode == 0) /* The node does not exist. Create it (if allowed to). */
 	{
-		char* parent = path_parent(subpath);
-		char* filename = path_filename(subpath);
-		int parent_inode = fs->get_inode(fs->dev, parent);
-		inode = fs->mkfile(fs->dev, parent_inode, filename);
-		vfs_update_freed(fs, parent_inode);
-		vfs_update_freed(fs, inode);
-		free(parent);
-		free(filename);
+		if (mode & O_CREATE) /* We're allowed to create a new file. */
+		{
+			char* parent = path_parent(subpath);
+			char* filename = path_filename(subpath);
+			int parent_inode = fs->get_inode(fs->dev, parent);
+			inode = fs->mkfile(fs->dev, parent_inode, filename);
+			vfs_update_freed(fs, parent_inode);
+			vfs_update_freed(fs, inode);
+			free(parent);
+			free(filename);
+		}
+		else
+		{
+			kernel_log("Opened file that does not exist, not creating");
+			return 0;
+		}
 	}
 
 	/* Create descriptors */
@@ -352,6 +367,9 @@ void vfs_close_file(FILE file)
 
 size_t vfs_write_file(FILE file, const char* buf, size_t len)
 {
+	if (file == 0)
+		kernel_panic("Tried to write to unopened file");
+
 	open_file_t* of = list_get(open_files, file);
 	if (of->type == FFILE)
 	{
@@ -367,6 +385,9 @@ size_t vfs_write_file(FILE file, const char* buf, size_t len)
 
 size_t vfs_read_file(FILE file, char* buf, size_t len)
 {
+	if (file == 0)
+			kernel_panic("Tried to read from unopened file");
+
 	open_file_t* of = list_get(open_files, file);
 	if (of->type == FFILE)
 	{

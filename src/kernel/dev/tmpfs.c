@@ -51,6 +51,15 @@ struct filenode_t
 	 * hold the file data.
 	 */
 	list_t* contents;
+	/* Contains a list of lists. Each entry refers to
+	 * a contents list that no longer represent the
+	 * contents of the file, but that may still be
+	 * accessed by file descriptors.
+	 * These are deleted by `free_inode` as this is
+	 * the easiest way to detect that all descriptors
+	 * have been closed.
+	 */
+	list_t* gc_contents;
 	long long size;
 };
 
@@ -125,7 +134,9 @@ int tmpfs_get_inode(device_t* dev, const char* path)
 	path_t p = path_begin(path);
 
 	node_t* node = NODE(&fs->root);
-	/* TODO: Either path_next or path_store seems to have a bug. */
+	/* TODO: Either path_next or path_store seems to have a bug.
+	 * Update: This might have been related to a bug in strncpy.
+	 */
 	while (path_next(&p))
 	{
 		char name[p.length];
@@ -199,16 +210,38 @@ void tmpfs_free_inode(device_t* dev, int inode)
 {
 	fs_t* fs = FS(dev);
 	node_t* node = NODE(tmpfs_get_node(fs, inode));
+
+	/* Check if it's a file, for file specific garbage collection. */
+	if (node->type == FFILE)
+	{
+		/* We remove the contents of gc_contents. */
+		filenode_t* file = FILE(node);
+		size_t length = list_size(file->gc_contents);
+		for (size_t i = 0; i < length; i++)
+		{
+			list_t* contents = list_get(file->gc_contents, i);
+			size_t contents_length = list_size(contents);
+			for (size_t l = 0; l < contents_length; l++)
+			{
+				free(list_get(contents, l));
+			}
+			list_free(contents);
+		}
+		list_clear(file->gc_contents);
+	}
+
 	/* We only free the node if it has been marked for deletion. */
 	if (node->deleted)
 	{
 		if (node->type == FDIR)
 		{
+			/* Removes the directory from memory. */
 			dirnode_t* dir = DIR(node);
 			list_free(dir->contents);
 		}
 		else if (node->type == FFILE)
 		{
+			/* Removes the file buffer from memory */
 			filenode_t* file = FILE(node);
 			size_t len = list_size(file->contents);
 			for (size_t i = 0; i < len; i++)
@@ -216,10 +249,12 @@ void tmpfs_free_inode(device_t* dev, int inode)
 				free(list_get(file->contents, i));
 			}
 			list_free(file->contents);
+			list_free(file->gc_contents);
 		}
 		list_set(fs->nodes, node->id - 1, NULL);
 		free(node);
 	}
+
 }
 
 int tmpfs_mkdir(device_t* dev, int parentInode, const char* name)
@@ -251,6 +286,7 @@ int tmpfs_mkfile(device_t* dev, int parentInode, const char* name)
 	/* Allocate and prepare the child */
 	filenode_t* child = malloc(sizeof(filenode_t));
 	child->contents = list_new();
+	child->gc_contents = list_new();
 	child->size = 0;
 	child->node.type = FFILE;
 	child->node.parent = parent;
@@ -315,7 +351,20 @@ void tmpfs_stat(device_t* dev, int inode, stat_t* stat)
 	memcpy(stat->name, node->name, MAX_FILENAME);
 
 	if (stat->type == FDIR || stat->type == FFILE)
+	{
 		stat->device = dev;
+		stat->block_size = 512;
+		if (stat->type == FDIR)
+		{
+			stat->blocks = list_size(FILE(node)->contents);
+			stat->size = FILE(node)->size;
+		}
+		else
+		{
+			stat->blocks = 0;
+			stat->size = 0;
+		}
+	}
 	else
 	{
 		devnode_t* devn = DEVN(node);
@@ -365,7 +414,24 @@ void* tmpfs_file_open(device_t* dev, int inode, mode_t mode)
 	fs_t* fs = FS(dev);
 	openfile_t* of = malloc(sizeof(openfile_t));
 	of->node = (filenode_t*) tmpfs_get_node(fs, inode);
-	of->pointer = 0;
+
+	if ((mode & O_WRITE) && !(mode & O_READ))
+	{
+		/* The file is opened for truncation.
+		 * This should remove all file contents,
+		 * but must allow for correct garbage collection
+		 * so that already opened file handles can still read
+		 * the old contents.
+		 */
+		list_add(of->node->gc_contents, of->node->contents);
+		of->node->contents = list_new();
+	}
+
+	if (mode & O_APPEND)
+		of->pointer = of->node->size;
+	else
+		of->pointer = 0;
+
 	of->mode = mode;
 	return of;
 }

@@ -229,7 +229,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	vfs_mkdir("/dirB/subDirB");
 
 	kernel_log("Writing file");
-	FILE file = vfs_open_file("/file", O_WRITE);
+	FILE file = vfs_open_file("/file", O_WRITE | O_CREATE | O_READ);
 	size_t amount = vfs_write_file(file, "Hello, world!", 14);
 	kernel_log("Wrote %d bytes", amount);
 	vfs_close_file(file);
@@ -243,6 +243,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 
 	kernel_log("Content: '%s'", buf);
 	vfs_rm("/file");
+	vfs_rm("/dirB");
 
 
 	/*kernel_log("Listing filesystem drivers");
@@ -272,12 +273,12 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	list_dir("/");
 	kernel_log("Finished");
 
-	FILE f = vfs_open_file("/dev/kbd", O_READ);
+	/*FILE f = vfs_open_file("/dev/kbd", O_READ);
 	char kbuf[16];
 	size_t read = vfs_read_file(f, kbuf, 16);
 	kernel_log("Read %d", read);
 	kernel_log("%s", buf);
-	vfs_close_file(f);
+	vfs_close_file(f);*/
 
 	sched_main();
 

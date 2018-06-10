@@ -103,7 +103,12 @@ void* list_remove(list_t* list, size_t index)
 	}
 }
 
-
+void list_clear(list_t* list)
+{
+	list->size = 0;
+	list->max_size = 8;
+	realloc(list->contents, sizeof(void*) * list->max_size);
+}
 
 
 
