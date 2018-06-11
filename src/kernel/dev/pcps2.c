@@ -27,6 +27,17 @@ typedef struct
 							setting it to false will cause it to ignore interrupts. */
 } ps2ctrl_t;
 
+unsigned char pcps2_read_status(device_t*);
+
+/**
+ * Waits until the PS2 input buffer is empty.
+ * This should be done before writing. (NOT reading!)
+ */
+void pcps2_wait_input_clear(device_t* dev)
+{
+	while ((pcps2_read_status(dev) & 0x02) > 0);
+}
+
 unsigned char pcps2_read_status(device_t* dev)
 {
 	UNUSED(dev);
@@ -55,20 +66,22 @@ void pcps2_write_data(device_t* dev, unsigned char data)
 void pcps2_write_command(device_t* dev, unsigned char command)
 {
 	UNUSED(dev);
+	pcps2_wait_input_clear(dev);
 	outb(PS2_CMD, command);
 }
 
 unsigned char pcps2_read_ram(device_t* dev, unsigned char i)
 {
-	outb(PS2_CMD, 0x20 + i);
+	//outb(PS2_CMD, 0x20 + i);
+	pcps2_write_command(dev, 0x20 + i);
 	return pcps2_read_resp(dev);
 }
 
 void pcps2_write_ram(device_t* dev, unsigned char i, unsigned char val)
 {
-	UNUSED(dev);
+	pcps2_wait_input_clear(dev);
 	outb(PS2_CMD, 0x60 + i);
-	while ((inb(PS2_STA) & 2) > 0);
+	pcps2_wait_input_clear(dev);
 	outb(PS2_DAT, val);
 }
 
@@ -145,9 +158,12 @@ void pcps2_init_hardware(ps2ctrl_t* dev)
 	pcps2_write_command(DEV(dev), 0xAE);
 
 	// Set Controller Configuration Byte (Enable interrupts)
+	kernel_log("A");
 	unsigned int config = pcps2_read_ram(DEV(dev), 0);
+	kernel_log("B");
 	config |= 1;
 	pcps2_write_ram(DEV(dev), 0, config);
+	kernel_log("C");
 
 	// Reset Device
 	dev->wait_interrupt = true;

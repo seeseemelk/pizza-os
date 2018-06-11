@@ -275,8 +275,6 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	kernel_log("Done");
 	//printf("DONE\n");
 
-	if (enable_gdb)
-		kernel_init_gdb();
 
 	// Enable VGA output if possible
 	#ifdef ENABLE_VGA
@@ -284,6 +282,9 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	tty_set_tty(device_get_first(VGA));
 	#endif
 	tty_clear();
+
+	if (enable_gdb)
+		kernel_init_gdb();
 
 	// Show startup screen.
 	kernel_log("Starting pizza-os (yum!)...");
@@ -300,10 +301,14 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	tmpfs_init();
 	//filesystem_t* tmpfs = tmpfs_init();
 	//vfs_mount("/", tmpfs);
+	kernel_log("Mounting root");
 	vfs_mount("/", "tmpfs", "tmpfs", 0, NULL);
+	kernel_log("Creating /dev");
 	vfs_mkdir("/dev");
+	kernel_log("Mounting /dev");
 	vfs_mount("/dev", "tmpfs", "tmpfs", 0, NULL);
 
+	kernel_log("Continuing");
 	vfs_mkdir("/dirB");
 	vfs_mkdir("/dirB/subDirA");
 	vfs_mkdir("/dirB/subDirB");

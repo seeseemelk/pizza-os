@@ -2,8 +2,8 @@
 #include "io.h"
 #include <stdbool.h>
 
-#define PORT 0x3E8
-//#define PORT 0x3F8
+//#define PORT 0x3E8
+#define PORT 0x3F8
 
 /*
  * Code taken from:

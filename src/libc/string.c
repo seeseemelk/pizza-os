@@ -98,7 +98,8 @@ int strncmp(const char* str1, const char* str2, size_t n)
 char* strcpy(char* dest, const char* src)
 {
 	size_t len = strlen(src);
-	return strncpy(dest, src, len);
+	/* We do '+ 1' to include the null-terminator. */
+	return strncpy(dest, src, len + 1);
 }
 
 char* strncpy(char* dest, const char* src, size_t num)

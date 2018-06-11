@@ -98,6 +98,7 @@ mountpoint_t* vfs_find_mountpoint(const char* path)
 	for (size_t i = mp_size-1; i < mp_size; i--)
 	{
 		mountpoint_t* mp = list_get(mountpoints, i);
+		kernel_log("Comparing %s to %s", path, mp->path);
 		size_t mp_length = strlen(mp->path);
 		if (path_length >= mp_length && strncmp(path, mp->path, mp_length) == 0)
 		{
