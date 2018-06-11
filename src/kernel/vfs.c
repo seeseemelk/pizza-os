@@ -8,8 +8,12 @@
 #include <string.h>
 #include <stdbool.h>
 
+/* Predefine functions */
+bool vfs_stat_unsafe(filesystem_t* fs, int inode, stat_t* stat);
+
 /* Contains a list of all mountpoints */
 list_t* mountpoints;
+mutex_t mountpoints_mutex;
 
 /* Data structure stored in mountpoints list */
 typedef struct
@@ -43,6 +47,9 @@ typedef struct
 } open_file_t;
 list_t* open_files;
 
+static mutex_t dir_mutex;
+static mutex_t file_mutex;
+
 void vfs_init()
 {
 	mountpoints = list_new();
@@ -52,6 +59,10 @@ void vfs_init()
 	/* This prevents the VFS from ever using descriptor 0. */
 	list_add(open_dirs, (void*) 0xFFFFFFFF);
 	list_add(open_files, (void*) 0xFFFFFFFF);
+
+	mutex_new(&mountpoints_mutex);
+	mutex_new(&dir_mutex);
+	mutex_new(&file_mutex);
 }
 
 filesystem_mounter_t* vfs_get_mounter(const char* name)
@@ -85,9 +96,11 @@ void vfs_mount_direct(const char* path, filesystem_t* fs)
 
 void vfs_mount(const char* path, const char* fs, const char* block, int argc, const char** argv)
 {
+	mutex_lock(&mountpoints_mutex);
 	filesystem_mounter_t* mounter = vfs_get_mounter(fs);
 	filesystem_t* mounted = mounter->mount(mounter->mod, block, argc, argv);
 	vfs_mount_direct(path, mounted);
+	mutex_unlock(&mountpoints_mutex);
 }
 
 mountpoint_t* vfs_find_mountpoint(const char* path)
@@ -98,7 +111,6 @@ mountpoint_t* vfs_find_mountpoint(const char* path)
 	for (size_t i = mp_size-1; i < mp_size; i--)
 	{
 		mountpoint_t* mp = list_get(mountpoints, i);
-		kernel_log("Comparing %s to %s", path, mp->path);
 		size_t mp_length = strlen(mp->path);
 		if (path_length >= mp_length && strncmp(path, mp->path, mp_length) == 0)
 		{
@@ -165,12 +177,21 @@ bool vfs_rm(const char* path)
 	filesystem_t* fs = mp->fs;
 	const char* subpath = vfs_get_sub_path(mp, path);
 
+	device_lock(fs->dev);
+
 	/* Get the inode */
 	int inode = fs->get_inode(fs->dev, subpath);
 
+	if (!inode)
+	{
+		kernel_log("Removing file that does not exist: %s", path);
+		device_unlock(fs->dev);
+		return false;
+	}
+
 	/* Check if it is a directory */
 	stat_t stat;
-	vfs_stat(path, &stat);
+	vfs_stat_unsafe(fs, inode, &stat);
 	if (stat.type == FDIR)
 	{
 		/* Check if it's empty */
@@ -182,6 +203,7 @@ bool vfs_rm(const char* path)
 		{
 			/* It's not empty */
 			vfs_update_freed(fs, inode);
+			device_unlock(fs->dev);
 			return false;
 		}
 	}
@@ -189,6 +211,7 @@ bool vfs_rm(const char* path)
 	/* Delete it */
 	fs->rm(fs->dev, inode);
 	vfs_update_freed(fs, inode);
+	device_unlock(fs->dev);
 	return true;
 }
 
@@ -196,6 +219,7 @@ void vfs_mkdir(const char* path)
 {
 	mountpoint_t* mp = vfs_find_mountpoint(path);
 	filesystem_t* fs = mp->fs;
+	device_lock(fs->dev);
 	const char* subpath = vfs_get_sub_path(mp, path);
 	char* parent = path_parent(subpath);
 	char* filename = path_filename(subpath);
@@ -205,6 +229,7 @@ void vfs_mkdir(const char* path)
 	int inode = fs->mkdir(fs->dev, parent_inode, filename);
 	vfs_update_freed(fs, parent_inode);
 	vfs_update_freed(fs, inode);
+	device_unlock(fs->dev);
 	free(parent);
 }
 
@@ -212,6 +237,7 @@ void vfs_mkspecial(const char* path, device_t* dev, file_t type)
 {
 	mountpoint_t* mp = vfs_find_mountpoint(path);
 	filesystem_t* fs = mp->fs;
+	device_lock(fs->dev);
 	const char* subpath = vfs_get_sub_path(mp, path);
 	char* parent = path_parent(subpath);
 	char* filename = path_filename(subpath);
@@ -221,6 +247,7 @@ void vfs_mkspecial(const char* path, device_t* dev, file_t type)
 	int inode = fs->mknode(fs->dev, parent_inode, filename, type, dev->module->major, dev->minor);
 	vfs_update_freed(fs, parent_inode);
 	vfs_update_freed(fs, inode);
+	device_unlock(fs->dev);
 	free(parent);
 }
 
@@ -242,6 +269,7 @@ DIR vfs_open_dir(const char* path)
 	mountpoint_t* mp = vfs_find_mountpoint(path);
 	filesystem_t* fs = mp->fs;
 	const char* subpath = vfs_get_sub_path(mp, path);
+	device_lock(fs->dev);
 
 	/* Get the inode */
 	int inode = fs->get_inode(fs->dev, subpath);
@@ -256,18 +284,23 @@ DIR vfs_open_dir(const char* path)
 	od->data = data;
 
 	/* Store the descriptor */
+	mutex_lock(&dir_mutex);
 	DIR dir = vfs_find_free_descriptor(open_dirs);
 	list_set(open_dirs, dir, od);
+	mutex_unlock(&dir_mutex);
+	device_unlock(fs->dev);
 	return dir;
 }
 
 void vfs_close_dir(DIR dir)
 {
+	mutex_lock(&dir_mutex);
 	open_dir_t* od = list_get(open_dirs, dir);
 	filesystem_t* fs = od->fs;
 	fs->dir_close(fs->dev, od->data);
 	list_set(open_dirs, dir, NULL);
 	vfs_update_freed(fs, od->inode);
+	mutex_unlock(&dir_mutex);
 	free(od);
 }
 
@@ -275,7 +308,8 @@ bool vfs_next_dir(DIR dir, dirent_t* dirent)
 {
 	open_dir_t* od = list_get(open_dirs, dir);
 	filesystem_t* fs = od->fs;
-	return fs->dir_next(fs->dev, od->data, dirent);
+	bool r = fs->dir_next(fs->dev, od->data, dirent);
+	return r;
 }
 
 /* Functions that operate on opened files */
@@ -284,6 +318,7 @@ FILE vfs_open_file(const char* path, mode_t mode)
 {
 	mountpoint_t* mp = vfs_find_mountpoint(path);
 	filesystem_t* fs = mp->fs;
+	device_lock(fs->dev);
 	const char* subpath = vfs_get_sub_path(mp, path);
 
 	/* Needs a way to check if the inode exists.
@@ -313,10 +348,12 @@ FILE vfs_open_file(const char* path, mode_t mode)
 	}
 
 	/* Create descriptors */
+	mutex_lock(&file_mutex);
 	FILE desc = vfs_find_free_descriptor(open_files);
 	open_file_t* of = malloc(sizeof(open_file_t));
 	of->fs = fs;
 	list_set(open_files, desc, of);
+	mutex_unlock(&file_mutex);
 
 	/* Test the file type */
 	stat_t stat;
@@ -330,6 +367,7 @@ FILE vfs_open_file(const char* path, mode_t mode)
 		of->inode = inode;
 		of->data = data;
 
+		device_unlock(fs->dev);
 		return desc;
 	}
 	else if (stat.type == FCHAR || stat.type == FBLOCK)
@@ -338,35 +376,39 @@ FILE vfs_open_file(const char* path, mode_t mode)
 		fileop_t* fop = device_get_bus(stat.device, FILEOP);
 		of->fop = fop;
 		of->data = fop->open(fop->dev);
+		device_unlock(fs->dev);
 		return desc;
 	}
-	else
-	{
-		kernel_panic("Bad fs: stat.type was not filled in correctly");
-		return 0;
-	}
 
-	//open_files_fs
+	kernel_panic("Bad fs: stat.type was not filled in correctly");
+	device_unlock(fs->dev);
+	return 0;
 }
 
 void vfs_close_file(FILE file)
 {
+	mutex_lock(&file_mutex);
 	open_file_t* of = list_get(open_files, file);
 	list_set(open_files, file, NULL);
 	if (of->type == FFILE)
 	{
 		/* Normal file */
 		filesystem_t* fs = of->fs;
+		device_lock(fs->dev);
 		fs->file_close(fs->dev, of->data);
 		vfs_update_freed(fs, of->inode);
+		device_unlock(fs->dev);
 	}
 	else
 	{
 		/* Special file */
 		fileop_t* fop = of->fop;
+		device_lock(fop->dev);
 		fop->close(fop->dev, of->data);
+		device_unlock(fop->dev);
 	}
 	/* Cleanup descriptor */
+	mutex_unlock(&file_mutex);
 	free(of);
 }
 
@@ -408,18 +450,8 @@ size_t vfs_read_file(FILE file, char* buf, size_t len)
 
 /* Functions that operate on closed files */
 
-bool vfs_stat(const char* path, stat_t* stat)
+bool vfs_stat_unsafe(filesystem_t* fs, int inode, stat_t* stat)
 {
-	/* Find the mountpoint and subpath */
-	mountpoint_t* mp = vfs_find_mountpoint(path);
-	filesystem_t* fs = mp->fs;
-	const char* subpath = vfs_get_sub_path(mp, path);
-
-	/* Get the inode */
-	int inode = fs->get_inode(fs->dev, subpath);
-	if (inode == 0) /* Inode not found */
-		return false;
-
 	/* Stat the inode */
 	fs->stat(fs->dev, inode, stat);
 	stat->device = fs->dev;
@@ -427,6 +459,30 @@ bool vfs_stat(const char* path, stat_t* stat)
 	/* Cleanup */
 	vfs_update_freed(fs, inode);
 	return true;
+}
+
+bool vfs_stat(const char* path, stat_t* stat)
+{
+	/* Find the mountpoint and subpath */
+	mountpoint_t* mp = vfs_find_mountpoint(path);
+	filesystem_t* fs = mp->fs;
+	device_lock(fs->dev);
+	const char* subpath = vfs_get_sub_path(mp, path);
+
+	/* Get the inode */
+	int inode = fs->get_inode(fs->dev, subpath);
+
+	if (inode == 0)
+	{
+		device_unlock(fs->dev);
+		return false;
+	}
+	else
+	{
+		bool r = vfs_stat_unsafe(fs, inode, stat);
+		device_unlock(fs->dev);
+		return r;
+	}
 }
 
 size_t vfs_seek(FILE file, long n, seek_t seek)

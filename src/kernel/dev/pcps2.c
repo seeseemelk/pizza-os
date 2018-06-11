@@ -60,6 +60,7 @@ unsigned char pcps2_read_data(device_t* dev)
 void pcps2_write_data(device_t* dev, unsigned char data)
 {
 	UNUSED(dev);
+	pcps2_wait_input_clear(dev);
 	outb(PS2_DAT, data);
 }
 
@@ -158,12 +159,9 @@ void pcps2_init_hardware(ps2ctrl_t* dev)
 	pcps2_write_command(DEV(dev), 0xAE);
 
 	// Set Controller Configuration Byte (Enable interrupts)
-	kernel_log("A");
 	unsigned int config = pcps2_read_ram(DEV(dev), 0);
-	kernel_log("B");
 	config |= 1;
 	pcps2_write_ram(DEV(dev), 0, config);
-	kernel_log("C");
 
 	// Reset Device
 	dev->wait_interrupt = true;
