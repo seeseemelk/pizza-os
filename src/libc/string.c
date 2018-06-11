@@ -21,6 +21,17 @@ void* memcpy(void* dest, const void* src, size_t num)
 	char* c_dest = (char*) dest;
 	char* c_src = (char*) src;
 
+	for (size_t i = 0; i < num; i++)
+		c_dest[i] = c_src[i];
+
+	return dest;
+}
+
+void* memmove(void* dest, const void* src, size_t num)
+{
+	char* c_dest = (char*) dest;
+	char* c_src = (char*) src;
+
 	if (src > dest)
 	{
 		for (size_t i = 0; i < num; i++)
