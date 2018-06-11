@@ -73,8 +73,14 @@ void vfs_mount_direct(const char* path, filesystem_t* fs)
 	mountpoint_t* mp = malloc(sizeof(mp));
 	mp->fs = fs;
 	strcpy(mp->path, path);
+	size_t len = strlen(mp->path);
+	/* Strip the trailing slash.
+	 * Also does this for the root, but that's okay.
+	 * It actually makes some things easier.
+	 */
+	if (mp->path[len-1] == '/')
+		mp->path[len-1] = '\0';
 	list_add(mountpoints, mp);
-	kernel_log("Mounted %s at %s", fs->dev->module->name, path);
 }
 
 void vfs_mount(const char* path, const char* fs, const char* block, int argc, const char** argv)
@@ -105,7 +111,7 @@ mountpoint_t* vfs_find_mountpoint(const char* path)
 const char* vfs_get_sub_path(mountpoint_t* mp, const char* path)
 {
 	size_t fs_len = strlen(mp->path);
-	return path + fs_len - 1;
+	return path + fs_len;
 }
 
 /**
@@ -249,8 +255,6 @@ DIR vfs_open_dir(const char* path)
 	od->data = data;
 
 	/* Store the descriptor */
-	/*list_add(open_dirs, od);
-	DIR dir = list_size(open_dirs) - 1;*/
 	DIR dir = vfs_find_free_descriptor(open_dirs);
 	list_set(open_dirs, dir, od);
 	return dir;

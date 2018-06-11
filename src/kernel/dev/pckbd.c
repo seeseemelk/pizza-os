@@ -83,44 +83,6 @@ int pckbd_req(dev_req_t* req)
 	}
 }
 
-void pckbd_test()
-{
-	kernel_log("Waiting for scancodes");
-	while (1)
-	{
-		char c = keyboard_read_char();
-		kernel_log("Found '%c'", c);
-	}
-}
-
-/*
-static fileop_t fopt = {0};
-
-void* pckbd_open(device_t* dev)
-{
-	UNUSED(dev);
-	kernel_log("Opened");
-	return NULL;
-}
-
-void pckbd_close(device_t* dev, void* data)
-{
-	UNUSED(dev);
-	UNUSED(data);
-}
-
-size_t pckbd_read(device_t* dev, void* data, char* buf, size_t len)
-{
-	UNUSED(dev);
-	UNUSED(data);
-
-	const char* str = "Hello";
-	len = (len < 5) ? len : 5;
-	memcpy(buf, str, len);
-	return len;
-}
-*/
-
 void pckbd_init(ps2_bus_t* bus)
 {
 	module_register(&mod, "pckbd", NULL, &pckbd_req);
@@ -143,16 +105,6 @@ void pckbd_init(ps2_bus_t* bus)
 	kbd.accept_ints = false;
 
 	kbd.enabled = true;
-	thread_create(&pckbd_test);
-
-	/*
-	fopt.dev = &kbd.dev;
-	fopt.open = pckbd_open;
-	fopt.close = pckbd_close;
-	fopt.read = pckbd_read;
-	device_register_bus(&kbd.dev, FILEOP, &fopt);
-	vfs_mkchar("/dev/kbd", &kbd.dev);
-	*/
 }
 
 

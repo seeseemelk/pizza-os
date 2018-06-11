@@ -4,6 +4,9 @@
 #include "thread/mutex.h"
 #include "kernel.h"
 #include "config.h"
+#include "bus/filesystem.h"
+#include "fstypes.h"
+#include "vfs.h"
 #include <stdbool.h>
 
 #include KEYBOARD_LAYOUT
@@ -19,17 +22,11 @@ static int buf_write_index = 0;
 static volatile int buf_size = 0;
 static mutex_t buf_lock;
 
-void keyboard_init()
-{
-	signal_new(&signal);
-	mutex_new(&buf_lock);
-}
-
 u8 keyboard_get_char(SCANCODE code)
 {
 	if (keyboard_is_down(KB_LSHIFT) || keyboard_is_down(KB_RSHIFT))
 		return keymapShift[code];
-	else if (keyboard_is_down(KB_RALT))
+	else if (keyboard_is_down(KB_RALT) || keyboard_is_down(KB_LALT))
 		return keymapAlt[code];
 	else
 		return keymapNormal[code];
@@ -84,16 +81,56 @@ char keyboard_read_char()
 	return c;
 }
 
+void* kbf_open(device_t* dev)
+{
+	UNUSED(dev);
+	return NULL;
+}
 
+void kbf_close(device_t* dev, void* fd)
+{
+	UNUSED(dev);
+	UNUSED(fd);
+}
 
+size_t kbf_write(device_t* dev, void* fd, const char* buf, size_t buf_len)
+{
+	UNUSED(dev);
+	UNUSED(fd);
+	UNUSED(buf);
+	UNUSED(buf_len);
+	kernel_log("Attempt to write to system keyboard");
+	return 0;
+}
 
+size_t kbf_read(device_t* dev, void* fd, char* buf, size_t buf_len)
+{
+	UNUSED(dev);
+	UNUSED(fd);
+	for (size_t i = 0; i < buf_len; i++)
+	{
+		buf[i] = keyboard_read_char();
+	}
+	return buf_len;
+}
 
+static module_t mod;
+static device_t dev;
+static fileop_t fop = {
+	.dev = &dev,
+	.open = kbf_open,
+	.close = kbf_close,
+	.read = kbf_read,
+	.write = kbf_write
+};
 
-
-
-
-
-
-
-
+void keyboard_init()
+{
+	signal_new(&signal);
+	mutex_new(&buf_lock);
+	module_register(&mod, "system_keyboard", NULL, NULL);
+	device_register(&dev, &mod);
+	device_register_bus(&dev, FILEOP, &fop);
+	vfs_mkchar("/dev/kbd", &dev);
+}
 

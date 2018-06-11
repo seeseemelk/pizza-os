@@ -173,6 +173,17 @@ void list_dir(const char* path)
 	vfs_close_dir(dir);
 }
 
+void kernel_test()
+{
+	char kbuf[1];
+	FILE file = vfs_open_file("/dev/kbd", O_READ);
+	while (1)
+	{
+		vfs_read_file(file, kbuf, 1);
+		kernel_log("Pressed %c", kbuf[0]);
+	}
+	vfs_close_file(file);
+}
 
 void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 {
@@ -223,27 +234,28 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	//filesystem_t* tmpfs = tmpfs_init();
 	//vfs_mount("/", tmpfs);
 	vfs_mount("/", "tmpfs", "tmpfs", 0, NULL);
-
 	vfs_mkdir("/dev");
+	vfs_mount("/dev", "tmpfs", "tmpfs", 0, NULL);
+
 	vfs_mkdir("/dirB");
 	vfs_mkdir("/dirB/subDirA");
 	vfs_mkdir("/dirB/subDirB");
 
 	kernel_log("Writing file");
-	FILE file = vfs_open_file("/file", O_WRITE | O_CREATE | O_READ);
+	FILE file = vfs_open_file("/dev/file", O_WRITE | O_CREATE | O_READ);
 	size_t amount = vfs_write_file(file, "Hello, world!", 14);
 	kernel_log("Wrote %d bytes", amount);
 	vfs_close_file(file);
 	kernel_log("Done. Reading it");
 
-	file = vfs_open_file("/file", O_READ);
+	file = vfs_open_file("/dev/file", O_READ);
 	char buf[32];
 	amount = vfs_read_file(file, buf, 32);
 	kernel_log("Read %d bytes", amount);
 	vfs_close_file(file);
 
 	kernel_log("Content: '%s'", buf);
-	vfs_rm("/file");
+	//vfs_rm("/file");
 
 
 	/*kernel_log("Listing filesystem drivers");
@@ -279,6 +291,8 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	kernel_log("Read %d", read);
 	kernel_log("%s", buf);
 	vfs_close_file(f);*/
+
+	thread_create(kernel_test);
 
 	sched_main();
 
