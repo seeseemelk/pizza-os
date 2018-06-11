@@ -148,31 +148,6 @@ void kernel_init_paging()
 	page_enable();
 }
 
-void list_dir(const char* path)
-{
-	DIR dir = vfs_open_dir(path);
-	dirent_t dirent;
-	while (vfs_next_dir(dir, &dirent))
-	{
-		size_t path_length = strlen(path);
-		size_t filelength = strlen(dirent.name);
-		char* cat = malloc(path_length + filelength + 1);
-		strcpy(cat, path);
-		if (path_length > 1)
-			cat[path_length++] = '/';
-		strcpy(cat+path_length, dirent.name);
-		if (dirent.type == FDIR)
-		{
-			kernel_log("D %s", cat);
-			list_dir(cat);
-			free(cat);
-		}
-		else
-			kernel_log("F %s", cat);
-	}
-	vfs_close_dir(dir);
-}
-
 void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 {
 	UNUSED(magic);
@@ -243,7 +218,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 
 	kernel_log("Content: '%s'", buf);
 	vfs_rm("/file");
-	vfs_rm("/dirB");
+	test_vfs();
 
 
 	/*kernel_log("Listing filesystem drivers");

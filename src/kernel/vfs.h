@@ -36,6 +36,7 @@ FILE vfs_open_file(const char* path, mode_t mode);
 void vfs_close_file(FILE file);
 size_t vfs_read_file(FILE file, char* buf, size_t len);
 size_t vfs_write_file(FILE file, const char* buf, size_t len);
+size_t vfs_seek(FILE file, long n, seek_t seek);
 
 #endif /* VFS_H_ */
 

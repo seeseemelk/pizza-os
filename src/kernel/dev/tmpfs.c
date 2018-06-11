@@ -512,6 +512,21 @@ size_t tmpfs_file_read(device_t* dev, void* data, char* buf, size_t len)
 	return len - left;
 }
 
+size_t tmpfs_file_seek(device_t* dev, void* data, long n, seek_t seek)
+{
+	UNUSED(dev);
+	openfile_t* of = data;
+
+	if (seek == SEEK_SET)
+		of->pointer = n;
+	else if (seek == SEEK_CUR)
+		of->pointer += n;
+	else
+		of->pointer = of->node->size + n;
+
+	return of->pointer;
+}
+
 filesystem_t* tmpfs_mount(module_t* mod, const char* path, int argc, const char** argv)
 {
 	/*UNUSED(mod);
@@ -540,6 +555,7 @@ filesystem_t* tmpfs_mount(module_t* mod, const char* path, int argc, const char*
 	dev->bus.file_close = tmpfs_file_close;
 	dev->bus.file_write = tmpfs_file_write;
 	dev->bus.file_read = tmpfs_file_read;
+	dev->bus.file_seek = tmpfs_file_seek;
 
 	dev->root.node.id = 1;
 	dev->root.node.name[0] = '\0';

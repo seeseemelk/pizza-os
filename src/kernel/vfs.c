@@ -424,7 +424,15 @@ bool vfs_stat(const char* path, stat_t* stat)
 	return true;
 }
 
+size_t vfs_seek(FILE file, long n, seek_t seek)
+{
+	if (file == 0)
+		kernel_panic("Tried to read from unopened file");
 
+	/* Get the opened file. */
+	open_file_t* of = list_get(open_files, file);
+	return of->fs->file_seek(of->fs->dev, of->data, n, seek);
+}
 
 
 

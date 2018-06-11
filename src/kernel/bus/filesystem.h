@@ -38,7 +38,7 @@ typedef struct
 	void(*file_close)(device_t* dev, void* fd);
 	size_t(*file_read)(device_t* dev, void* fd, char* buf, size_t amount);
 	size_t(*file_write)(device_t* dev, void* fd, const char* buf, size_t amount);
-	int(*file_seek)(device_t* dev, void* fd, int amount, seek_t relative);
+	size_t(*file_seek)(device_t* dev, void* fd, long amount, seek_t relative);
 } filesystem_t;
 
 /**
