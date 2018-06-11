@@ -8,239 +8,444 @@
 #include <string.h>
 #include <stdbool.h>
 
-mount_t mounts[16];
-size_t num_mounts = 0;
+/* Contains a list of all mountpoints */
+list_t* mountpoints;
 
-void vfs_save_devi(device_t* src, devi_t* dest)
+/* Data structure stored in mountpoints list */
+typedef struct
 {
-	dest->dev_major = src->module->major;
-	dest->dev_minor = src->minor;
+	char path[256];
+	filesystem_t* fs;
+} mountpoint_t;
+
+/* Contains a list of all directory descriptors */
+typedef struct
+{
+	filesystem_t* fs;
+	size_t inode;
+	void* data;
+} open_dir_t;
+list_t* open_dirs;
+
+/* Contains a list of all open file descriptors */
+typedef struct
+{
+	filesystem_t* fs;
+	file_t type;
+	union {
+		/* The file is just a common file descriptor */
+		size_t inode;
+
+		/* The file is an opened special file */
+		fileop_t* fop;
+	};
+	void* data;
+} open_file_t;
+list_t* open_files;
+
+void vfs_init()
+{
+	mountpoints = list_new();
+	open_dirs = list_new();
+	open_files = list_new();
+
+	/* This prevents the VFS from ever using descriptor 0. */
+	list_add(open_dirs, (void*) 0xFFFFFFFF);
+	list_add(open_files, (void*) 0xFFFFFFFF);
 }
 
-device_t* vfs_getdev(devi_t* dev)
+filesystem_mounter_t* vfs_get_mounter(const char* name)
 {
-	return device_get_by_minor(dev->dev_major, dev->dev_minor);
-}
-
-device_t* vfs_finddev(const char* path)
-{
-	for (int i = num_mounts-1; i >= 0; i--)
+	bus_it it;
+	filesystem_mounter_t* fs;
+	module_it_begin(&it, FILESYSTEM);
+	while ((fs = module_it_next(&it)) != NULL)
 	{
-		if (strncmp(path, mounts[i].path, 256) == 0)
-		{
-			return mounts[i].dev;
-		}
+		if (strcmp(name, fs->name) == 0)
+			return fs;
 	}
-	kernel_panic("Mount point not found");
+	kernel_panic("No such filesystem mounter");
 	return NULL;
 }
 
-bool vfs_is_sibling(const char* parent, const char* sibling)
+void vfs_mount_direct(const char* path, filesystem_t* fs)
 {
-	size_t parent_len = strlen(parent);
-	size_t sibling_len = strlen(sibling);
-	if (sibling_len >= parent_len)
-		return strncmp(sibling, parent, parent_len) == 0;
-	else
-		return false;
+	mountpoint_t* mp = malloc(sizeof(mp));
+	mp->fs = fs;
+	strcpy(mp->path, path);
+	size_t len = strlen(mp->path);
+	/* Strip the trailing slash.
+	 * Also does this for the root, but that's okay.
+	 * It actually makes some things easier.
+	 */
+	if (mp->path[len-1] == '/')
+		mp->path[len-1] = '\0';
+	list_add(mountpoints, mp);
 }
 
-void vfs_diropen(DIR* dir, const char* path)
+void vfs_mount(const char* path, const char* fs, const char* block, int argc, const char** argv)
 {
-	device_t* dev = vfs_finddev(path);
-	vfs_save_devi(dev, &dir->dev);
-	dir->inode = 0;
-	//dir->dev_it = (void*) device_invoke1(dev, DIROPEN, dir->inode);
+	filesystem_mounter_t* mounter = vfs_get_mounter(fs);
+	filesystem_t* mounted = mounter->mount(mounter->mod, block, argc, argv);
+	vfs_mount_direct(path, mounted);
 }
 
-void vfs_dirclose(DIR* dir)
+mountpoint_t* vfs_find_mountpoint(const char* path)
 {
-	device_t* dev = vfs_getdev(&dir->dev);
-	UNUSED(dev);
-	//device_invoke1(dev, DIRCLOSE, (int) dir->dev_it);
-}
-
-int vfs_dirnext(DIR* dir, dirent_t* dirent)
-{
-	UNUSED(dirent);
-	device_t* dev = vfs_getdev(&dir->dev);
-	UNUSED(dev);
-	//return device_invoke2(dev, DIRNEXT, (int) dir->dev_it, (int) dirent);
-	return 0;
-}
-
-void tvfs_list(const char* path)
-{
-	kprintf("-> %s\n", path);
-	DIR dir;
-	dirent_t dirent;
-	vfs_diropen(&dir, path);
-	while (vfs_dirnext(&dir, &dirent) != 0)
+	size_t path_length = strlen(path);
+	size_t mp_size = list_size(mountpoints);
+	/* TODO Check if the loop condition is correct. */
+	for (size_t i = mp_size-1; i < mp_size; i--)
 	{
-		kprintf("%s%s\n", path, dirent.name);
-		if (dirent.type == EDIRECTORY)
+		mountpoint_t* mp = list_get(mountpoints, i);
+		size_t mp_length = strlen(mp->path);
+		if (path_length >= mp_length && strncmp(path, mp->path, mp_length) == 0)
 		{
-			size_t path_len = strlen(path);
-			size_t dir_len = strlen(dirent.name);
-			char* subpath = malloc(path_len + dir_len + 2);
-			strcpy(subpath, path);
-			strcpy(subpath + path_len, dirent.name);
-			subpath[path_len + dir_len + 1] = '/';
-			subpath[path_len + dir_len + 2] = 0;
-			tvfs_list(subpath);
-			free(subpath);
+			return mp;
 		}
 	}
-	vfs_dirclose(&dir);
+	kernel_panic("No mountpoint found");
+	return NULL;
 }
 
-void tvfs_test()
+const char* vfs_get_sub_path(mountpoint_t* mp, const char* path)
 {
-	kprintf("Listing '/'\n");
-	tvfs_list("/");
-	kprintf("Done\n");
-	/*DIR dir;
-	vfs_diropen(&dir, "/");
-	dirent_t dirent;
-	kprintf("Listing\n");
-	tv*/
+	size_t fs_len = strlen(mp->path);
+	return path + fs_len;
 }
 
-void vfs_init()
+/**
+ * Checks if the inode can be freed.
+ * If it can be freed it will call `free_inode` to the filesystem.
+ */
+void vfs_update_freed(filesystem_t* fs, size_t inode)
 {
-	module_t* tmpfs = module_get("tmpfs");
-	if (tmpfs == NULL)
-		kernel_panic("tmpfs module not loaded");
-	//mounts[0].dev = (device_t*) module_invoke(tmpfs, MOUNT);
-	//vfs_save_devi(dev, &mounts[0].dev);
-	mounts[0].path = "/";
-	num_mounts++;
+	size_t len;
+	/* Check if a directory entry is using the inode. */
+	len = list_size(open_dirs);
+	for (size_t i = 1; i < len; i++)
+	{
+		open_dir_t* od = list_get(open_dirs, i);
+		if (od != NULL && od->inode == inode && od->fs == fs)
+			return; /* We return if the inode is still being used */
+	}
 
-	tvfs_test();
+	/* The same but for files */
+	len = list_size(open_files);
+	for (size_t i = 1; i < len; i++)
+	{
+		open_file_t* of = list_get(open_files, i);
+		if (of != NULL && of->inode == inode && of->fs == fs)
+			return; /* We return if the inode is still being used */
+	}
+
+	/* Free the inode */
+	fs->free_inode(fs->dev, inode);
 }
 
-//stat_t root;
-
-/*void vfs_stat(unsigned int inode, stat_t* dest_stat)
+size_t vfs_find_free_descriptor(list_t* list)
 {
-	stat_t* stat = list_get(inodes, inode);
-	dest_stat->inode = stat->inode;
-	dest_stat->filename = stat->filename;
-	dest_stat->size = stat->size;
-	dest_stat->type = stat->type;
-}*/
+	size_t len = list_size(list);
+	for (size_t i = 1; i < len; i++)
+	{
+		if (list_get(list, i) == NULL)
+			return i;
+	}
 
-/*
-void vfs_mount(unsigned int inode, module_t* module)
-{
-	stat_t* stat = list_get(inodes, inode);
-	device_t* dev = device_invoke1(module, MOUNT, stat->inode);
-	stat->dev = stat;
+	/* None were found, so we make one */
+	list_add(list, NULL);
+	return list_size(list) - 1;
 }
 
-void vfs_dir_begin(stat_t* inode, dir_it_t* it)
+bool vfs_rm(const char* path)
 {
-	it->dev = inode;
-	it->iterator = device_invoke1(it->dev, DIRIT_CREATE, inode->inode);
+	/* Find the mountpoint and subpath */
+	mountpoint_t* mp = vfs_find_mountpoint(path);
+	filesystem_t* fs = mp->fs;
+	const char* subpath = vfs_get_sub_path(mp, path);
+
+	/* Get the inode */
+	int inode = fs->get_inode(fs->dev, subpath);
+
+	/* Check if it is a directory */
+	stat_t stat;
+	vfs_stat(path, &stat);
+	if (stat.type == FDIR)
+	{
+		/* Check if it's empty */
+		DIR dir = vfs_open_dir(path);
+		dirent_t dirent;
+		bool result = vfs_next_dir(dir, &dirent);
+		vfs_close_dir(dir);
+		if (result == true)
+		{
+			/* It's not empty */
+			vfs_update_freed(fs, inode);
+			return false;
+		}
+	}
+
+	/* Delete it */
+	fs->rm(fs->dev, inode);
+	vfs_update_freed(fs, inode);
+	return true;
 }
 
-void vfs_dir_next(dir_it_t* it, stat_t* stat)
+void vfs_mkdir(const char* path)
 {
-	unsigned int inode = it_next(it->iterator);
+	mountpoint_t* mp = vfs_find_mountpoint(path);
+	filesystem_t* fs = mp->fs;
+	const char* subpath = vfs_get_sub_path(mp, path);
+	char* parent = path_parent(subpath);
+	char* filename = path_filename(subpath);
+	int parent_inode = fs->get_inode(fs->dev, parent);
+	if (parent_inode == 0)
+		kernel_panic("Parent directory of %s does not exist", path);
+	int inode = fs->mkdir(fs->dev, parent_inode, filename);
+	vfs_update_freed(fs, parent_inode);
+	vfs_update_freed(fs, inode);
+	free(parent);
 }
 
-void vfs_dir_end(dir_it_t* it)
+void vfs_mkspecial(const char* path, device_t* dev, file_t type)
 {
-	free(it->iterator);
+	mountpoint_t* mp = vfs_find_mountpoint(path);
+	filesystem_t* fs = mp->fs;
+	const char* subpath = vfs_get_sub_path(mp, path);
+	char* parent = path_parent(subpath);
+	char* filename = path_filename(subpath);
+	int parent_inode = fs->get_inode(fs->dev, parent);
+	if (parent_inode == 0)
+		kernel_panic("Parent directory of %s does not exist", path);
+	int inode = fs->mknode(fs->dev, parent_inode, filename, type, dev->module->major, dev->minor);
+	vfs_update_freed(fs, parent_inode);
+	vfs_update_freed(fs, inode);
+	free(parent);
 }
 
-void tvfs_print(unsigned int inode)
+void vfs_mkblock(const char* path, device_t* dev)
 {
-	stat_t stat = root;
-	//vfs_stat(inode, &stat);
-	kprintf("%c '%s' %d %d\n", stat.type==FILE?'F':'D', stat.filename, stat.inode, stat.size);
+	vfs_mkspecial(path, dev, FBLOCK);
 }
 
-void tvfs_test()
+void vfs_mkchar(const char* path, device_t* dev)
 {
-	tvfs_print(root);
+	vfs_mkspecial(path, dev, FCHAR);
 }
 
-void vfs_init()
+/* Functions that operate on opened directories */
+
+DIR vfs_open_dir(const char* path)
 {
-	module_t* tmpfs = module_get("tmpfs");
-	if (tmpfs == NULL)
-		kernel_panic("tmpfs module not loaded");
+	/* Find the mounted filesystem and the relative subpath */
+	mountpoint_t* mp = vfs_find_mountpoint(path);
+	filesystem_t* fs = mp->fs;
+	const char* subpath = vfs_get_sub_path(mp, path);
 
-	root.filename = "";
-	root.type = DIRECTORY;
-	root.dev = (device_t*) module_invoke(tmpfs, MOUNT);
+	/* Get the inode */
+	int inode = fs->get_inode(fs->dev, subpath);
+	if (inode == 0)
+		kernel_panic("Directory does not exist");
 
-	tvfs_test();
+	/* Open the directory */
+	void* data = fs->dir_open(fs->dev, inode);
+	open_dir_t* od = malloc(sizeof(open_dir_t));
+	od->fs = fs;
+	od->inode = inode;
+	od->data = data;
+
+	/* Store the descriptor */
+	DIR dir = vfs_find_free_descriptor(open_dirs);
+	list_set(open_dirs, dir, od);
+	return dir;
 }
 
-/ *
-void vfs_fs_stat(device_t* dev, stat_t* stat, unsigned int inode)
+void vfs_close_dir(DIR dir)
 {
-	device_invoke2(dev, STAT, (int)inode, (int)stat);
+	open_dir_t* od = list_get(open_dirs, dir);
+	filesystem_t* fs = od->fs;
+	fs->dir_close(fs->dev, od->data);
+	list_set(open_dirs, dir, NULL);
+	vfs_update_freed(fs, od->inode);
+	free(od);
 }
 
-int vfs_stat(const char* path, stat_t* stat)
+bool vfs_next_dir(DIR dir, dirent_t* dirent)
 {
-	UNUSED(path);
-	UNUSED(stat);
-	return 0;
+	open_dir_t* od = list_get(open_dirs, dir);
+	filesystem_t* fs = od->fs;
+	return fs->dir_next(fs->dev, od->data, dirent);
 }
 
-typedef struct
-{
-	stat_t* parent;
-	it_t* dev_it;
-} it_dir_t;
+/* Functions that operate on opened files */
 
-bool vfs_dir_iter_has_next(it_t* it)
+FILE vfs_open_file(const char* path, mode_t mode)
 {
-	it_dir_t* data = (it_dir_t*) it->data;
-	return it_has_next(data->dev_it);
+	mountpoint_t* mp = vfs_find_mountpoint(path);
+	filesystem_t* fs = mp->fs;
+	const char* subpath = vfs_get_sub_path(mp, path);
+
+	/* Needs a way to check if the inode exists.
+	 * If it does it should be opened,
+	 * if it doesn't it may need to be created.
+	 */
+
+	int inode = fs->get_inode(fs->dev, subpath);
+	if (inode == 0) /* The node does not exist. Create it (if allowed to). */
+	{
+		if (mode & O_CREATE) /* We're allowed to create a new file. */
+		{
+			char* parent = path_parent(subpath);
+			char* filename = path_filename(subpath);
+			int parent_inode = fs->get_inode(fs->dev, parent);
+			inode = fs->mkfile(fs->dev, parent_inode, filename);
+			vfs_update_freed(fs, parent_inode);
+			vfs_update_freed(fs, inode);
+			free(parent);
+			free(filename);
+		}
+		else
+		{
+			kernel_log("Opened file that does not exist, not creating");
+			return 0;
+		}
+	}
+
+	/* Create descriptors */
+	FILE desc = vfs_find_free_descriptor(open_files);
+	open_file_t* of = malloc(sizeof(open_file_t));
+	of->fs = fs;
+	list_set(open_files, desc, of);
+
+	/* Test the file type */
+	stat_t stat;
+	fs->stat(fs->dev, inode, &stat);
+	of->type = stat.type;
+	if (stat.type == FFILE)
+	{
+		/* File is just a normal file. Open it. */
+		void* data = fs->file_open(fs->dev, inode, mode);
+
+		of->inode = inode;
+		of->data = data;
+
+		return desc;
+	}
+	else if (stat.type == FCHAR || stat.type == FBLOCK)
+	{
+		/* File is a special file. So handle it specially. */
+		fileop_t* fop = device_get_bus(stat.device, FILEOP);
+		of->fop = fop;
+		of->data = fop->open(fop->dev);
+		return desc;
+	}
+	else
+	{
+		kernel_panic("Bad fs: stat.type was not filled in correctly");
+		return 0;
+	}
+
+	//open_files_fs
 }
 
-void* vfs_dir_iter_next(it_t* it)
+void vfs_close_file(FILE file)
 {
-	it_dir_t* data = (it_dir_t*) it->data;
-	unsigned int inode = it_next(data->dev_it);
-
-	return it_has_next(data->dev_it);
+	open_file_t* of = list_get(open_files, file);
+	list_set(open_files, file, NULL);
+	if (of->type == FFILE)
+	{
+		/* Normal file */
+		filesystem_t* fs = of->fs;
+		fs->file_close(fs->dev, of->data);
+		vfs_update_freed(fs, of->inode);
+	}
+	else
+	{
+		/* Special file */
+		fileop_t* fop = of->fop;
+		fop->close(fop->dev, of->data);
+	}
+	/* Cleanup descriptor */
+	free(of);
 }
 
-void vfs_dir_iter_free(it_t* it)
+size_t vfs_write_file(FILE file, const char* buf, size_t len)
 {
-	it_dir_t* data = (it_dir_t*) it->data;
-	it_free(data->dev_it);
+	if (file == 0)
+		kernel_panic("Tried to write to unopened file");
+
+	open_file_t* of = list_get(open_files, file);
+	if (of->type == FFILE)
+	{
+		filesystem_t* fs = of->fs;
+		return fs->file_write(fs->dev, of->data, buf, len);
+	}
+	else
+	{
+		fileop_t* fop = of->fop;
+		return fop->write(fop->dev, of->data, buf, len);
+	}
 }
 
-it_t* vfs_dir_iter(stat_t* parent)
+size_t vfs_read_file(FILE file, char* buf, size_t len)
 {
-	it_t* it = it_new(&vfs_dir_iter_has_next, &vfs_dir_iter_next);
-	it_dir_t* data = malloc(sizeof(it_dir_t));
-	data->parent = parent;
-	data->dev_it = (it_t*) device_invoke1(parent->dev, DIRIT_CREATE, parent->inode);
-	it->data = data;
-	it->free = &vfs_dir_iter_free;
-	return it;
+	if (file == 0)
+			kernel_panic("Tried to read from unopened file");
+
+	open_file_t* of = list_get(open_files, file);
+	if (of->type == FFILE)
+	{
+		filesystem_t* fs = of->fs;
+		return fs->file_read(fs->dev, of->data, buf, len);
+	}
+	else
+	{
+		fileop_t* fop = of->fop;
+		return fop->read(fop->dev, of->data, buf, len);
+	}
 }
 
-void vfs_test()
+/* Functions that operate on closed files */
+
+bool vfs_stat(const char* path, stat_t* stat)
 {
-	dir_it it;
-	vfs_create_dir_it(&it);
+	/* Find the mountpoint and subpath */
+	mountpoint_t* mp = vfs_find_mountpoint(path);
+	filesystem_t* fs = mp->fs;
+	const char* subpath = vfs_get_sub_path(mp, path);
+
+	/* Get the inode */
+	int inode = fs->get_inode(fs->dev, subpath);
+	if (inode == 0) /* Inode not found */
+		return false;
+
+	/* Stat the inode */
+	fs->stat(fs->dev, inode, stat);
+	stat->device = fs->dev;
+
+	/* Cleanup */
+	vfs_update_freed(fs, inode);
+	return true;
 }
 
-void vfs_init()
+size_t vfs_seek(FILE file, long n, seek_t seek)
 {
-	device_t* tmpfs;
-	root.filename = "";
-	root.type = DIRECTORY;
-	root.dev = (device_t*) device_invoke(tmpfs, MOUNT);
+	if (file == 0)
+		kernel_panic("Tried to read from unopened file");
 
-	vfs_test();
-}*/
+	/* Get the opened file. */
+	open_file_t* of = list_get(open_files, file);
+	return of->fs->file_seek(of->fs->dev, of->data, n, seek);
+}
+
+
+
+
+
+
+
+
+
+
+
+

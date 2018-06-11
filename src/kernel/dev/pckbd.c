@@ -1,4 +1,6 @@
 #include "bus/ps2.h"
+#include "bus/filesystem.h"
+#include "vfs.h"
 #include "cdefs.h"
 #include "devices.h"
 #include "interrupt.h"
@@ -7,8 +9,8 @@
 #include "threads.h"
 #include "thread/signal.h"
 #include "io.h"
-#include <stdlib.h>
 #include "../api/keyboard.h"
+#include <stdlib.h>
 
 #define DEV(obj) ((device_t*)obj)
 #define KBD(obj) ((pckbd_t*)obj)
@@ -81,16 +83,6 @@ int pckbd_req(dev_req_t* req)
 	}
 }
 
-void pckbd_test()
-{
-	kernel_log("Waiting for scancodes");
-	while (1)
-	{
-		char c = keyboard_read_char();
-		kernel_log("Found '%c'", c);
-	}
-}
-
 void pckbd_init(ps2_bus_t* bus)
 {
 	module_register(&mod, "pckbd", NULL, &pckbd_req);
@@ -113,7 +105,6 @@ void pckbd_init(ps2_bus_t* bus)
 	kbd.accept_ints = false;
 
 	kbd.enabled = true;
-	thread_create(&pckbd_test);
 }
 
 

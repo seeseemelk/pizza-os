@@ -6,8 +6,28 @@
  */
 #include "string.h"
 #include "stdio.h"
+#include "stdlib.h"
 
-void* memcpy(void* dest, void* src, size_t num)
+#ifndef __STDC_LIMIT_MACROS
+#define __STDC_LIMIT_MACROS
+#endif
+#include <stdint.h>
+#ifndef SIZE_MAX
+#define SIZE_MAX 4
+#endif
+
+void* memcpy(void* dest, const void* src, size_t num)
+{
+	char* c_dest = (char*) dest;
+	char* c_src = (char*) src;
+
+	for (size_t i = 0; i < num; i++)
+		c_dest[i] = c_src[i];
+
+	return dest;
+}
+
+void* memmove(void* dest, const void* src, size_t num)
 {
 	char* c_dest = (char*) dest;
 	char* c_src = (char*) src;
@@ -21,6 +41,7 @@ void* memcpy(void* dest, void* src, size_t num)
 	{
 		for (size_t i = num-1; i > 0; i--)
 			c_dest[i] = c_src[i];
+		c_dest[0] = c_src[0];
 	}
 	return dest;
 }
@@ -84,15 +105,30 @@ char* strncpy(char* dest, const char* src, size_t num)
 {
 	for (size_t i = 0; i < num; i++)
 	{
+		dest[i] = src[i];
 		if (src[i] == 0)
 			return dest;
-		else
-			dest[i] = src[i];
 	}
 	return dest;
 }
 
+char* strndup(const char* src, size_t len)
+{
+	size_t srclen = strlen(src);
+	len = (len < srclen) ? len : srclen;
+	char* dest = malloc(len);
 
+	/* '<=' is used to also copy the null terminator */
+	for (size_t i = 0; i <= len; i++)
+		dest[i] = src[i];
+
+	return dest;
+}
+
+char* strdup(const char* src)
+{
+	return strndup(src, SIZE_MAX);
+}
 
 
 

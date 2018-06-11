@@ -10,53 +10,57 @@
 #ifndef VFS_H_
 #define VFS_H_
 
+#include "bus/filesystem.h"
+#include "fstypes.h"
 #include <stdbool.h>
 #include <devices.h>
-
-typedef struct devi_t
-{
-	unsigned short dev_major;
-	unsigned short dev_minor;
-} devi_t;
-
-typedef unsigned int ino_t;
-
-typedef enum
-{
-	EDIRECTORY, EFILE
-} file_t;
-
-typedef struct stat_t
-{
-	devi_t dev;
-	ino_t ino;
-	file_t type;
-} stat_t;
-
-typedef struct mount_t
-{
-	device_t* dev;
-	const char* path;
-} mount_t;
-
-typedef struct DIR
-{
-	devi_t dev;
-	ino_t inode;
-	void* dev_it;
-} DIR;
-
-typedef struct dirent_t
-{
-	devi_t dev;
-	ino_t inode;
-	file_t type;
-	char name[256];
-} dirent_t;
 
 /**
  * Initialises the VFS.
  */
 void vfs_init();
+void vfs_mount_direct(const char* path, filesystem_t* fs);
+void vfs_mount(const char* path, const char* fs, const char* block, int argc, const char** argv);
+
+bool vfs_rm(const char* path);
+bool vfs_stat(const char* path, stat_t* stat);
+void vfs_mkdir(const char* path);
+void vfs_mkblock(const char* path, device_t* dev);
+void vfs_mkchar(const char* path, device_t* dev);
+
+DIR vfs_open_dir(const char* path);
+void vfs_close_dir(DIR dir);
+bool vfs_next_dir(DIR dir, dirent_t* dirent);
+
+FILE vfs_open_file(const char* path, mode_t mode);
+void vfs_close_file(FILE file);
+size_t vfs_read_file(FILE file, char* buf, size_t len);
+size_t vfs_write_file(FILE file, const char* buf, size_t len);
+size_t vfs_seek(FILE file, long n, seek_t seek);
 
 #endif /* VFS_H_ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

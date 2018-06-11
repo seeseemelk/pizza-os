@@ -28,6 +28,12 @@
 /** The minimum block size that the physical memory allocator can allocate */
 #define PMEM_BLOCK_SIZE KB(4)
 
+/** The maximum length of a filename in bytes, including the null terminator */
+#define MAX_FILENAME 256
+
+/** The maximum length of a path in bytes, including the null terminator */
+#define MAX_PATH 4096
+
 /** Selects the required keyboard layout */
 //#define KEYBOARD_LAYOUT "api/keymaps/enUS.h"
 #define KEYBOARD_LAYOUT "api/keymaps/nlBE.h"
