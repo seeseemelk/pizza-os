@@ -65,7 +65,8 @@ void mem_window_set(void* phys)
 		// got a pointer to the memory window entry.
 		// We just move this to point to our new address.
 		page_set_address(mem_window_entry, phys);
-		asm_invlpg(mem_window);
+		//asm_invlpg(mem_window);
+		asm_load_cr3_page_dir((size_t) page_directory);
 	}
 }
 
@@ -236,10 +237,11 @@ void page_alloc_page(void* virt, void* phys)
 	// we should invalidate the page after loading it.
 	page_entry* tbl_entry = tbl + tbl_i;
 	page_set_address(tbl_entry, phys);
-	const bool was_present = page_is_present(tbl_entry);
+	//const bool was_present = page_is_present(tbl_entry);
 	page_set_flags(tbl_entry, PAGE_PRESENT | PAGE_RW);
-	if (was_present)
-		asm_invlpg(virt);
+	/*if (was_present)
+		asm_invlpg(virt);*/
+	asm_load_cr3_page_dir((size_t) page_directory);
 }
 
 void* page_alloc_phys(void* phys, size_t length)
@@ -303,7 +305,8 @@ void page_free_page(void* virt)
 	page_entry* tbl = page_get_table(virt);
 	page_entry* tbl_entry = tbl + tbl_i;
 	page_set_flags(tbl_entry, 0);
-	asm_invlpg(virt);
+	//asm_invlpg(virt);
+	asm_load_cr3_page_dir((size_t) page_directory);
 }
 
 void* page_get_phys_address(void* virt)

@@ -13,10 +13,12 @@
 #include "cpu.h"
 #include "vfs.h"
 #include "fstypes.h"
+#include "gdbstub.h"
 
 #include "thread/mutex.h"
 
 #include "devices.h"
+#include "dev/eserial.h"
 #include "dev/pcps2.h"
 #include "dev/pckbd.h"
 #include "dev/tty.h"
@@ -114,16 +116,25 @@ void kernel_init_pmem()
 	pmem_set((void*) NULL, MB(1), PMEM_RESERVED);
 
 	if ((multiboot->flags & MULTIBOOT_INFO_MEM_MAP) == 0)
-			kernel_panic("No memory map");
-
-	multiboot_memory_map_t* map = (multiboot_memory_map_t*) multiboot->mmap_addr;
-	multiboot_memory_map_t* last_map = (multiboot_memory_map_t*) (multiboot->mmap_addr + multiboot->mmap_length);
-	while (map < last_map)
 	{
-		if (map->type != MULTIBOOT_MEMORY_AVAILABLE)
-			pmem_set((void*) (size_t) map->addr, map->len, PMEM_RESERVED);
+		/* The bootloader did not provide us with a memory map.
+		 * Lets use everything about 1MB as free memory.
+		 */
+		kernel_log("No memory map. Using 0x00000000 to 0x00100000 as RESERVED");
+		pmem_set(0, MB(1), PMEM_RESERVED);
+	}
+	else
+	{
+		/* The bootloader provided us with a memory map that we can use. */
+		multiboot_memory_map_t* map = (multiboot_memory_map_t*) multiboot->mmap_addr;
+		multiboot_memory_map_t* last_map = (multiboot_memory_map_t*) (multiboot->mmap_addr + multiboot->mmap_length);
+		while (map < last_map)
+		{
+			if (map->type != MULTIBOOT_MEMORY_AVAILABLE)
+				pmem_set((void*) (size_t) map->addr, map->len, PMEM_RESERVED);
 
-		map = (multiboot_memory_map_t*) ((size_t)map + map->size + 4);
+			map = (multiboot_memory_map_t*) ((size_t)map + map->size + 4);
+		}
 	}
 }
 
@@ -185,8 +196,51 @@ void kernel_test()
 	vfs_close_file(file);
 }
 
+int kernel_cmdline_next(char* cmd, int* start, int* end)
+{
+	if (cmd[*end] == '\0')
+		return 0;
+
+	*start = *end;
+	if (cmd[*start] == ' ' || cmd[*start] == ',')
+		(*start)++;
+
+	*end = *start;
+	while (cmd[*end] != ' ' && cmd[*end] != ',' && cmd[*end] != '\0')
+	{
+		(*end)++;
+	}
+	return *end - *start;
+}
+
+void kernel_init_gdb()
+{
+	set_debug_traps();
+	kernel_log("Waiting for GDB...");
+	__asm__("int3");
+	kernel_log("GDB Connected!");
+}
+
 void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 {
+	bool enable_gdb = false;
+	eserial_init();
+
+	kernel_log("Argument list: '%s'", mbd->cmdline);
+	int start = 0, end = 0;
+	int size;
+	while ((size = kernel_cmdline_next((char*) mbd->cmdline, &start, &end)) > 0)
+	{
+		kernel_log("Size: %d", size);
+		char str[size];
+		strncpy(str, (char*) mbd->cmdline + start, size);
+		kernel_log("Argument: '%s'", str);
+		if (strcmp(str, "gdb") == 0)
+			enable_gdb = true;
+	}
+	kernel_log("End of argument list");
+
+	kernel_log("Enter kernel_main");
 	UNUSED(magic);
 	/*
 	 * Information for the multiboot header can be found at:
@@ -201,15 +255,28 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	else
 		kernel_panic("No memory");
 
+	kernel_log("Init cpu");
 	kernel_init_cpu();
+	kernel_log("Done");
+	kernel_log("Init pmem");
 	kernel_init_pmem();
+	kernel_log("Done");
+	kernel_log("Init paging");
 	kernel_init_paging();
+	kernel_log("Done");
 
 	//printf("Init interrupts... ");
 
+	kernel_log("Init mem");
 	mem_init();
+	kernel_log("Done");
+	kernel_log("Init interrupts");
 	interrupt_init();
+	kernel_log("Done");
 	//printf("DONE\n");
+
+	if (enable_gdb)
+		kernel_init_gdb();
 
 	// Enable VGA output if possible
 	#ifdef ENABLE_VGA
