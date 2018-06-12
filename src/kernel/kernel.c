@@ -23,6 +23,8 @@
 #include "dev/pckbd.h"
 #include "dev/tty.h"
 #include "dev/tmpfs.h"
+#include "dev/null.h"
+#include "dev/zero.h"
 
 #if TARGET==i386
 #include "arch/i386/dev/vga.h"
@@ -186,7 +188,7 @@ void list_dir(const char* path)
 
 void kernel_test()
 {
-	char kbuf[1];
+	char kbuf[16];
 	FILE file = vfs_open_file("/dev/kbd", O_READ);
 	while (1)
 	{
@@ -342,7 +344,8 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 
 
 	keyboard_init();
-
+	null_init();
+	zero_init();
 
 	pit_init();
 
