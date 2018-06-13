@@ -7,7 +7,6 @@
 #include "config.h"
 #include "pmem.h"
 #include "mem.h"
-#include "page.h"
 #include "threads.h"
 #include "sched.h"
 #include "cpu.h"
@@ -25,6 +24,7 @@
 #include "dev/tmpfs.h"
 #include "dev/null.h"
 #include "dev/zero.h"
+#include "paging.h"
 
 #if TARGET==i386
 #include "arch/i386/dev/vga.h"
@@ -154,11 +154,11 @@ void kernel_init_cpu()
 void kernel_init_paging()
 {
 	page_init();
-	page_idmap(&kernel_start, &kernel_end - &kernel_start);
+	/*page_idmap(&kernel_start, &kernel_end - &kernel_start);
 	pmem_register_pages();
 	// ID-Map the lowest 1 megabyte
 	page_idmap((void*)0, MB(1));
-	page_enable();
+	page_enable();*/
 }
 
 void list_dir(const char* path)

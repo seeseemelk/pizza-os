@@ -5,12 +5,12 @@
  *      Author: seeseemelk
  */
 #include "pmem.h"
-#include "page.h"
 #include "config.h"
 #include "kernel.h"
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
+#include "paging.h"
 
 state_t* pmem_map;
 size_t pmem_size;
@@ -88,10 +88,12 @@ void pmem_init(void* start, size_t mem_size)
 		pmem_map[block + map_start] = PMEM_USED;
 }
 
+/*
 void pmem_register_pages()
 {
 	page_idmap(pmem_map, ceilg(pmem_size * sizeof(state_t), KB(4)));
 }
+*/
 
 
 

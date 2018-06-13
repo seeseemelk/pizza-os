@@ -199,7 +199,7 @@ void device_unlock(device_t* device);
 /*
  * Functions for allocating and deallocating memory.
  */
-void* device_mmap(void* phys, size_t length);
+//void* device_mmap(void* phys, size_t length);
 
 #endif /* DEV_DEVICES_H_ */
 

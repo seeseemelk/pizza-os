@@ -11,11 +11,11 @@
 #include "i386_pic.h"
 #include "cdefs.h"
 #include "kernel.h"
-#include "page.h"
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>
+#include "../../paging.h"
 
 extern void* inth_start;
 extern void* inth_end;

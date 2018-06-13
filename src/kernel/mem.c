@@ -7,13 +7,12 @@
 #include "mem.h"
 #include "cdefs.h"
 #include "kernel.h"
-#include "page.h"
-
 #include <string.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <math.h>
 #include <string.h>
+#include "paging.h"
 
 #define BLK_SIZE KB(4)
 #define TBL_SIZE MB(4)
@@ -45,7 +44,7 @@ dir_t* directory;
  */
 tbl_t* mem_get_tbl(void* mem)
 {
-	size_t dir_i = DIRI(mem);
+	/*size_t dir_i = DIRI(mem);
 
 	if (directory[dir_i].tbl == FREE)
 	{
@@ -58,7 +57,9 @@ tbl_t* mem_get_tbl(void* mem)
 	{
 		tbl_t* tbl = directory[dir_i].tbl;
 		return tbl;
-	}
+	}*/
+	UNUSED(mem);
+	return NULL;
 }
 
 /**
@@ -76,7 +77,7 @@ void* mem_alloc(const size_t bytes)
 {
 	// If the user is allocating 0 bytes,
 	// we can just return a null-pointer.
-	if (bytes == 0)
+	/*if (bytes == 0)
 		return NULL;
 
 	// We allocate the pages.
@@ -98,12 +99,15 @@ void* mem_alloc(const size_t bytes)
 		}
 	}
 
-	return mem;
+	return mem;*/
+
+	UNUSED(bytes);
+	return NULL;
 }
 
 void mem_free(void* addr)
 {
-	tbl_t* first_entry = mem_get_tbl_entry(addr);
+	/*tbl_t* first_entry = mem_get_tbl_entry(addr);
 	size_t size = first_entry->state;
 	size_t blocks = ceildiv(size, BLK_SIZE);
 	first_entry->state = FREE;
@@ -113,12 +117,14 @@ void mem_free(void* addr)
 	{
 		tbl_t* entry = mem_get_tbl_entry((void*)((size_t)addr + i * BLK_SIZE));
 		entry->state = FREE;
-	}
+	}*/
+
+	UNUSED(addr);
 }
 
 void* mem_realloc(void* addr, size_t new_size)
 {
-	tbl_t* first_entry = mem_get_tbl_entry(addr);
+	/*tbl_t* first_entry = mem_get_tbl_entry(addr);
 	size_t old_size = first_entry->state;
 	size_t old_blocks = ceildiv(old_size, BLK_SIZE);
 	size_t new_blocks = ceildiv(new_size, BLK_SIZE);
@@ -168,13 +174,17 @@ void* mem_realloc(void* addr, size_t new_size)
 
 		}
 		return NULL;
-	}
+	}*/
+
+	UNUSED(addr);
+	UNUSED(new_size);
+	return NULL;
 }
 
 void mem_init()
 {
-	directory = page_alloc(sizeof(dir_t) * 1024);
-	memset(directory, 0, sizeof(dir_t) * 1024);
+	/*directory = page_alloc(sizeof(dir_t) * 1024);
+	memset(directory, 0, sizeof(dir_t) * 1024);*/
 }
 
 /*void* mem_base;

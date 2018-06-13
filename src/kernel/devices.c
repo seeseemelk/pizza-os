@@ -6,10 +6,10 @@
  */
 #include "devices.h"
 #include "config.h"
-#include "page.h"
 #include "kernel.h"
 #include <stddef.h>
 #include <string.h>
+#include "paging.h"
 
 typedef struct
 {
@@ -263,10 +263,10 @@ void device_unlock(device_t* device)
  * Lets a device allocate some physical memory.
  * A pointer to the memory is returned.
  */
-void* device_mmap(void* phys, size_t length)
+/*void* device_mmap(void* phys, size_t length)
 {
 	return page_alloc_phys(phys, length);
-}
+}*/
 
 
 
