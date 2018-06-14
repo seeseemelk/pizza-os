@@ -21,15 +21,38 @@ stack_top:
 section .text
 global _start:function (_start.end - _start)
 _start:
+	; Initialise the system page directory and load it.
+	mov dword [_system_page_directory - 0xC0000000], 0x00000083
+	mov dword [_system_page_directory - 0xC0000000 + 3072], 0x00000083
+
+	mov eax, _system_page_directory - 0xC0000000
+	mov cr3, eax
+
+	mov eax, cr4
+	or eax, 0x00000010
+	mov cr4, eax
+
+	mov eax, cr0
+	or eax, 0x80000000
+	mov cr0, eax
+
+	;jmp .hang
+
+	; Boot kernel_main
 	mov ebp, stack_top
 	mov esp, stack_top
 	push esp
 	push eax
 	push ebx
 	extern kernel_main
-	call kernel_main
+	call kernel_main + 0xC0000000
 	cli
 .hang:
 	hlt
 	jmp .hang
 .end:
+
+section .bss
+align 4096
+global _system_page_directory
+_system_page_directory resd 1024
