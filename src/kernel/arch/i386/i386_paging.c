@@ -16,9 +16,10 @@
 #include "i386_paging.h"
 
 #define KERNEL_START GB(3)
+#define KERNEL_MEM_END GB(3) + MB(4)
 #define PAGE_TABLES_START GB(4) - MB(4)
-#define ENTRY_ADDRESS(x) (virt_addr_t)((size_t)x >> 12)
-#define REAL_ADDRESS(x) (virt_addr_t)((size_t)x << 12)
+#define ENTRY_ADDRESS(x) (virt_addr_t)((size_t)(x) >> 12)
+#define REAL_ADDRESS(x) (virt_addr_t)((size_t)(x) << 12)
 
 typedef struct
 {
@@ -53,9 +54,10 @@ typedef struct
 page_dir_entry* page_directory;
 phys_addr_t phys_current;
 /* The page table that contains the other page tables. */
-page_table_entry page_metatable[1024];
+page_table_entry main_page_metatable[1024] __attribute__ ((aligned (4096)));
+page_table_entry* page_metatable = (page_table_entry*) PAGE_TABLES_START;
 
-phys_addr_t page_get_virt_addr(virt_addr_t addr)
+phys_addr_t page_phys_addr(virt_addr_t addr)
 {
 	page_dir_entry* dentry = page_directory + ((size_t) addr / MB(4));
 	if (dentry->present)
@@ -91,86 +93,167 @@ paged_t* arch_page_init()
 	phys_current = ((phys_addr_t) page_directory) - 0xC0000000;
 
 	/* We set all the bytes to 0 to make sure all entries are marked as not-present. */
-	memset(page_metatable, 0, KB(4));
+	memset(main_page_metatable, 0, KB(4));
 
 	/* Add the metatable to itself as the very last entry. */
-	page_metatable[1023].address = (u32) page_metatable;
-	page_metatable[1023].writable = 1;
-	page_metatable[1023].present = 1;
+	//main_page_metatable[1023].address = (u32) ENTRY_ADDRESS(page_phys_addr((virt_addr_t) main_page_metatable));
+	//main_page_metatable[50].address = (u32) ENTRY_ADDRESS((virt_addr_t)main_page_metatable - 0xC0000000);
+	main_page_metatable[50].address = 0x0;
+	main_page_metatable[50].writable = 1;
+	main_page_metatable[50].present = 1;
+	//main_page_metatable[1020] = main_page_metatable[1023];
 
 	/* Add the metatable to the page directory. */
-	page_directory[1023].address = (u32) page_metatable;
-	page_directory[1023].writable = 1;
-	page_directory[1023].present = 1;
+	//page_directory[1020].address = (u32) ENTRY_ADDRESS(page_phys_addr((virt_addr_t) main_page_metatable));
+	//page_directory[1020].address = (u32) ENTRY_ADDRESS((virt_addr_t)main_page_metatable - 0xC0000000);
+	page_directory[4].address = (u32) ENTRY_ADDRESS((virt_addr_t)main_page_metatable - 0xC0000000);
+	page_directory[4].writable = 1;
+	page_directory[4].present = 1;
 
 	/* Disable the old low-memory page table entry. */
-	page_directory[0].present = 0;
-
-	page_dir_entry* entry = page_directory + (GB(3) / MB(4));
-	entry->large_page = 1;
-	entry->address = 0;
-	entry->present = 1;
-	entry->writable = 1;
+	//page_directory[0].present = 0;
 
 	/* Enable paging */
 	page_reload_all();
 
-	phys_current = page_get_virt_addr((virt_addr_t) page_directory);
+	while(1);
 
 	return page_directory;
 }
 
-void arch_page_enable()
+typedef struct
 {
-	// Before we turn on paging we should allocate a page
-	// for the memory window. We are going to allocate it
-	// right before the metatable.
-	/*page_alloc_page((void*) (1023 * MB(4) - KB(4)), (void*) mem_window);
+	page_table_entry* entry;
+	// These two point to the next entry to read.
+	unsigned short dir_index;
+	unsigned short table_index;
+	unsigned short dir_index_end;
+	unsigned short table_index_end;
 
-	// Set this variable to true
-	paging_enabled = true;
+	// Does the page_table_entry exist at all
+	bool exists;
+} page_it;
 
-	// Also allocate some physical memory for the memory window.
-	//page_idmap(mem_window, KB(4));
-
-	// Load the address of the page directory into CR3
-	asm_load_cr3_page_dir((size_t) page_directory);
-
-	// Set CR0.PG to 1.
-	// This will put the CPU in 32-bit paging mode.
-	// (see Intel Manual Volume 3, 4.1.2)
-	asm_enable_cr0_pepg();*/
-
-	// Get the virtual address to the metatable.
-	/*page_metatable = (page_entry*) (1023 * MB(4));
-
-	// Now we still need to get the handle for the memory window.
-	page_entry* tbl = page_get_table((void*) (1022 * MB(4)));
-	mem_window_entry = (page_entry*)(tbl + 1023);
-	mem_window = (void*) (1023 * MB(4) - KB(4));*/
-
-	/*printf("TBL = 0x%X\n", tbl);
-	printf("Memory window = 0x%X\n", (size_t)mem_window);
-	printf("Memory window entry = 0x%X\n", *mem_window_entry);
-	//while(1);*/
-
-	/*// Find the entry that points to the memory window.
-	for (size_t block = 1; block < 1024; block++)
-	{
-		page_entry* entry = page_metatable + block;
-		if (page_is_present(entry))
-			printf("Entry %d = 0x%X\n", block, (size_t)entry);
-		if (page_is_present(entry) && page_get_address(entry) == mem_window)
-		{
-			mem_window_entry = entry;
-			break;
-		}
-	}*/
-
-	/*printf("Mem_window_entry = 0x%p\n", (size_t)mem_window_entry);
-	mem_window_set((void*) 0x1000);*/
-	//while(1) ;
+page_it page_iterate(virt_addr_t begin, virt_addr_t end)
+{
+	page_it it;
+	it.dir_index = (unsigned short) ((size_t) begin / MB(4));
+	it.table_index = (unsigned short) ((size_t) begin % MB(4) / KB(4));
+	it.dir_index_end = (unsigned short) ((size_t) end / MB(4));
+	it.table_index_end = (unsigned short) ((size_t) end % MB(4) / KB(4));
+	return it;
 }
+
+bool page_it_next(page_it* it)
+{
+	if (it->dir_index >= it->dir_index_end && it->table_index >= it->table_index_end)
+		return false;
+
+	it->entry = ((page_table_entry*) PAGE_TABLES_START) + (it->dir_index * 1024) + it->table_index;
+	it->exists = page_directory[it->dir_index].present;
+
+	if (it->table_index == 1023)
+	{
+		it->dir_index++;
+		it->table_index = 0;
+	}
+	else
+		it->table_index++;
+
+	return true;
+}
+
+virt_addr_t page_it_virt_addr(page_it* it)
+{
+	return (virt_addr_t) ((it->dir_index * MB(4)) + (it->table_index * KB(4)));
+}
+
+void page_it_create(page_it* it)
+{
+	phys_addr_t addr = (phys_addr_t) pmem_alloc(4096);
+	page_table_entry* entry = page_metatable + it->dir_index;
+	entry->address = (u32) ENTRY_ADDRESS(addr);
+	entry->writable = 1;
+	entry->present = 1;
+	it->exists = true;
+}
+
+bool page_query(page_t* page, size_t align, size_t bytes, action_t action)
+{
+	/*
+	 * Check if we have to find a page in user space memory or kernel space memory
+	 */
+	if ((action & PAGE_GLOBAL) == 0)
+	{
+		kernel_panic("Not yet supported");
+		return false;
+	}
+	else
+	{
+		/* Find free pages */
+
+		size_t blocks_needed = ceildiv(bytes, KB(4));
+		size_t blocks_found = 0;
+		page_it blocks_first;
+		page_it it = page_iterate((virt_addr_t) KERNEL_MEM_END, (virt_addr_t) PAGE_TABLES_START);
+
+		while (page_it_next(&it))
+		{
+			if (it.exists == false || it.entry->present == 0)
+			{
+				// First new block found
+				if (blocks_found == 0)
+				{
+					// Has to be aligned
+					if ((size_t)page_it_virt_addr(&it) % align != 0)
+						continue;
+					blocks_first = it;
+				}
+
+				if (++blocks_found >= blocks_needed)
+					break;
+			}
+		}
+
+		if (blocks_found >= blocks_needed)
+		{
+			it = blocks_first;
+			page->begin = page_it_virt_addr(&it);
+			page->bytes_per_page = 4096;
+			page->pages = blocks_needed;
+			for (size_t i = 0; i < blocks_needed; i++)
+			{
+				if (it.exists == false)
+					page_it_create(&it);
+
+				it.entry->present = 1;
+
+				if (action & PAGE_READONLY)
+					it.entry->writable = 0;
+				else
+					it.entry->writable = 1;
+
+				if (action & PAGE_USER)
+					it.entry->userspace = 1;
+				else
+					it.entry->userspace = 0;
+
+				page_it_next(&it);
+			}
+			return true;
+		}
+		else
+		{
+			kernel_panic("Not enough kernel memory available");
+			return false;
+		}
+	}
+}
+
+void arch_page_free(page_t* page);
+void arch_page_assign(virt_addr_t page, phys_addr_t phys_addr);
+paged_t* arch_page_copy(paged_t* page_directory);
+void arch_page_load(paged_t* page_directory);
 
 
 

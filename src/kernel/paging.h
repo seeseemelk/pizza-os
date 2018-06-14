@@ -33,14 +33,12 @@ extern paged_t* kernel_page;
 
 enum action_t
 {
-	/** Assign physical memory to the page. */
-	PAGE_ALLOC =    0x01,
 	/** Assigns the page in the globally shared memory space. */
-	PAGE_GLOBAL =   0x02,
+	PAGE_GLOBAL =   0x01,
 	/** Allows userspace to access the memory. */
-	PAGE_USER =     0x04,
+	PAGE_USER =     0x02,
 	/** Prevents writes to the page from happening. */
-	PAGE_READONLY = 0x08
+	PAGE_READONLY = 0x04
 };
 
 struct page_t
@@ -74,7 +72,13 @@ void page_load(paged_t* page_directory);
  * Creates the basic kernel page directory.
  */
 paged_t* arch_page_init();
-
+/*
+bool arch_page_query(page_t* page, size_t align, size_t bytes, action_t action);
+void arch_page_free(page_t* page);
+void arch_page_assign(virt_addr_t page, phys_addr_t phys_addr);
+paged_t* arch_page_copy(paged_t* page_directory);
+void arch_page_load(paged_t* page_directory);
+*/
 #endif /* PAGING_H_ */
 
 

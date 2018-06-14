@@ -267,6 +267,11 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	kernel_init_paging();
 	kernel_log("Done");
 
+	while (1);
+	page_t p;
+	page_query(&p, KB(4), 4096, PAGE_GLOBAL);
+	while (1);
+
 	//printf("Init interrupts... ");
 
 	kernel_log("Init mem");
