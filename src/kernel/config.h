@@ -34,6 +34,9 @@
 /** The maximum length of a path in bytes, including the null terminator */
 #define MAX_PATH 4096
 
+/** The maximum amount of memory the kernel can malloc. */
+#define KERNEL_MEMORY_SIZE MB(8)
+
 /** Selects the required keyboard layout */
 //#define KEYBOARD_LAYOUT "api/keymaps/enUS.h"
 #define KEYBOARD_LAYOUT "api/keymaps/nlBE.h"

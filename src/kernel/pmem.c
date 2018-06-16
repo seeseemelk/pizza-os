@@ -27,16 +27,14 @@ void* pmem_alloc(size_t amount)
 		if (pmem_map[i] == PMEM_FREE)
 		{
 			if (blocks_found == 0)
-			{
-				blocks_found = 1;
 				index_found = i;
-			}
-			else
-				blocks_found++;
+			blocks_found++;
 
 			if (blocks_found == blocks_needed)
 				break;
 		}
+		else
+			blocks_found = 0;
 	}
 
 	if (blocks_found >= blocks_needed)
@@ -62,10 +60,13 @@ void pmem_free(void* start, size_t amount)
 
 void pmem_set(void* start, size_t amount, state_t state)
 {
-	const size_t start_index = (size_t)start / PMEM_BLOCK_SIZE * sizeof(state_t);
-	const size_t blocks = amount / PMEM_BLOCK_SIZE;
+	const size_t start_index = (size_t)start / PMEM_BLOCK_SIZE;
+	const size_t blocks = ceildiv(amount, PMEM_BLOCK_SIZE);
 	for (size_t i = start_index; i < start_index + blocks; i++)
+	{
+		if (i < pmem_size)
 			pmem_map[i] = state;
+	}
 }
 
 /**

@@ -16,13 +16,13 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-/** A page directory. */
-typedef void paged_t;
-
 /** Represents a pointer to somewhere in physical memory. */
-typedef u8* phys_addr_t;
+typedef void* phys_addr_t;
 /** Represents a pointer to somewhere in virtual memory. */
-typedef u8* virt_addr_t;
+typedef void* virt_addr_t;
+
+/** A page directory. */
+typedef phys_addr_t paged_t;
 
 /** The action the pager should take. */
 typedef enum action_t action_t;
@@ -61,7 +61,7 @@ bool page_query(page_t* page, size_t align, size_t bytes, action_t action);
 void page_free(page_t* page);
 void page_assign(virt_addr_t page, phys_addr_t phys_addr);
 void page_init();
-paged_t* page_copy(paged_t* page_directory);
+paged_t* page_copy();
 void page_load(paged_t* page_directory);
 
 /*
@@ -72,13 +72,7 @@ void page_load(paged_t* page_directory);
  * Creates the basic kernel page directory.
  */
 paged_t* arch_page_init();
-/*
-bool arch_page_query(page_t* page, size_t align, size_t bytes, action_t action);
-void arch_page_free(page_t* page);
-void arch_page_assign(virt_addr_t page, phys_addr_t phys_addr);
-paged_t* arch_page_copy(paged_t* page_directory);
-void arch_page_load(paged_t* page_directory);
-*/
+
 #endif /* PAGING_H_ */
 
 

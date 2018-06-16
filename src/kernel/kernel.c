@@ -112,7 +112,7 @@ void kernel_panic(const char* format, ...)
 void kernel_init_pmem()
 {
 	pmem_init(KERNEL_END, memory_available);
-	pmem_set(KERNEL_START, KERNEL_SIZE, PMEM_USED);
+	pmem_set(KERNEL_START - GB(3), KERNEL_SIZE, PMEM_USED);
 
 	// First set everything below 1MB to RESERVED
 	pmem_set((void*) NULL, MB(1), PMEM_RESERVED);
@@ -223,6 +223,7 @@ void kernel_init_gdb()
 	kernel_log("GDB Connected!");
 }
 
+volatile bool _c = true;
 void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 {
 	bool enable_gdb = false;
@@ -267,21 +268,25 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	kernel_init_paging();
 	kernel_log("Done");
 
-	while (1);
-	page_t p;
+	/*page_t p;
 	page_query(&p, KB(4), 4096, PAGE_GLOBAL);
-	while (1);
-
-	//printf("Init interrupts... ");
+	//while (_c);
+	page_assign(p.begin, 0x13370000);
+	//page_free(&p);
+	while (_c);*/
 
 	kernel_log("Init mem");
 	mem_init();
 	kernel_log("Done");
+
+	volatile void* m = mem_alloc(512);
+	UNUSED(m);
+
+	while (_c);
+
 	kernel_log("Init interrupts");
 	interrupt_init();
 	kernel_log("Done");
-	//printf("DONE\n");
-
 
 	// Enable VGA output if possible
 	#ifdef ENABLE_VGA
