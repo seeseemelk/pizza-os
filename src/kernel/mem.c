@@ -10,115 +10,135 @@
 #include <math.h>
 #include <string.h>
 
-#define MEM_BLOCK_SIZE 16
-#define METADATA_SIZE KB(4)
+#define COUNT (sizeof(sizes)/sizeof(size_t))
 
 #define FREE 0
 #define USED 1
 
-typedef struct
-{
-	/** State of the entry. */
-	char state;
-} buddy_t;
+typedef char bitmap_t;
 
-/*
- * Example 1:
- *                 ORDER 0
- *                   /\
- *                  /  \
- *                 /    \
- *         ORDER 1.1    ORDER 1.2
- *         /     \       /     \
- *       O2.1   O2.2   O2.3   O2.4
- *
- * list = [0, 1.1, 2.1, 2.2, 1.2, 2.3, 2.4]; (length = 7)
+const size_t sizes[] = {4, 16, 32, 64, 128, 512};
+size_t allocated[COUNT];
+bitmap_t* bitmaps[COUNT];
+void* bitmap_mem[COUNT];
+
+/**
+ * Gets the index for a given size.
  */
-
-buddy_t* list;
-
-u8* kernel_memory;
-
-buddy_t* find_buddy_of_order(buddy_t* buddy, size_t list_size, size_t order, size_t wanted_order,
-		size_t mem_begin, size_t mem_length, size_t* mem_out, size_t* mem_out_length)
+size_t mem_get_index_for(size_t size)
 {
-	if (order == wanted_order)
+	for (size_t i = 0; i < COUNT; i++)
 	{
-		if (buddy->state == FREE)
-		{
-			*mem_out = mem_begin;
-			*mem_out_length = mem_length;
-			return buddy;
-		}
-		else
-			return NULL;
+		if (size <= sizes[i])
+			return i;
 	}
-	else if (buddy->state == USED)
-		return NULL;
+	return COUNT - 1;
+}
 
-	buddy_t* buddyA = buddy + 1;
-
-	buddy_t* result = find_buddy_of_order(buddyA, list_size/2, order+1, wanted_order, mem_begin, mem_length / 2, mem_out, mem_out_length);
-	if (result != NULL)
-		return result;
-
-	buddy_t* buddyB = (buddy_t*) (list_size / 2) + 1;
-	result = find_buddy_of_order(buddyB, list_size/2, order+1, wanted_order, mem_begin + mem_length / 2, mem_length / 2, mem_out, mem_out_length);
-
-	if (result != NULL)
-		return result;
-	else
-		return NULL;
+/**
+ * Gets the real memory used for a specific block.
+ */
+void* mem_get_memory_in(size_t index, size_t block_start, size_t blocks)
+{
+	void* addr = bitmap_mem[index] + block_start*sizes[index];
+	size_t needs_allocated = (block_start+blocks)*sizes[index];
+	while (allocated[index] < needs_allocated)
+	{
+		page_allocate((u8*)bitmap_mem[index] + allocated[index], 1);
+		allocated[index] += KB(4);
+	}
+	return addr;
 }
 
 void* mem_alloc(size_t size)
 {
-	size_t wanted_order = log2(size);
-	size_t mem_begin = (size_t) kernel_memory;
-	size_t mem_length = KERNEL_MEMORY_SIZE;
-	size_t mem_out;
-	size_t mem_out_length;
-	buddy_t* buddy = find_buddy_of_order(list+0, METADATA_SIZE, 0, wanted_order, mem_begin, mem_length, &mem_out, &mem_out_length);
-	if (buddy == 0)
-		kernel_panic("Out of buddies");
+	if (size == 0)
+		kernel_panic("Allocating 0 bytes");
 
-	// Map from buddy to real memory.
-	size_t test = buddy - list;
-	UNUSED(test);
-	buddy->state = USED;
-	return NULL;
+	size_t index = mem_get_index_for(size);
+
+	bitmap_t* bitmap = bitmaps[index];
+
+	size_t blocks_needed = ceildiv(size, sizes[index]);
+	size_t blocks_found = 0;
+	size_t first_block;
+
+	//for (size_t i = 0; i < 4096; i++)
+	size_t i = 0;
+	while (i < 4096)
+	{
+		if (bitmap[i] == FREE)
+		{
+			if (blocks_found == 0)
+				first_block = i;
+			blocks_found++;
+			i++;
+
+			if (blocks_found == blocks_needed)
+				break;
+		}
+		else
+		{
+			blocks_found = 0;
+			i += bitmap[i];
+		}
+	}
+
+	if (blocks_found < blocks_needed)
+		kernel_panic("Not enough memory");
+
+	bitmap[first_block] = blocks_needed;
+	for (size_t i = first_block+1; i < blocks_needed + first_block; i++)
+	{
+		bitmap[i] = USED;
+	}
+
+	return mem_get_memory_in(index, first_block, blocks_needed);
 }
 
 void mem_free(void* address)
 {
+	kernel_log("Freeing");
 	UNUSED(address);
 }
 
 void* mem_realloc(void* address, size_t new_size)
 {
+	kernel_panic("Reallocing");
 	UNUSED(address);
 	UNUSED(new_size);
 	return NULL;
 }
 
+/**
+ * Allocates a single 4-KB page.
+ */
+void* mem_create_page(int pages)
+{
+	page_t result;
+	page_query(&result, 0, KB(4) * pages, PAGE_GLOBAL | PAGE_ALLOCATE);
+	return result.begin;
+}
+
+/**
+ * Initialises a bitmap.
+ */
+void mem_init_bitmap(int index)
+{
+	const size_t size = sizes[index];
+	const size_t pages = size / 4;
+	bitmap_mem[index] = mem_create_page(pages);
+	bitmaps[index] = mem_create_page(1);
+	allocated[index] = 0;
+	memset(bitmaps[index], FREE, KB(4));
+}
+
 void mem_init()
 {
-	// Initialise the metadata
-
-	// Gets some pages for the metadata.
-	page_t result;
-	page_query(&result, 0, METADATA_SIZE, PAGE_GLOBAL);
-	list = (buddy_t*) result.begin;
-
-	// Allocate physical memory for the metadata.
-	void* mem = pmem_alloc(METADATA_SIZE);
-	page_assign(list, mem);
-
-	memset(list, 0, METADATA_SIZE);
-
-	// Initialise the page store
-	page_query(&result, 0, KERNEL_MEMORY_SIZE, PAGE_GLOBAL);
-	kernel_memory = (u8*) result.begin;
+	for (size_t i = 0; i < COUNT; i++)
+	{
+		mem_init_bitmap(i);
+	}
 }
 
 

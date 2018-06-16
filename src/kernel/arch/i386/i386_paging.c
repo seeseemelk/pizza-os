@@ -151,7 +151,7 @@ bool page_it_next(page_it* it)
 	if (it->dir_index >= it->dir_index_end && it->table_index >= it->table_index_end)
 		return false;
 
-	it->entry = (page_table_entry*) (((size_t) PAGE_TABLES_START) + ((size_t)it->dir_index * 4096) + (size_t)it->table_index);
+	it->entry = (page_table_entry*) (((size_t) PAGE_TABLES_START) + ((size_t)it->dir_index * 4096) + (size_t)it->table_index*4);
 	it->exists = page_directory[it->dir_index].present;
 
 	return true;
@@ -236,6 +236,10 @@ bool page_query_area(virt_addr_t begin, virt_addr_t end, page_t* page, size_t al
 
 			page_it_next(&it);
 		}
+
+		if (action & PAGE_ALLOCATE)
+			page_allocate(page->begin, page->pages);
+
 		return true;
 	}
 	else
@@ -269,11 +273,14 @@ void page_free(page_t* page)
 	page_reload_all();
 }
 
-void page_assign(virt_addr_t page, phys_addr_t phys_addr)
+void page_assign_many(virt_addr_t page, phys_addr_t phys_addr, size_t pages)
 {
-	size_t table_index = (size_t)page / KB(4);
-	page_table_entry* entry = (page_table_entry*)PAGE_TABLES_START + table_index;
-	entry->address = (u32) ENTRY_ADDRESS(phys_addr);
+	for (size_t i = 0; i < pages; i++)
+	{
+		size_t table_index = (size_t)page / KB(4) + i;
+		page_table_entry* entry = (page_table_entry*)PAGE_TABLES_START + table_index;
+		entry->address = (u32) ENTRY_ADDRESS(phys_addr);
+	}
 }
 
 paged_t* page_copy()

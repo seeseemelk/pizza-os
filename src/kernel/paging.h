@@ -38,7 +38,9 @@ enum action_t
 	/** Allows userspace to access the memory. */
 	PAGE_USER =     0x02,
 	/** Prevents writes to the page from happening. */
-	PAGE_READONLY = 0x04
+	PAGE_READONLY = 0x04,
+	/** Automatically assign physical memory to it. */
+	PAGE_ALLOCATE = 0x08
 };
 
 struct page_t
@@ -60,9 +62,11 @@ phys_addr_t page_phys_addr(virt_addr_t begin);
 bool page_query(page_t* page, size_t align, size_t bytes, action_t action);
 void page_free(page_t* page);
 void page_assign(virt_addr_t page, phys_addr_t phys_addr);
+void page_assign_many(virt_addr_t page, phys_addr_t phys_addr, size_t pages);
 void page_init();
 paged_t* page_copy();
 void page_load(paged_t* page_directory);
+void page_allocate(virt_addr_t mem_start, size_t pages);
 
 /*
  * To be implemented by the architecture.

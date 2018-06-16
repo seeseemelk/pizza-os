@@ -263,10 +263,13 @@ void device_unlock(device_t* device)
  * Lets a device allocate some physical memory.
  * A pointer to the memory is returned.
  */
-/*void* device_mmap(void* phys, size_t length)
+void* device_mmap(void* phys, size_t length)
 {
-	return page_alloc_phys(phys, length);
-}*/
+	page_t result;
+	page_query(&result, 0, length, PAGE_GLOBAL);
+	page_assign_many(result.begin, phys, 2);
+	return result.begin;
+}
 
 
 

@@ -115,7 +115,7 @@ void kernel_init_pmem()
 	pmem_set(KERNEL_START - GB(3), KERNEL_SIZE, PMEM_USED);
 
 	// First set everything below 1MB to RESERVED
-	pmem_set((void*) NULL, MB(1), PMEM_RESERVED);
+	pmem_set(0, MB(1), PMEM_RESERVED);
 
 	if ((multiboot->flags & MULTIBOOT_INFO_MEM_MAP) == 0)
 	{
@@ -269,23 +269,21 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	kernel_log("Done");
 
 	/*page_t p;
-	page_query(&p, KB(4), 4096, PAGE_GLOBAL);
+	page_query(&p, 0, KB(8), PAGE_GLOBAL | PAGE_ALLOCATE);
+	page_query(&p, 0, KB(8), PAGE_GLOBAL | PAGE_ALLOCATE);
 	//while (_c);
-	page_assign(p.begin, 0x13370000);
+	//page_assign(p.begin, 0x13370000);
 	//page_free(&p);
 	while (_c);*/
+	//*/
 
 	kernel_log("Init mem");
 	mem_init();
 	kernel_log("Done");
 
-	volatile void* m = mem_alloc(512);
-	UNUSED(m);
-
-	while (_c);
-
 	kernel_log("Init interrupts");
 	interrupt_init();
+	//while(_c);
 	kernel_log("Done");
 
 	// Enable VGA output if possible
@@ -294,6 +292,8 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	tty_set_tty(device_get_first(VGA));
 	#endif
 	tty_clear();
+
+	//while (_c);
 
 	if (enable_gdb)
 		kernel_init_gdb();
