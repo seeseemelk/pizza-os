@@ -113,10 +113,10 @@ void* mem_realloc(void* address, size_t new_size)
 /**
  * Allocates a single 4-KB page.
  */
-void* mem_create_page(int pages)
+void* mem_create_page(int pages, action_t options)
 {
 	page_t result;
-	page_query(&result, 0, KB(4) * pages, PAGE_GLOBAL | PAGE_ALLOCATE);
+	page_query(&result, 0, KB(4) * pages, options);
 	return result.begin;
 }
 
@@ -127,8 +127,8 @@ void mem_init_bitmap(int index)
 {
 	const size_t size = sizes[index];
 	const size_t pages = size / 4;
-	bitmap_mem[index] = mem_create_page(pages);
-	bitmaps[index] = mem_create_page(1);
+	bitmap_mem[index] = mem_create_page(pages, PAGE_GLOBAL);
+	bitmaps[index] = mem_create_page(1, PAGE_GLOBAL | PAGE_ALLOCATE);
 	allocated[index] = 0;
 	memset(bitmaps[index], FREE, KB(4));
 }

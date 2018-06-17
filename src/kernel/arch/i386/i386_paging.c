@@ -195,7 +195,7 @@ bool page_query_area(virt_addr_t begin, virt_addr_t end, page_t* page, size_t al
 
 	while (page_it_next(&it))
 	{
-		if (it.exists == false || it.entry->present == 0)
+		if (it.exists == false || it.entry->IGNORE1 == 0)
 		{
 			// First new block found
 			if (blocks_found == 0)
@@ -222,7 +222,8 @@ bool page_query_area(virt_addr_t begin, virt_addr_t end, page_t* page, size_t al
 			if (it.exists == false)
 				page_it_create(&it);
 
-			it.entry->present = 1;
+			it.entry->IGNORE1 = 1;
+			it.entry->present = 0;
 
 			if (action & PAGE_READONLY)
 				it.entry->writable = 0;
@@ -269,6 +270,7 @@ void page_free(page_t* page)
 	while (page_it_next(&it))
 	{
 		it.entry->present = 0;
+		it.entry->IGNORE1 = 0;
 	}
 	page_reload_all();
 }
@@ -280,6 +282,7 @@ void page_assign_many(virt_addr_t page, phys_addr_t phys_addr, size_t pages)
 		size_t table_index = (size_t)page / KB(4) + i;
 		page_table_entry* entry = (page_table_entry*)PAGE_TABLES_START + table_index;
 		entry->address = (u32) ENTRY_ADDRESS(phys_addr);
+		entry->present = 1;
 	}
 }
 

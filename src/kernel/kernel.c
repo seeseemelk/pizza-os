@@ -307,6 +307,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 
 	kernel_log("Kernel range: 0x%p to 0x%p", KERNEL_START, KERNEL_END);
 
+	//while (_c);
 	thread_init();
 
 	vfs_init();

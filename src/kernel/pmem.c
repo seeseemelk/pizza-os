@@ -41,6 +41,8 @@ void* pmem_alloc(size_t amount)
 	{
 		for (size_t i = index_found; i < index_found + blocks_needed; i++)
 			pmem_map[i] = PMEM_USED;
+		if ((index_found * PMEM_BLOCK_SIZE) == 0x3000)
+			kernel_panic("BAD MEM");
 		return (void*) (index_found * PMEM_BLOCK_SIZE);
 	}
 	else
