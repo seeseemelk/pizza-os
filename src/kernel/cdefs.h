@@ -9,8 +9,11 @@
 #define CDEFS_H_
 #include <stdint.h>
 
-#define KB(x) ((size_t) (x) << 10)
-#define MB(x) ((size_t) (x) << 20)
+//#define KB(x) ((size_t) (x) << 10)
+//#define MB(x) ((size_t) (x) << 20)
+#define KB(x) ((size_t) x * 1024)
+#define MB(x) (KB(x) * 1024)
+#define GB(x) (MB(x) * 1024)
 
 typedef int8_t i8;
 typedef int16_t i16;

@@ -7,7 +7,6 @@
 #include "config.h"
 #include "pmem.h"
 #include "mem.h"
-#include "page.h"
 #include "threads.h"
 #include "sched.h"
 #include "cpu.h"
@@ -25,6 +24,7 @@
 #include "dev/tmpfs.h"
 #include "dev/null.h"
 #include "dev/zero.h"
+#include "paging.h"
 
 #if TARGET==i386
 #include "arch/i386/dev/vga.h"
@@ -112,10 +112,10 @@ void kernel_panic(const char* format, ...)
 void kernel_init_pmem()
 {
 	pmem_init(KERNEL_END, memory_available);
-	pmem_set(KERNEL_START, KERNEL_SIZE, PMEM_USED);
+	pmem_set(KERNEL_START - GB(3), KERNEL_SIZE, PMEM_USED);
 
 	// First set everything below 1MB to RESERVED
-	pmem_set((void*) NULL, MB(1), PMEM_RESERVED);
+	pmem_set(0, MB(1), PMEM_RESERVED);
 
 	if ((multiboot->flags & MULTIBOOT_INFO_MEM_MAP) == 0)
 	{
@@ -154,11 +154,11 @@ void kernel_init_cpu()
 void kernel_init_paging()
 {
 	page_init();
-	page_idmap(&kernel_start, &kernel_end - &kernel_start);
+	/*page_idmap(&kernel_start, &kernel_end - &kernel_start);
 	pmem_register_pages();
 	// ID-Map the lowest 1 megabyte
 	page_idmap((void*)0, MB(1));
-	page_enable();
+	page_enable();*/
 }
 
 void list_dir(const char* path)
@@ -223,6 +223,7 @@ void kernel_init_gdb()
 	kernel_log("GDB Connected!");
 }
 
+volatile bool _c = true;
 void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 {
 	bool enable_gdb = false;
@@ -234,8 +235,9 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	while ((size = kernel_cmdline_next((char*) mbd->cmdline, &start, &end)) > 0)
 	{
 		kernel_log("Size: %d", size);
-		char str[size];
+		char str[size+1];
 		strncpy(str, (char*) mbd->cmdline + start, size);
+		str[size] = 0;
 		kernel_log("Argument: '%s'", str);
 		if (strcmp(str, "gdb") == 0)
 			enable_gdb = true;
@@ -267,16 +269,23 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	kernel_init_paging();
 	kernel_log("Done");
 
-	//printf("Init interrupts... ");
+	/*page_t p;
+	page_query(&p, 0, KB(8), PAGE_GLOBAL | PAGE_ALLOCATE);
+	page_query(&p, 0, KB(8), PAGE_GLOBAL | PAGE_ALLOCATE);
+	//while (_c);
+	//page_assign(p.begin, 0x13370000);
+	//page_free(&p);
+	while (_c);*/
+	//*/
 
 	kernel_log("Init mem");
 	mem_init();
 	kernel_log("Done");
+
 	kernel_log("Init interrupts");
 	interrupt_init();
+	//while(_c);
 	kernel_log("Done");
-	//printf("DONE\n");
-
 
 	// Enable VGA output if possible
 	#ifdef ENABLE_VGA
@@ -284,6 +293,8 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	tty_set_tty(device_get_first(VGA));
 	#endif
 	tty_clear();
+
+	//while (_c);
 
 	if (enable_gdb)
 		kernel_init_gdb();
@@ -297,6 +308,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 
 	kernel_log("Kernel range: 0x%p to 0x%p", KERNEL_START, KERNEL_END);
 
+	//while (_c);
 	thread_init();
 
 	vfs_init();

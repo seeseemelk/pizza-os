@@ -31,12 +31,6 @@ void* mem_realloc(void* address, size_t new_size);
  */
 void mem_init();
 
-/**
- * Initialises the memory allocator.
- * The total size of the memory should be passed
- */
-//void mem_init(size_t memory_size);
-
 #endif /* MEM_H_ */
 
 

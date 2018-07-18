@@ -11,11 +11,11 @@
 #include "i386_pic.h"
 #include "cdefs.h"
 #include "kernel.h"
-#include "page.h"
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>
+#include "../../paging.h"
 
 extern void* inth_start;
 extern void* inth_end;
@@ -72,9 +72,16 @@ static void lidt(int_descriptor* idt)
 			: "m" (val));
 }
 
+static void* alloc_idt()
+{
+	page_t result;
+	page_query(&result, 0x10000, sizeof(int_descriptor) * 256, PAGE_GLOBAL | PAGE_ALLOCATE);
+	return result.begin;
+}
+
 static void init_idt()
 {
-	idt = malloc(sizeof(int_descriptor) * 256);
+	idt = alloc_idt();
 
 	for (int i = 0; i < 256; i++)
 	{

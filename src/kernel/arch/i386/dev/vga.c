@@ -103,6 +103,7 @@ void vga_init()
 
 	module_register(&vga_mod, "vga", NULL, NULL);
 	device_register(DEV(&vga_dev), &vga_mod);
+	/* TODO Change to new paging API */
 	vga_dev.memory = device_mmap((void*) 0xB8000, KB(8));
 
 	device_register_bus(DEV(&vga_dev), VGA, &vga_bus);

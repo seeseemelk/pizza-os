@@ -1,215 +1,221 @@
-/*
- * mem.c
- *
- *  Created on: Jan 3, 2018
- *      Author: seeseemelk
+/**
+ * A buddy-memory allocator.
  */
 #include "mem.h"
+#include "pmem.h"
 #include "cdefs.h"
+#include "config.h"
 #include "kernel.h"
-#include "page.h"
-
-#include <string.h>
-#include <stdio.h>
-#include <stdbool.h>
+#include "paging.h"
 #include <math.h>
 #include <string.h>
 
-#define BLK_SIZE KB(4)
-#define TBL_SIZE MB(4)
-#define TBLI(x) (((size_t)x) % TBL_SIZE / BLK_SIZE)
-#define DIRI(x) (((size_t)x) / MB(4))
+#define COUNT (sizeof(sizes)/sizeof(size_t))
 
 #define FREE 0
-#define USED -1
-typedef unsigned char state_t;
+//#define USED 1
 
-typedef struct dir_t dir_t;
-typedef struct tbl_t tbl_t;
+typedef char bitmap_t;
 
-struct dir_t
-{
-	tbl_t* tbl;
-};
-
-struct tbl_t
-{
-	size_t state;
-};
-
-dir_t* directory;
+const size_t sizes[] = {4, 16, 32, 64, 128, 512};
+size_t allocated[COUNT];
+bitmap_t* bitmaps[COUNT];
+void* bitmap_mem[COUNT];
 
 /**
- * Get a table from the directory.
- * This is actually a pointer to the first entry.
+ * Gets the index for a given size.
  */
-tbl_t* mem_get_tbl(void* mem)
+size_t mem_get_index_for(size_t size)
 {
-	size_t dir_i = DIRI(mem);
-
-	if (directory[dir_i].tbl == FREE)
+	for (size_t i = 0; i < COUNT; i++)
 	{
-		tbl_t* tbl = (tbl_t*) page_alloc(sizeof(tbl_t) * 1024);
-		memset(tbl, 0, sizeof(tbl_t) * 1024);
-		directory[dir_i].tbl = tbl;
-		return tbl;
+		if (size <= sizes[i])
+			return i;
 	}
-	else
-	{
-		tbl_t* tbl = directory[dir_i].tbl;
-		return tbl;
-	}
+	return COUNT - 1;
 }
 
 /**
- * Gets a pointer to a table entry.
+ * Gets the real memory used for a specific block.
  */
-tbl_t* mem_get_tbl_entry(void* mem)
+void* mem_get_memory_in(size_t index, size_t block_start, size_t blocks)
 {
-	size_t tbl_i = TBLI(mem);
-
-	tbl_t* tbl = mem_get_tbl(mem);
-	return tbl + tbl_i;
+	void* addr = bitmap_mem[index] + block_start*sizes[index];
+	size_t needs_allocated = (block_start+blocks)*sizes[index];
+	while (allocated[index] < needs_allocated)
+	{
+		page_allocate((u8*)bitmap_mem[index] + allocated[index], 1);
+		allocated[index] += KB(4);
+	}
+	return addr;
 }
 
-void* mem_alloc(const size_t bytes)
+/**
+ * Gets for a given address the index into sizes for that location of memory.
+ */
+size_t mem_get_sizeindex_for(void* addr)
 {
-	// If the user is allocating 0 bytes,
-	// we can just return a null-pointer.
-	if (bytes == 0)
-		return NULL;
-
-	// We allocate the pages.
-	void* mem = page_alloc(bytes);
-
-	// We set first table entry so that it contains the size of the allocated memory.
-	tbl_t* first_entry = mem_get_tbl_entry(mem);
-	first_entry->state = bytes;
-
-	// Then we set the state of the following entries to USED
-	// This only has to be done if we are allocating more than one block.
-	if (bytes / BLK_SIZE > 0)
+	for (size_t i = 0; i < COUNT; i++)
 	{
-		size_t blocks = ceildiv(bytes, BLK_SIZE);
-		for (size_t block = 1; block < blocks; block++)
+		void* mem_start = bitmap_mem[i];
+		void* mem_end = bitmap_mem[i] + sizes[i]*1024;
+		if (addr >= mem_start && addr < mem_end)
+			return i;
+	}
+	kernel_panic("Could not find sizeindex for address 0x%X", addr);
+	return 0;
+}
+
+/**
+ * Gets the bitmap that contains the mapping for a specific address.
+ */
+bitmap_t* mem_get_bitmap_for(void* addr)
+{
+	size_t size_index = mem_get_sizeindex_for(addr);
+	u8* caddr = addr;
+	u8* begin_addr = bitmap_mem[size_index];
+	bitmap_t* bitmap = bitmaps[size_index];
+	size_t bitmap_index = (caddr - begin_addr) / sizes[size_index];
+	return bitmap + bitmap_index;
+}
+
+void* mem_alloc(size_t size)
+{
+	if (size == 0)
+		kernel_panic("Allocating 0 bytes");
+
+	size_t index = mem_get_index_for(size);
+
+	bitmap_t* bitmap = bitmaps[index];
+
+	size_t blocks_needed = ceildiv(size, sizes[index]);
+	size_t blocks_found = 0;
+	size_t first_block;
+
+	size_t i = 0;
+	while (i < 4096)
+	{
+		if (bitmap[i] == FREE)
 		{
-			tbl_t* tbl_entry = mem_get_tbl_entry((void*)((size_t)mem + block * BLK_SIZE));
-			tbl_entry->state = USED;
+			if (blocks_found == 0)
+				first_block = i;
+			blocks_found++;
+			i++;
+
+			if (blocks_found == blocks_needed)
+				break;
+		}
+		else
+		{
+			blocks_found = 0;
+			i += bitmap[i];
 		}
 	}
 
-	return mem;
-}
+	if (blocks_found < blocks_needed)
+		kernel_panic("Not enough memory");
 
-void mem_free(void* addr)
-{
-	tbl_t* first_entry = mem_get_tbl_entry(addr);
-	size_t size = first_entry->state;
-	size_t blocks = ceildiv(size, BLK_SIZE);
-	first_entry->state = FREE;
-	page_free(addr, size);
+	bitmap[first_block] = blocks_needed;
+	for (size_t i = first_block+1; i < blocks_needed + first_block; i++)
+		bitmap[i] = bitmap[i-1] - 1;
 
-	for (size_t i = 1; i < blocks; i++)
-	{
-		tbl_t* entry = mem_get_tbl_entry((void*)((size_t)addr + i * BLK_SIZE));
-		entry->state = FREE;
-	}
-}
-
-void* mem_realloc(void* addr, size_t new_size)
-{
-	tbl_t* first_entry = mem_get_tbl_entry(addr);
-	size_t old_size = first_entry->state;
-	size_t old_blocks = ceildiv(old_size, BLK_SIZE);
-	size_t new_blocks = ceildiv(new_size, BLK_SIZE);
-	if (new_blocks == old_blocks) // The size may have changed, but the number of blocks not.
-	{
-		first_entry->state = new_size;
-		return addr;
-	}
-	else if (new_blocks < old_blocks) // The number of blocks has been reduced. Let's free those.
-	{
-		for (unsigned int i = old_blocks - 1; i > new_blocks; i--)
-		{
-			void* virt = (void*)((size_t)addr + i * BLK_SIZE);
-			tbl_t* entry = mem_get_tbl_entry(virt);
-			entry->state = FREE;
-			page_free(virt, BLK_SIZE);
-		}
-		return addr;
-	}
-	else // The number of required blocks has increased.
-	{
-		// Not yet implemented.
-		kernel_panic("mem_realloc: Unsupported operation");
-		size_t needed = new_blocks - old_blocks;
-		size_t available = 0;
-		// Lets check if there are enough blocks free right here
-		for (unsigned int i = old_blocks; i < new_blocks; i++)
-		{
-			void* virt = (void*)((size_t)addr + i * BLK_SIZE);
-			tbl_t* entry = mem_get_tbl_entry(virt);
-			if (entry->state == FREE)
-				available++;
-		}
-
-		if (available >= needed) // We've got enough, let's allocate.
-		{
-			for (unsigned int i = old_blocks; i < new_blocks; i++)
-			{
-				void* virt = (void*)((size_t)addr + i * BLK_SIZE);
-				tbl_t* entry = mem_get_tbl_entry(virt);
-				if (entry->state == FREE)
-					available++;
-			}
-		}
-		else // We haven't got enough, let's deallocate.
-		{
-
-		}
-		return NULL;
-	}
-}
-
-void mem_init()
-{
-	directory = page_alloc(sizeof(dir_t) * 1024);
-	memset(directory, 0, sizeof(dir_t) * 1024);
-}
-
-/*void* mem_base;
-size_t mem_length;
-
-state_t* mem_map;
-size_t map_entries;
-
-void* mem_alloc(const size_t size)
-{
-	const size_t required_size = size + sizeof(size_t);
+	return mem_get_memory_in(index, first_block, blocks_needed);
 }
 
 void mem_free(void* address)
 {
-	kernel_panic("Not implemented");
+	bitmap_t* bitmap = mem_get_bitmap_for(address);
+	if (*bitmap == FREE)
+		kernel_panic("Double free");
+
+	const size_t count = *bitmap;
+	for (size_t i = 0; i < count; i++)
+		*bitmap = 0;
 }
 
 void* mem_realloc(void* address, size_t new_size)
 {
-	kernel_panic("Not implemented");
+	size_t size_index = mem_get_sizeindex_for(address);
+	bitmap_t* bitmap = mem_get_bitmap_for(address);
+	size_t old_size = (*bitmap) * sizes[size_index];
+
+	size_t old_blocks = old_size / sizes[size_index];
+	size_t new_blocks = new_size / sizes[size_index];
+
+	if (new_size < old_size)
+	{
+		// The size of the allocated memory has been reduced.
+		size_t delta = old_blocks - new_blocks;
+		for (size_t i = 0; i < new_blocks; i++)
+			bitmap[i] -= delta;
+		for (size_t i = new_blocks; i < old_blocks; i++)
+			bitmap[i] = FREE;
+		// We keep the old address
+		return address;
+	}
+	else
+	{
+		bool can_increase = true;
+		// Check if the size can simple be increased.
+		for (size_t i = old_blocks; i < new_blocks; i++)
+		{
+			if (bitmap[i] != FREE)
+			{
+				can_increase = false;
+				break;
+			}
+		}
+
+		if (can_increase)
+		{
+			// We simply add a few blocks.
+			for (size_t i = 0; i < new_blocks; i++)
+				bitmap[i] = new_blocks - i;
+			return mem_get_memory_in(size_index, bitmap - bitmaps[size_index], new_blocks);
+		}
+		else
+		{
+			// We reallocate.
+			void* new_address = mem_alloc(new_size);
+			memcpy(new_address, address, old_size);
+			mem_free(address);
+			return new_address;
+		}
+	}
+
 	return NULL;
+}
+
+/**
+ * Allocates a single 4-KB page.
+ */
+void* mem_create_page(int pages, action_t options)
+{
+	page_t result;
+	page_query(&result, 0, KB(4) * pages, options);
+	return result.begin;
+}
+
+/**
+ * Initialises a bitmap.
+ */
+void mem_init_bitmap(int index)
+{
+	const size_t size = sizes[index];
+	const size_t pages = size / 4;
+	bitmap_mem[index] = mem_create_page(pages, PAGE_GLOBAL);
+	bitmaps[index] = mem_create_page(1, PAGE_GLOBAL | PAGE_ALLOCATE);
+	allocated[index] = 0;
+	memset(bitmaps[index], FREE, KB(4));
 }
 
 void mem_init()
 {
-	// We split the map into enough entries so that the entire page table fits inside it.
-
-	// First we set the initial number of entries we want in the table.
-	mem_length = 1024;
-	map_entries = (GB(4) / BLOCK_SIZE);
-	mem_map = page_alloc(map_entries * sizeof(state_t));
-	memset(mem_map, 0, map_entries * sizeof(state_t));
+	for (size_t i = 0; i < COUNT; i++)
+	{
+		mem_init_bitmap(i);
+	}
 }
-*/
 
 
 

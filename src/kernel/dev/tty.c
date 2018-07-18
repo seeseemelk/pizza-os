@@ -73,14 +73,14 @@ void tty_put_char(const char c)
 {
 	if (c == '\n')
 	{
-		//eserial_putchar('\n');
-		//eserial_putchar('\r'); // Needed for cu
+		eserial_putchar('\n');
+		eserial_putchar('\r'); // Needed for cu
 		if (tty != NULL)
 			tty_advance_line();
 	}
 	else
 	{
-		//eserial_putchar(c);
+		eserial_putchar(c);
 		if (tty != NULL)
 		{
 			int cursor_x = tty_get_cursor_x();
