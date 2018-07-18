@@ -13,7 +13,7 @@
 #define COUNT (sizeof(sizes)/sizeof(size_t))
 
 #define FREE 0
-#define USED 1
+//#define USED 1
 
 typedef char bitmap_t;
 
@@ -50,6 +50,35 @@ void* mem_get_memory_in(size_t index, size_t block_start, size_t blocks)
 	return addr;
 }
 
+/**
+ * Gets for a given address the index into sizes for that location of memory.
+ */
+size_t mem_get_sizeindex_for(void* addr)
+{
+	for (size_t i = 0; i < COUNT; i++)
+	{
+		void* mem_start = bitmap_mem[i];
+		void* mem_end = bitmap_mem[i] + sizes[i]*1024;
+		if (addr >= mem_start && addr < mem_end)
+			return i;
+	}
+	kernel_panic("Could not find sizeindex for address 0x%X", addr);
+	return 0;
+}
+
+/**
+ * Gets the bitmap that contains the mapping for a specific address.
+ */
+bitmap_t* mem_get_bitmap_for(void* addr)
+{
+	size_t size_index = mem_get_sizeindex_for(addr);
+	u8* caddr = addr;
+	u8* begin_addr = bitmap_mem[size_index];
+	bitmap_t* bitmap = bitmaps[size_index];
+	size_t bitmap_index = (caddr - begin_addr) / sizes[size_index];
+	return bitmap + bitmap_index;
+}
+
 void* mem_alloc(size_t size)
 {
 	if (size == 0)
@@ -63,7 +92,6 @@ void* mem_alloc(size_t size)
 	size_t blocks_found = 0;
 	size_t first_block;
 
-	//for (size_t i = 0; i < 4096; i++)
 	size_t i = 0;
 	while (i < 4096)
 	{
@@ -89,24 +117,72 @@ void* mem_alloc(size_t size)
 
 	bitmap[first_block] = blocks_needed;
 	for (size_t i = first_block+1; i < blocks_needed + first_block; i++)
-	{
-		bitmap[i] = USED;
-	}
+		bitmap[i] = bitmap[i-1] - 1;
 
 	return mem_get_memory_in(index, first_block, blocks_needed);
 }
 
 void mem_free(void* address)
 {
-	kernel_log("Freeing");
-	UNUSED(address);
+	bitmap_t* bitmap = mem_get_bitmap_for(address);
+	if (*bitmap == FREE)
+		kernel_panic("Double free");
+
+	const size_t count = *bitmap;
+	for (size_t i = 0; i < count; i++)
+		*bitmap = 0;
 }
 
 void* mem_realloc(void* address, size_t new_size)
 {
-	kernel_panic("Reallocing");
-	UNUSED(address);
-	UNUSED(new_size);
+	size_t size_index = mem_get_sizeindex_for(address);
+	bitmap_t* bitmap = mem_get_bitmap_for(address);
+	size_t old_size = (*bitmap) * sizes[size_index];
+
+	size_t old_blocks = old_size / sizes[size_index];
+	size_t new_blocks = new_size / sizes[size_index];
+
+	if (new_size < old_size)
+	{
+		// The size of the allocated memory has been reduced.
+		size_t delta = old_blocks - new_blocks;
+		for (size_t i = 0; i < new_blocks; i++)
+			bitmap[i] -= delta;
+		for (size_t i = new_blocks; i < old_blocks; i++)
+			bitmap[i] = FREE;
+		// We keep the old address
+		return address;
+	}
+	else
+	{
+		bool can_increase = true;
+		// Check if the size can simple be increased.
+		for (size_t i = old_blocks; i < new_blocks; i++)
+		{
+			if (bitmap[i] != FREE)
+			{
+				can_increase = false;
+				break;
+			}
+		}
+
+		if (can_increase)
+		{
+			// We simply add a few blocks.
+			for (size_t i = 0; i < new_blocks; i++)
+				bitmap[i] = new_blocks - i;
+			return mem_get_memory_in(size_index, bitmap - bitmaps[size_index], new_blocks);
+		}
+		else
+		{
+			// We reallocate.
+			void* new_address = mem_alloc(new_size);
+			memcpy(new_address, address, old_size);
+			mem_free(address);
+			return new_address;
+		}
+	}
+
 	return NULL;
 }
 

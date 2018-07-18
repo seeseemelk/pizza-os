@@ -37,12 +37,12 @@ void* pmem_alloc(size_t amount)
 			blocks_found = 0;
 	}
 
-	if (blocks_found >= blocks_needed)
+	if (blocks_found == blocks_needed)
 	{
 		for (size_t i = index_found; i < index_found + blocks_needed; i++)
 			pmem_map[i] = PMEM_USED;
-		if ((index_found * PMEM_BLOCK_SIZE) == 0x3000)
-			kernel_panic("BAD MEM");
+		//if ((index_found * PMEM_BLOCK_SIZE) == 0x3000)
+			//kernel_panic("BAD MEM");
 		return (void*) (index_found * PMEM_BLOCK_SIZE);
 	}
 	else
@@ -85,7 +85,7 @@ void pmem_init(void* start, size_t mem_size)
 		pmem_map[i] = PMEM_FREE;
 
 	// Then set the blocks of the map itself to USED
-	size_t map_start = (size_t)pmem_map / PMEM_BLOCK_SIZE;
+	size_t map_start = ((size_t)pmem_map - GB(3)) / PMEM_BLOCK_SIZE;
 	size_t blocks = ceildiv(pmem_size, PMEM_BLOCK_SIZE);
 	for (size_t block = 0; block < blocks; block++)
 		pmem_map[block + map_start] = PMEM_USED;

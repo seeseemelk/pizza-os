@@ -235,8 +235,9 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic)
 	while ((size = kernel_cmdline_next((char*) mbd->cmdline, &start, &end)) > 0)
 	{
 		kernel_log("Size: %d", size);
-		char str[size];
+		char str[size+1];
 		strncpy(str, (char*) mbd->cmdline + start, size);
+		str[size] = 0;
 		kernel_log("Argument: '%s'", str);
 		if (strcmp(str, "gdb") == 0)
 			enable_gdb = true;
