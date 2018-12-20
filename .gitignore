@@ -4,8 +4,15 @@
 
 # Ignore build directory
 build/
-build/*
-build/**/*
+
+# Ignore ISO files and kernel files
+*.iso
+*.elf
 
 # Ignore bosch configuration
 bx_enh_dbg.ini
+
+# Ignore backup files
+*.bak
+*.old
+*.backup
