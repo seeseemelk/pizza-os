@@ -1,5 +1,6 @@
 ; This multiboot compliant header was taken from
 ; http://wiki.osdev.org/Bare_Bones_with_NASM
+[bits 32]
 MBALIGN equ 1<<0
 MEMINFO equ 1<<1
 FLAGS equ MBALIGN | MEMINFO

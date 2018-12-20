@@ -1,15 +1,7 @@
 # Initial setup
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 set(CMAKE_LEGACY_CYGWIN_WIN32 0)
-
-# The location at which the ISO file will be placed.
-set(PIZZAOS_ISO ${CMAKE_SOURCE_DIR}/pizzaos.iso)
-# The directory containing the files that should be on the ISO.
-set(ISODIR ${CMAKE_SOURCE_DIR}/isodir)
-
-# Setup toolchain
-set(CMAKE_TOOLCHAIN_FILE "toolchain.cmake")
-set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
+set(CMAKE_TOOLCHAIN_FILE toolchain.cmake)
 
 # Build project
 project("PizzaOS" CXX C)
@@ -18,19 +10,34 @@ set(VERSION_MAJOR 0)
 set(VERSION_MINOR 1)
 set(VERSION_PATCH 0)
 
-# Set flags and linker script
-set(CMAKE_ASM_NASM_FLAGS "${CMAKE_ASM_NASM_FLAGS} -f elf32")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -ffreestanding -std=gnu11 -nostdlib")
-set(CMAKE_CPP_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -ffreestanding -std=gnu11 -nostdlib")
+#################################
+### USER CONFIGURABLE SECTION ###
+#################################
+# The location at which the ISO file will be placed.
+set(PIZZAOS_ISO ${CMAKE_SOURCE_DIR}/pizzaos.iso)
+
+# The directory containing the files that should be on the ISO.
+set(ISODIR ${CMAKE_SOURCE_DIR}/isodir)
+
+########################################
+### END OF USER CONFIGURABLE SECTION ###
+########################################
+
+## BUILD SECTION
+# Include directories
+set(LIBC_INC ${PROJECT_SOURCE_DIR}/src/stdlib/libc/common)
+set(LIBKC_INC ${PROJECT_SOURCE_DIR}/src/stdlib/libc/kernel)
+set(LIBCXX_INC ${PROJECT_SOURCE_DIR}/src/stdlib/libcxx/common)
+set(LIBKCXX_INC ${PROJECT_SOURCE_DIR}/src/stdlib/libcxx/kernel)
 
 add_subdirectory(src/stdlib)
 add_subdirectory(src/kernel)
-
 
 #add_custom_target(pizzaos.iso ALL
 add_custom_command(OUTPUT ${PIZZAOS_ISO}
 	COMMAND grub-mkrescue -o pizzaos.iso isodir
 	DEPENDS ${ISODIR}/boot/grub/grub.cfg
+	DEPENDS ${ISODIR}/boot/pizzaos.elf
 	COMMENT "Building ISO image"
 	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
 )
