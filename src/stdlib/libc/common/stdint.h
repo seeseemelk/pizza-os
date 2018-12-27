@@ -1,7 +1,7 @@
 #ifndef STDINT_H_
 #define STDINT_H_
 
-#include <stdint.h>
+#include_next <stdint.h>
 
 typedef uint8_t u8;
 typedef uint16_t u16;

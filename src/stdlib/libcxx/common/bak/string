@@ -1,0 +1,36 @@
+#ifndef STRING_HPP
+#define STRING_HPP
+
+#include <cstddef>
+
+namespace std
+{
+
+class string
+{
+public:
+	// Constructors
+	//http://www.cplusplus.com/reference/string/string/string/
+	string();
+	string(const string& str);
+	string(const string&, size_t pos, size_t len = npos);
+	string(const char* s);
+	string(const char* s, size_t n);
+	string(size_t n, char c);
+	string(string&& str);
+
+	// Destructors
+	// http://www.cplusplus.com/reference/string/string/~string/
+	~string();
+
+	// Methods
+	const char* c_str() const;
+	const char* data() const;
+
+	// Constants
+	static const size_t npos = -1;
+};
+
+}
+
+#endif
