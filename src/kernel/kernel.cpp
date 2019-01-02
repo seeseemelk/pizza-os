@@ -29,8 +29,18 @@ extern "C" void kernel_main()
 }
 */
 
+extern "C" void _init(void);
+extern "C" void _fini(void);
+
+__attribute__ ((constructor)) void foo(void)
+{
+	vga[20] = 'T';
+	while (1);
+}
+
 extern "C" void kernel_main()
 {
+	_init();
 	vga[0] = 'A';
 	Debug::init();
 	vga[2] = 'B';
@@ -39,4 +49,5 @@ extern "C" void kernel_main()
 	Debug::puts("Initialising CPU\n");
 	CPU::init();
 	CPU::hang();
+	_fini();
 }

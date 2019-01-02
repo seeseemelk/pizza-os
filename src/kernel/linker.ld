@@ -8,7 +8,9 @@ SECTIONS
 	.text ALIGN(4K): AT(ADDR(.text) - 0xC0000000)
 	{
 		*(.multiboot)
+		*(.init)
 		*(.text)
+		*(.fini)
 	}
 
 	.rodata ALIGN(4K) : AT(ADDR(.rodata) - 0xC0000000)
