@@ -8,7 +8,13 @@ SECTIONS
 	.text ALIGN(4K): AT(ADDR(.text) - 0xC0000000)
 	{
 		*(.multiboot)
-		*(.init)
+
+		*crti.*(.init)
+		*crtbegin.o(.init)
+		EXCLUDE_FILE (*crtbegin.o *crtend.o *crti.* *crtn.*) *(.init)
+		*crtend.o(.init)
+		*crtn.*(.init)
+
 		*(.text)
 		*(.fini)
 	}
@@ -16,6 +22,10 @@ SECTIONS
 	.rodata ALIGN(4K) : AT(ADDR(.rodata) - 0xC0000000)
 	{
 		*(.rodata)
+
+		*crtbegin.o(.ctors)
+		EXCLUDE_FILE(*crtbegin.o *crtend.o) *(.ctors)
+		*crtend.o(.ctors)
 	}
 
 	.data ALIGN(4K) : AT(ADDR(.data) - 0xC0000000)
