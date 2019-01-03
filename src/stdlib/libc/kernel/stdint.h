@@ -1,5 +1,5 @@
-#ifndef STDINT_H_
-#define STDINT_H_
+#ifndef STDINT_KERNEL_H_
+#define STDINT_KERNEL_H_
 
 #include_next <stdint.h>
 

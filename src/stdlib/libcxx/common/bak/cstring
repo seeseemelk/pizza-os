@@ -1,8 +1,0 @@
-#ifndef CSTRING_
-#define CSTRING_
-
-extern "C" {
-#include "string.h"
-}
-
-#endif

@@ -1,8 +1,0 @@
-#ifndef CSTDINT_
-#define CSTDINT_
-
-extern "C" {
-#include "stdint.h"
-}
-
-#endif

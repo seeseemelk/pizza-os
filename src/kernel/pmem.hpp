@@ -2,9 +2,11 @@
 #define PMEM_HPP_
 
 #include <cstddef>
+#include <cstdint>
 
 namespace PMem
 {
+	extern u8* map;
 
 	enum BlockState
 	{
@@ -18,8 +20,8 @@ namespace PMem
 	};
 
 	void init();
-	Result get_state(size_t block);
-	void set_state(size_t blocks, BlockState state);
+	Result get_state(size_t addr);
+	void set_state(size_t start_addr, size_t bytes_length, BlockState state);
 }
 
 #endif

@@ -5,8 +5,6 @@
  *      Author: seeseemelk
  */
 #include "string.h"
-#include "stdio.h"
-#include "stdlib.h"
 
 #ifndef __STDC_LIMIT_MACROS
 #define __STDC_LIMIT_MACROS
@@ -111,24 +109,6 @@ char* strncpy(char* dest, const char* src, size_t num)
 			return dest;
 	}
 	return dest;
-}
-
-char* strndup(const char* src, size_t len)
-{
-	size_t srclen = strlen(src);
-	len = (len < srclen) ? len : srclen;
-	char* dest = malloc(len);
-
-	/* '<=' is used to also copy the null terminator */
-	for (size_t i = 0; i <= len; i++)
-		dest[i] = src[i];
-
-	return dest;
-}
-
-char* strdup(const char* src)
-{
-	return strndup(src, SIZE_MAX);
 }
 
 

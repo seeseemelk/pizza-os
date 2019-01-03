@@ -11,6 +11,11 @@ size_t ceilg(size_t n, size_t granularity)
 	return ((n - 1) / granularity + 1) * granularity;
 }
 
+size_t floorg(size_t n, size_t granularity)
+{
+	return (n / granularity) * granularity;
+}
+
 size_t ceildiv(size_t a, size_t b)
 {
 	return (a - 1) / b + 1;

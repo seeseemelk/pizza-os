@@ -25,10 +25,10 @@ set(ISODIR ${CMAKE_SOURCE_DIR}/isodir)
 
 ## BUILD SECTION
 # Include directories
-set(LIBC_INC ${PROJECT_SOURCE_DIR}/src/stdlib/libc/common)
 set(LIBKC_INC ${PROJECT_SOURCE_DIR}/src/stdlib/libc/kernel)
-set(LIBCXX_INC ${PROJECT_SOURCE_DIR}/src/stdlib/libcxx/common)
+set(LIBC_INC ${PROJECT_SOURCE_DIR}/src/stdlib/libc/user)
 set(LIBKCXX_INC ${PROJECT_SOURCE_DIR}/src/stdlib/libcxx/kernel)
+set(LIBCXX_INC ${PROJECT_SOURCE_DIR}/src/stdlib/libcxx/user)
 
 add_subdirectory(src/stdlib)
 add_subdirectory(src/kernel)

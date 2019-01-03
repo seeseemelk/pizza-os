@@ -1,4 +1,5 @@
 #include "cpu.hpp"
+#include "debug.hpp"
 
 using namespace CPU;
 
@@ -14,6 +15,7 @@ void CPU::halt()
 
 void CPU::hang()
 {
+	log("Hanging");
 	while (true)
 		halt();
 }

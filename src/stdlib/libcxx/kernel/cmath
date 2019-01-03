@@ -1,0 +1,9 @@
+#ifndef CMATH_KERNEL
+#define CMATH_KERNEL
+
+extern "C"
+{
+#include "math.h"
+}
+
+#endif
