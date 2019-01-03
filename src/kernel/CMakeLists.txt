@@ -16,7 +16,7 @@ add_executable(pizzaos.elf $<TARGET_OBJECTS:crti> ${SOURCES} $<TARGET_OBJECTS:cr
 #add_dependencies(pizzaos.elf crti crtn)
 
 #target_link_libraries(pizzaos.elf PUBLIC ${CRTBEGIN_OBJ} PUBLIC ${CRTEND_OBJ} $<TARGET_OBJECTS:crtn>)
-target_link_libraries(pizzaos.elf ${CRTBEGIN_OBJ}) # ${CRTEND_OBJ})
+target_link_libraries(pizzaos.elf ${CRTBEGIN_OBJ} ${CRTEND_OBJ})
 
 add_custom_command(TARGET pizzaos.elf
 	POST_BUILD

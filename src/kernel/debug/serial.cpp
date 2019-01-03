@@ -45,7 +45,7 @@ static int is_transmit_empty()
 
 void Debug::put(const char c)
 {
-	while (is_transmit_empty() != 0);
+	while (!is_transmit_empty());
 	reg_data.outb(c);
 }
 
