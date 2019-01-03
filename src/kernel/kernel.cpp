@@ -2,21 +2,25 @@
 #include "debug.hpp"
 #include "cpu.hpp"
 #include "pmem.hpp"
+#include "multiboot.hpp"
 
 extern "C" void _init(void);
 extern "C" void _fini(void);
 
-extern "C" void kernel_main()
+extern "C" void kernel_main(multiboot_info_t* mbt)
 {
+	Multiboot::mbt = mbt;
 	_init();
 
-	Debug::puts("Initialising CPU...");
+	log("Initialising CPU...");
 	CPU::init();
-	Debug::puts(" DONE!\n");
+	log("Done");
 
-	Debug::puts("Initialising PMEM allocator...");
+	//Multiboot::memory_size();
+
+	log("Initialising PMEM allocator...");
 	PMem::init();
-	Debug::puts(" DONE!\n");
+	log("Done");
 
 	CPU::hang();
 	_fini();

@@ -11,8 +11,14 @@ namespace PMem
 		FREE, USED, RESERVED, NON_EXISTANT
 	};
 
+	struct Result
+	{
+		enum {SUCCESS, FAIL} result;
+		enum BlockState block_state;
+	};
+
 	void init();
-	BlockState get_state(size_t block);
+	Result get_state(size_t block);
 	void set_state(size_t blocks, BlockState state);
 }
 
