@@ -48,13 +48,33 @@ struct PageDirectory
 	PageDirEntry entries[1024];
 
 	bool has_table(size_t virt);
-	PageTable get_table(size_t virt);
+	PageDirEntry& get_entry(size_t virt);
+	PageTable& get_table(size_t virt);
 };
 
 extern PageDirectory& directory;
 
 void init();
+size_t dir_index(size_t virt);
+size_t tbl_index(size_t virt);
 
 }
 
 #endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

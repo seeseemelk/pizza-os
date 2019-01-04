@@ -11,9 +11,12 @@ void Paging::init()
 
 }
 
-bool PageDirectory::has_table(size_t virt)
+size_t Paging::dir_index(size_t virt)
 {
-	size_t dir_i = ceildiv(virt, MB(4));
-	PageDirEntry& table = directory.entries[dir_i];
-	return table.present;
+	return ceildiv(virt, MB(4));
+}
+
+size_t Paging::tbl_index(size_t virt)
+{
+	return ceildiv(virt % MB(4), KB(4));
 }
