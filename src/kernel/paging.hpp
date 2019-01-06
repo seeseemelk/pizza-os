@@ -59,7 +59,7 @@ struct PageDirectory
 };
 
 extern PageDirectory& directory;
-extern PageTable tables[];
+extern PageTable* const tables;
 
 void init();
 size_t dir_index(size_t virt);

@@ -13,6 +13,7 @@ static void print_hex(unsigned int num)
 	for (int i = 0; i < 8; i++)
 	{
 		char c = conversion[(num & 0xF0000000) >> 28];
+		num <<= 4;
 		Debug::put(c);
 	}
 }
@@ -35,6 +36,14 @@ static void print_uinteger(unsigned int num)
 			Debug::put(arr[i]);
 		i--;
 	}
+}
+
+void print_bool(bool v)
+{
+	if (v)
+		Debug::puts("true");
+	else
+		Debug::puts("false");
 }
 
 void Debug::printf(const char* fmt, ...)
@@ -60,6 +69,9 @@ void Debug::printf(const char* fmt, ...)
 				break;
 			case 's':
 				Debug::puts(va_arg(args, const char*));
+				break;
+			case 'b':
+				print_bool(va_arg(args, int));
 				break;
 			default:
 				Debug::puts("[BAD TOKEN]");
