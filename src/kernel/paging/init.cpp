@@ -5,6 +5,7 @@ using namespace Paging;
 
 extern "C" PageDirectory _system_page_directory;
 PageDirectory& Paging::directory = _system_page_directory;
+PageTable Paging::tables[] = reinterpret_cast<PageTable*>(GB(4) - MB(4));
 
 void Paging::init()
 {

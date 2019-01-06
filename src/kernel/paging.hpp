@@ -19,6 +19,9 @@ struct PageDirEntry
 	u32 large_page : 1; // 1 if it maps a 4-MiB page, 0 if it references a page table.
 	u32 IGNORE2 : 4;
 	u32 address : 20;
+
+	void set_address(size_t address);
+	size_t get_address();
 };
 
 struct PageTableEntry
@@ -36,23 +39,27 @@ struct PageTableEntry
 	u32 address : 20;
 
 	void set_address(size_t address);
+	size_t get_address();
 };
 
 struct PageTable
 {
 	PageTableEntry entries[1024];
+
+	PageTableEntry& get_entry(size_t virt);
 };
 
 struct PageDirectory
 {
 	PageDirEntry entries[1024];
 
-	bool has_table(size_t virt);
 	PageDirEntry& get_entry(size_t virt);
+	bool has_table(size_t virt);
 	PageTable& get_table(size_t virt);
 };
 
 extern PageDirectory& directory;
+extern PageTable tables[];
 
 void init();
 size_t dir_index(size_t virt);

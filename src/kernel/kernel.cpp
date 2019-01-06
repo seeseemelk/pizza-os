@@ -2,6 +2,7 @@
 #include "debug.hpp"
 #include "cpu.hpp"
 #include "pmem.hpp"
+#include "paging.hpp"
 #include "multiboot.hpp"
 
 extern "C" void _init(void);
@@ -20,6 +21,10 @@ extern "C" void kernel_main(multiboot_info_t* mbt)
 
 	log("Initialising PMEM allocator...");
 	PMem::init();
+	log("Done");
+
+	log("Initialising Paging...");
+	Paging::init();
 	log("Done");
 
 	CPU::hang();
