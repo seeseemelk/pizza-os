@@ -23,7 +23,7 @@ size_t PageTableEntry::get_address()
 	return address << 12;
 }
 
-void PageTableEntry::set_address(size_t virt)
+void PageTableEntry::set_address(size_t phys)
 {
-	address = virt >> 12;
+	address = phys >> 12;
 }

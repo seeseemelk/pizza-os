@@ -7,6 +7,13 @@
 namespace Paging
 {
 
+enum Result
+{
+	SUCCESS, FAIL
+};
+
+struct PageTable;
+
 struct PageDirEntry
 {
 	u32 present : 1;
@@ -20,8 +27,11 @@ struct PageDirEntry
 	u32 IGNORE2 : 4;
 	u32 address : 20;
 
-	void set_address(size_t address);
+	void set_address(size_t phys);
 	size_t get_address();
+	Result make_table();
+	void make_table(size_t phys);
+	PageTable& get_table();
 };
 
 struct PageTableEntry
@@ -38,7 +48,7 @@ struct PageTableEntry
 	u32 IGNORE1 : 3;
 	u32 address : 20;
 
-	void set_address(size_t address);
+	void set_address(size_t phys);
 	size_t get_address();
 };
 
@@ -60,6 +70,7 @@ struct PageDirectory
 
 extern PageDirectory& directory;
 extern PageTable* const tables;
+extern PageTable metatable;
 
 void init();
 size_t dir_index(size_t virt);

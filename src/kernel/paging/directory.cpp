@@ -1,4 +1,5 @@
 #include "paging.hpp"
+#include "pmem.hpp"
 #include <cmath>
 
 using namespace Paging;
@@ -34,7 +35,26 @@ size_t PageDirEntry::get_address()
 	return address << 12;
 }
 
-void PageDirEntry::set_address(size_t virt)
+void PageDirEntry::set_address(size_t phys)
 {
-	address = virt >> 12;
+	address = phys >> 12;
+}
+
+Result PageDirEntry::make_table()
+{
+	PMem::Result pmem_result = PMem::alloc_end(KB(4));
+	if (pmem_result.state == PMem::Result::SUCCESS)
+	{
+		make_table(reinterpret_cast<size_t>(pmem_result.address));
+		return Result::SUCCESS;
+	}
+	return Result::FAIL;
+}
+
+void PageDirEntry::make_table(size_t phys)
+{
+	size_t block = (this - directory.entries) / sizeof(PageDirEntry);
+	set_address(phys);
+	PageTableEntry& entry = tables[1023].entries[block];
+	entry.set_address(phys);
 }

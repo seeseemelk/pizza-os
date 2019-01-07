@@ -27,6 +27,8 @@ extern "C" void kernel_main(multiboot_info_t* mbt)
 	Paging::init();
 	log("Done");
 
+	Paging::directory.get_entry(0x12345678).make_table();
+
 	CPU::hang();
 	_fini();
 }

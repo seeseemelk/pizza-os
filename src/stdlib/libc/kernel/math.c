@@ -18,7 +18,7 @@ size_t floorg(size_t n, size_t granularity)
 
 size_t ceildiv(size_t a, size_t b)
 {
-	return (a - 1) / b + 1;
+	return (a == 0) ? 0 : ((a - 1) / b + 1);
 }
 
 /*

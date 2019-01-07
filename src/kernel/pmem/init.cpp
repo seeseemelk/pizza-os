@@ -8,8 +8,8 @@
 
 using namespace PMem;
 
-size_t map_size;
 u8* PMem::map = 0;
+size_t PMem::map_length;
 
 static size_t total_size()
 {
@@ -40,7 +40,7 @@ static void allocate_map()
 	{
 		multiboot_mmap_entry* entry = reinterpret_cast<multiboot_mmap_entry*>(entry_addr);
 
-		if (entry->type == MULTIBOOT_MEMORY_AVAILABLE && entry->len >= map_size && (entry->len + map_size) < MB(4))
+		if (entry->type == MULTIBOOT_MEMORY_AVAILABLE && entry->len >= map_length && (entry->len + map_length) < MB(4))
 		{
 			log("Found something at 0x%X (%d, %d)", static_cast<size_t>(entry->addr), entry->type, static_cast<size_t>(entry->len));
 			map = reinterpret_cast<u8*>(entry->addr);
@@ -57,7 +57,7 @@ static void allocate_map()
 
 static void zero_map()
 {
-	for (size_t i = 0; i < map_size; i++)
+	for (size_t i = 0; i < map_length; i++)
 		map[i] = BlockState::FREE;
 	log("pmmap zeroed");
 }
@@ -94,8 +94,8 @@ void PMem::init()
 	else
 		log("Total memory size: %d MiB", mem_length / 1024 / 1024);
 
-	map_size = mem_length / KB(4);
-	log("Need %d KiB for pmmap", map_size / 1024);
+	map_length = mem_length / KB(4);
+	log("Need %d KiB for pmmap", map_length / 1024);
 
 	allocate_map();
 	zero_map();
