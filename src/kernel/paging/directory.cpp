@@ -42,19 +42,36 @@ void PageDirEntry::set_address(size_t phys)
 
 Result PageDirEntry::make_table()
 {
+	Result result;
 	PMem::Result pmem_result = PMem::alloc_end(KB(4));
 	if (pmem_result.state == PMem::Result::SUCCESS)
 	{
-		make_table(reinterpret_cast<size_t>(pmem_result.address));
-		return Result::SUCCESS;
+		result.state = Result::SUCCESS;
+		result.table = &make_table(reinterpret_cast<size_t>(pmem_result.address));;
 	}
-	return Result::FAIL;
+	else
+		result.state = Result::FAIL;
+	return result;
 }
 
-void PageDirEntry::make_table(size_t phys)
+PageTable& PageDirEntry::make_table(size_t phys)
 {
 	size_t block = (this - directory.entries) / sizeof(PageDirEntry);
 	set_address(phys);
-	PageTableEntry& entry = tables[1023].entries[block];
+	PageTableEntry& entry = metatable.entries[block];
 	entry.set_address(phys);
+	entry.present = 1;
+	entry.writable = 1;
+	return tables[block];
 }
+
+
+
+
+
+
+
+
+
+
+

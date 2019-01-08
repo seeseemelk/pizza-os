@@ -7,12 +7,12 @@
 namespace Paging
 {
 
-enum Result
-{
-	SUCCESS, FAIL
-};
-
 struct PageTable;
+struct Result
+{
+	enum {SUCCESS, FAIL} state;
+	PageTable* table;
+};
 
 struct PageDirEntry
 {
@@ -30,7 +30,7 @@ struct PageDirEntry
 	void set_address(size_t phys);
 	size_t get_address();
 	Result make_table();
-	void make_table(size_t phys);
+	PageTable& make_table(size_t phys);
 	PageTable& get_table();
 };
 
@@ -57,7 +57,7 @@ struct PageTable
 	PageTableEntry entries[1024];
 
 	PageTableEntry& get_entry(size_t virt);
-};
+} __attribute__((aligned(4096),packed));
 
 struct PageDirectory
 {
@@ -66,7 +66,7 @@ struct PageDirectory
 	PageDirEntry& get_entry(size_t virt);
 	bool has_table(size_t virt);
 	PageTable& get_table(size_t virt);
-};
+} __attribute__((aligned(4096),packed));
 
 extern PageDirectory& directory;
 extern PageTable* const tables;
