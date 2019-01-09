@@ -57,12 +57,29 @@ Result PageDirEntry::make_table()
 PageTable& PageDirEntry::make_table(size_t phys)
 {
 	size_t block = (this - directory.entries) / sizeof(PageDirEntry);
-	set_address(phys);
+	/*set_address(phys);
+	present = 1;
+	writable = 1;*/
+
+	// Store the metatable entry.
 	PageTableEntry& entry = metatable.entries[block];
 	entry.set_address(phys);
 	entry.present = 1;
 	entry.writable = 1;
-	return tables[block];
+	PageTable& table = tables[block];
+
+	// Clear each entry.
+	for (size_t i = 0; i < 1024; i++)
+	{
+		table.entries[i].present = 0;
+	}
+
+	// Store the directory entry.
+	set_address(phys);
+	present = 1;
+	writable = 1;
+
+	return table;
 }
 
 

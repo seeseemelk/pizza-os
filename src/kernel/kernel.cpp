@@ -27,7 +27,16 @@ extern "C" void kernel_main(multiboot_info_t* mbt)
 	Paging::init();
 	log("Done");
 
-	Paging::directory.get_entry(0x12345678).make_table();
+	Paging::Result result = Paging::directory.get_entry(0x12345678).make_table();
+	if (result.state == Paging::Result::SUCCESS)
+	{
+		Paging::PageTable& table = *result.table;
+		table.entries[0].set_address(0xEEEEEEEE);
+		table.entries[0].present = 1;
+		log("Allocated page table");
+	}
+	else
+		log("Failed to allocate page table");
 
 	CPU::hang();
 	_fini();
