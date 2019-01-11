@@ -40,26 +40,18 @@ void PageDirEntry::set_address(size_t phys)
 	address = phys >> 12;
 }
 
-Result PageDirEntry::make_table()
+Result<PageTable*> PageDirEntry::make_table()
 {
-	Result result;
-	PMem::Result pmem_result = PMem::alloc_end(KB(4));
-	if (pmem_result.state == PMem::Result::SUCCESS)
-	{
-		result.state = Result::SUCCESS;
-		result.table = &make_table(reinterpret_cast<size_t>(pmem_result.address));;
-	}
+	Result<void*> pmem_result = PMem::alloc_end(KB(4));
+	if (pmem_result.is_success())
+		return Result<PageTable*>(&make_table(reinterpret_cast<size_t>(pmem_result.result)));
 	else
-		result.state = Result::FAIL;
-	return result;
+		return Result<PageTable*>();
 }
 
 PageTable& PageDirEntry::make_table(size_t phys)
 {
 	size_t block = (this - directory.entries) / sizeof(PageDirEntry);
-	/*set_address(phys);
-	present = 1;
-	writable = 1;*/
 
 	// Store the metatable entry.
 	PageTableEntry& entry = metatable.entries[block];

@@ -13,6 +13,11 @@ PageTableEntry& PageTable::get_entry(size_t virt)
 	return entries[tbl_i];
 }
 
+void* PageTable::get_address()
+{
+	return reinterpret_cast<void*>((reinterpret_cast<u8*>(this) - reinterpret_cast<u8*>(tables)) / KB(4) * MB(4));
+}
+
 
 //////////////////////
 // Page Table Entry //

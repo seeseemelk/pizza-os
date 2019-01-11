@@ -13,7 +13,7 @@ extern handle_interrupt
 	iretd
 %endmacro
 
-%macro inth_errorode 1
+%macro inth_errorcode 1
 	pushad
 	push %1
 	mov eax, [esp+4]

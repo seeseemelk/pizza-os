@@ -3,6 +3,9 @@
 
 using namespace Interrupt;
 
+IDT Interrupt::idt;
+IDTR Interrupt::idtr;
+
 extern "C" void handle_interrupt(int irq, int error_code)
 {
 	log("IRQ: 0x%X, error: 0x%X", irq, error_code);

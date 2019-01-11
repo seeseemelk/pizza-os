@@ -1,6 +1,7 @@
 #ifndef PAGING_HPP_
 #define PAGING_HPP_
 
+#include "result.hpp"
 #include <cstddef>
 #include <cstdint>
 
@@ -8,11 +9,6 @@ namespace Paging
 {
 
 struct PageTable;
-struct Result
-{
-	enum {SUCCESS, FAIL} state;
-	PageTable* table;
-};
 
 struct PageDirEntry
 {
@@ -29,7 +25,7 @@ struct PageDirEntry
 
 	void set_address(size_t phys);
 	size_t get_address();
-	Result make_table();
+	Result<PageTable*> make_table();
 	PageTable& make_table(size_t phys);
 	PageTable& get_table();
 };
@@ -57,6 +53,7 @@ struct PageTable
 	PageTableEntry entries[1024];
 
 	PageTableEntry& get_entry(size_t virt);
+	void* get_address();
 } __attribute__((aligned(4096),packed));
 
 struct PageDirectory

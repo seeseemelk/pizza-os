@@ -27,10 +27,10 @@ extern "C" void kernel_main(multiboot_info_t* mbt)
 	Paging::init();
 	log("Done");
 
-	Paging::Result result = Paging::directory.get_entry(0x12345678).make_table();
-	if (result.state == Paging::Result::SUCCESS)
+	auto result = Paging::directory.get_entry(0x12345678).make_table();
+	if (result.is_success())
 	{
-		Paging::PageTable& table = *result.table;
+		Paging::PageTable& table = *result.result;
 		table.entries[0].set_address(0xEEEEEEEE);
 		table.entries[0].present = 1;
 		log("Allocated page table");
