@@ -7,8 +7,6 @@ namespace CPU
 	void init_gdt();
 	void halt();
 	void hang();
-	void disable_interrupts();
-	void enable_interrupts();
 }
 
 #endif

@@ -20,16 +20,16 @@
  * 05	#BR	BOUND Range Exceeded
  * 06	#UD	Invalid Opcode
  * 07	#NM	Device Not Available (No Math Coprocessor)
- * 08	#DF	Double Fault
+ * 08	#DF	Double Fault (ERROR CODE)
  * 09		Coprocessor Segment Overrun (reserved)
- * 0A	#TS	Invalid TSS
- * 0B	#NP	Segment not present
- * 0C	#SS	Stack-Segment Fault
- * 0D	#GP	General Protection
- * 0E	#PF	Page Fault
+ * 0A	#TS	Invalid TSS (ERROR CODE)
+ * 0B	#NP	Segment not present (ERROR CODE)
+ * 0C	#SS	Stack-Segment Fault (ERROR CODE)
+ * 0D	#GP	General Protection (ERROR CODE)
+ * 0E	#PF	Page Fault (ERROR CODE)
  * 0F		(reserved)
  * 10	#MF	Math Fault
- * 11	#AC	Alignment Check
+ * 11	#AC	Alignment Check (ERROR CODE)
  * 12	#MC	Machine Check
  * 13	#XM	SIMD Floating-Point Exception
  * 14	#VE	Virtualization Exception
@@ -88,8 +88,11 @@ struct IDTR
 	u32 address;
 } __attribute__((packed));
 
+IDT idt;
+IDTR idtr;
 Gate& get_handler(int irq);
 
+void init();
 void disable();
 void enable();
 
