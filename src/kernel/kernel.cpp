@@ -4,6 +4,7 @@
 #include "pmem.hpp"
 #include "paging.hpp"
 #include "multiboot.hpp"
+#include "interrupt.hpp"
 
 extern "C" void _init(void);
 extern "C" void _fini(void);
@@ -12,6 +13,7 @@ extern "C" void kernel_main(multiboot_info_t* mbt)
 {
 	Multiboot::mbt = mbt;
 	_init();
+	Debug::init();
 
 	log("Initialising CPU...");
 	CPU::init();
@@ -23,21 +25,15 @@ extern "C" void kernel_main(multiboot_info_t* mbt)
 	PMem::init();
 	log("Done");
 
-	log("Initialising Paging...");
+	log("Initialising paging...");
 	Paging::init();
 	log("Done");
 
-	auto result = Paging::directory.get_entry(0x12345678).make_table();
-	if (result.is_success())
-	{
-		Paging::PageTable& table = *result.result;
-		table.entries[0].set_address(0xEEEEEEEE);
-		table.entries[0].present = 1;
-		log("Allocated page table");
-	}
-	else
-		log("Failed to allocate page table");
+	log("Initialising interrupts...");
+	Interrupt::init();
+	log("Done");
 
+	log("Kernel main ended, hanging");
 	CPU::hang();
 	_fini();
 }

@@ -1,11 +1,13 @@
 [bits 32]
 
+section .text
+
 extern handle_interrupt
 
 ; Actual interrupt handler code
 %macro inth_no_errorcode 1
 	pushad
-	push %1
+	push strict dword %1
 	push 0
 	call handle_interrupt
 	add eax, 8
@@ -15,7 +17,7 @@ extern handle_interrupt
 
 %macro inth_errorcode 1
 	pushad
-	push %1
+	push strict dword %1
 	mov eax, [esp+4]
 	push eax
 	call handle_interrupt

@@ -8,18 +8,18 @@ using namespace Paging;
 // Page Directory //
 ////////////////////
 
-PageDirEntry& PageDirectory::get_entry(size_t virt)
+PageDirEntry& PageDirectory::get_entry(void* virt)
 {
 	size_t dir_i = dir_index(virt);
 	return directory.entries[dir_i];
 }
 
-bool PageDirectory::has_table(size_t virt)
+bool PageDirectory::has_table(void* virt)
 {
 	return get_entry(virt).present;
 }
 
-PageTable& PageDirectory::get_table(size_t virt)
+PageTable& PageDirectory::get_table(void* virt)
 {
 	size_t dir_i = dir_index(virt);
 	return tables[dir_i];
@@ -40,6 +40,12 @@ void PageDirEntry::set_address(size_t phys)
 	address = phys >> 12;
 }
 
+PageTable& PageDirEntry::get_table()
+{
+	size_t block = (this - directory.entries) / sizeof(PageDirEntry);
+	return tables[block];
+}
+
 Result<PageTable*> PageDirEntry::make_table()
 {
 	Result<void*> pmem_result = PMem::alloc_end(KB(4));
@@ -51,7 +57,7 @@ Result<PageTable*> PageDirEntry::make_table()
 
 PageTable& PageDirEntry::make_table(size_t phys)
 {
-	size_t block = (this - directory.entries) / sizeof(PageDirEntry);
+	size_t block = (reinterpret_cast<size_t>(this) - reinterpret_cast<size_t>(directory.entries)) / sizeof(PageDirEntry);
 
 	// Store the metatable entry.
 	PageTableEntry& entry = metatable.entries[block];
@@ -62,9 +68,7 @@ PageTable& PageDirEntry::make_table(size_t phys)
 
 	// Clear each entry.
 	for (size_t i = 0; i < 1024; i++)
-	{
 		table.entries[i].present = 0;
-	}
 
 	// Store the directory entry.
 	set_address(phys);

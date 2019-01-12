@@ -1,4 +1,5 @@
 #include "io.hpp"
+#include <cstdint>
 
 using namespace IO;
 

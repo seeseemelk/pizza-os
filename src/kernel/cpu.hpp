@@ -6,7 +6,8 @@ namespace CPU
 	void init();
 	void init_gdt();
 	void halt();
-	void hang();
+	[[noreturn]] void hang();
+	[[noreturn]] void out_of_memory();
 }
 
 #endif

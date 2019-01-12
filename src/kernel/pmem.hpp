@@ -7,7 +7,7 @@
 
 namespace PMem
 {
-	extern u8* map;
+	extern u8 map[];
 	extern size_t map_length;
 
 	enum BlockState

@@ -7,7 +7,7 @@ using namespace Paging;
 // Page Table //
 ////////////////
 
-PageTableEntry& PageTable::get_entry(size_t virt)
+PageTableEntry& PageTable::get_entry(void* virt)
 {
 	size_t tbl_i = tbl_index(virt);
 	return entries[tbl_i];

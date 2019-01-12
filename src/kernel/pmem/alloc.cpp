@@ -3,8 +3,6 @@
 
 using namespace PMem;
 
-#define GET_BLOCK(block) static_cast<BlockState>(map[block])
-
 Result<void*> PMem::alloc_start(size_t bytes)
 {
 	size_t blocks = ceildiv(bytes, KB(4));
@@ -12,7 +10,7 @@ Result<void*> PMem::alloc_start(size_t bytes)
 
 	for (size_t i = 0; i < map_length; i++)
 	{
-		if (GET_BLOCK(i) != FREE)
+		if (static_cast<BlockState>(map[i]) != FREE)
 			block_start = i;
 		else if (i - block_start > blocks)
 			return Result<void*>(reinterpret_cast<void*>((block_start + 1) * KB(4)));
@@ -23,14 +21,12 @@ Result<void*> PMem::alloc_start(size_t bytes)
 
 Result<void*> PMem::alloc_end(size_t bytes)
 {
-	Result<void*> result;
 	size_t blocks = ceildiv(bytes, KB(4));
 	size_t block_end = 0;
 
-	size_t i = map_length - 1;
-	for (; i != static_cast<size_t>(-1); i--)
+	for (size_t i = map_length - 1; i != static_cast<size_t>(-1); i--)
 	{
-		if (GET_BLOCK(i) != FREE)
+		if (static_cast<BlockState>(map[i]) != FREE)
 			block_end = i;
 		else if (block_end - i > blocks)
 			return Result<void*>(reinterpret_cast<void*>(i * KB(4)));

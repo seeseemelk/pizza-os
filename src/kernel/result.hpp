@@ -14,6 +14,7 @@ public:
 	Result(T result);
 	Result();
 	bool is_success();
+	bool is_fail();
 
 	T result;
 	ResultState state;
@@ -37,6 +38,12 @@ template<typename T>
 bool Result<T>::is_success()
 {
 	return state == ResultState::SUCCESS;
+}
+
+template<typename T>
+bool Result<T>::is_fail()
+{
+	return state != ResultState::SUCCESS;
 }
 
 #endif

@@ -34,7 +34,7 @@ void Paging::init()
 	mte.writable = 1;
 
 	// Add the startup page table to the metatable.
-	PageTableEntry& system_page_entry = metatable.get_entry(0xC0000000);
+	PageTableEntry& system_page_entry = metatable.get_entry(reinterpret_cast<void*>(0xC0000000));
 	system_page_entry.set_address(reinterpret_cast<size_t>(&_system_default_page_entry) - 0xC0000000);
 	system_page_entry.present = 1;
 	system_page_entry.writable = 0;
@@ -44,12 +44,12 @@ void Paging::init()
 	log("Has table: %b", directory.has_table(0));
 }
 
-size_t Paging::dir_index(size_t virt)
+size_t Paging::dir_index(void* virt)
 {
-	return virt / MB(4);
+	return reinterpret_cast<u32>(virt) / MB(4);
 }
 
-size_t Paging::tbl_index(size_t virt)
+size_t Paging::tbl_index(void* virt)
 {
-	return (virt % MB(4)) / KB(4);
+	return (reinterpret_cast<u32>(virt) % MB(4)) / KB(4);
 }
