@@ -2,6 +2,9 @@
 #include "debug.hpp"
 #include "multiboot.hpp"
 #include "cpu.hpp"
+#include "paging.hpp"
+#include "kernel.hpp"
+#include "result.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <cmath>
@@ -11,10 +14,88 @@ using namespace PMem;
 #define KERNEL_END reinterpret_cast<size_t>(&kernel_end);
 extern u8 kernel_end;
 
-//u8* PMem::map = reinterpret_cast<u8*>(-1);
-u8 PMem::map[4080];
-size_t PMem::map_length = 4080;
+typedef multiboot_mmap_entry MemEntry;
+Paging::PageTable pagetable;
+size_t total_memory = 0;
+size_t PMem::map_length = 0;
+u8* PMem::map;
 
+static void setup_pagetable()
+{
+	for (size_t i = 0; i < 1024; i++)
+	{
+		reinterpret_cast<u32&>(pagetable.entries[i]) = 0;
+	}
+}
+
+static MemEntry& get_next_entry(MemEntry& entry)
+{
+	void* entry_ptr = &entry;
+	void* new_entry_ptr = entry_ptr + entry.size + 4;
+	return *reinterpret_cast<MemEntry*>(new_entry_ptr);
+}
+
+static bool add_pagetable_entries_for_mementry(MemEntry& entry, size_t length_left, int& pagetable_end)
+{
+	length_left -= entry.size + 4;
+	total_memory += entry.len;
+
+	// Check if we need to add an entry.
+	MemEntry& next_entry = get_next_entry(entry);
+	if (length_left > 0 && add_pagetable_entries_for_mementry(next_entry, length_left, pagetable_end) == false)
+		return false;
+
+	// Add the entry.
+	size_t first_area = ceilg(entry.addr, KB(4));
+	size_t last_area = floorg(entry.addr + entry.len - 1, KB(4));
+
+	// These blocks refer to blocks of 4096 states.
+	size_t blocks_needed = ceildiv(total_memory, MB(4)) - map_length;
+	size_t num_blocks = (last_area - first_area) / KB(4);
+	size_t num_blocks_to_allocate_now = (num_blocks < blocks_needed) ? num_blocks : blocks_needed;
+
+	//size_t end_block = first_block + num_blocks_to_allocate_now * KB(4);
+	//for (size_t block = first_block; block < end_block; block += KB(4))
+	for (size_t block = 0; block < num_blocks_to_allocate_now; block++)
+	{
+		Paging::PageTableEntry& entry = pagetable.entries[pagetable_end++];
+		entry.set_address(first_area + block * KB(4));
+		entry.writable = 1;
+		entry.present = 1;
+	}
+
+	blocks_needed -= num_blocks_to_allocate_now * 4096;
+	map_length += num_blocks_to_allocate_now * 4096;
+
+	return blocks_needed > 0;
+}
+
+static void add_pagetable_entries()
+{
+	size_t length = Multiboot::mbt->mmap_length;
+	size_t entry_addr = Multiboot::mbt->mmap_addr;
+	MemEntry& entry = *reinterpret_cast<MemEntry*>(entry_addr);
+	int pagetable_end = 0;
+	if (add_pagetable_entries_for_mementry(entry, length, pagetable_end) == true)
+		CPU::out_of_memory();
+	//size_t entry_end = entry_addr + length;
+
+}
+
+void PMem::init()
+{
+	Paging::PageDirEntry& entry = Paging::alloc_dir_entry();
+	entry.set_address(reinterpret_cast<size_t>(&pagetable) - GB(3));
+	map = static_cast<u8*>(entry.get_virtual_address());
+	setup_pagetable();
+	add_pagetable_entries();
+	log("PMem allocator ready");
+}
+
+//u8* PMem::map = reinterpret_cast<u8*>(-1);
+//u8 PMem::map[4080];
+//size_t PMem::map_length = 4080;
+/*
 static size_t total_size()
 {
 	size_t size = 0;
@@ -64,7 +145,7 @@ static void allocate_map()
 	}
 
 	log("Error: no large enough memory hole found");
-	CPU::hang();*/
+	CPU::hang();*/ /*
 }
 
 static void zero_map()
@@ -113,6 +194,25 @@ void PMem::init()
 	zero_map();
 	populate_map();
 }
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -5,7 +5,7 @@
 
 namespace Kernel
 {
-	static u32 kernel_start = GB(3U);
+	const u32 kernel_start = GB(3U);
 }
 
 #endif

@@ -28,6 +28,7 @@ struct PageDirEntry
 	Result<PageTable*> make_table();
 	PageTable& make_table(size_t phys);
 	PageTable& get_table();
+	void* get_virtual_address();
 };
 
 struct PageTableEntry
