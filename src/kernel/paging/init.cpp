@@ -19,7 +19,7 @@ void Paging::init()
 
 	directory.entries[0].present = 0;
 
-	memset(&metatable, 0, sizeof(PageTable));
+	memset(static_cast<void*>(&metatable), 0, sizeof(PageTable));
 
 	// Enable the metatable.
 	PageDirEntry& mt = directory.entries[1023];

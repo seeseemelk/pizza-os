@@ -2,6 +2,7 @@
 #define KERNEL_HPP_
 
 #include <cstdint>
+#include <cstddef>
 
 namespace Kernel
 {

@@ -1,5 +1,6 @@
 #include "pmem.hpp"
 #include "debug.hpp"
+#include "cpu.hpp"
 #include <cmath>
 
 using namespace PMem;
@@ -7,11 +8,17 @@ using namespace PMem;
 void PMem::set_state(size_t start_addr, size_t bytes_length, BlockState state)
 {
 	size_t start_block = start_addr / KB(4);
-	size_t stop_block = start_block + (bytes_length / KB(4));
+	size_t stop_block = start_block + ceildiv(bytes_length, KB(4));
+
+	if (stop_block > PMem::map_length || stop_block < start_block)
+	{
+		log("PMem::set_state out-of-bounds.");
+		CPU::hang();
+	}
 
 	for (size_t i = start_block; i < stop_block; i++)
 	{
-		map[i] = state;
+		map[i] = static_cast<u8>(state);
 	}
 }
 

@@ -4,7 +4,7 @@
  *  Created on: Jan 3, 2018
  *      Author: seeseemelk
  */
-#include "string.h"
+#include "kstring.h"
 
 #ifndef __STDC_LIMIT_MACROS
 #define __STDC_LIMIT_MACROS

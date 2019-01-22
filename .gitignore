@@ -16,3 +16,6 @@ bx_enh_dbg.ini
 *.bak
 *.old
 *.backup
+
+# Ignore python cache
+__pycache__

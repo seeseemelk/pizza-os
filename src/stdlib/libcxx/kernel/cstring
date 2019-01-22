@@ -2,7 +2,7 @@
 #define CSTRING_
 
 extern "C" {
-#include "string.h"
+#include "kstring.h"
 }
 
 #endif

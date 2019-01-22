@@ -1,10 +1,14 @@
 #include "pmem.hpp"
+#include "cpu.hpp"
+#include "debug.hpp"
 #include <cmath>
 
 using namespace PMem;
 
+/* This contains bugs but also isn't used.
 Result<void*> PMem::alloc_start(size_t bytes)
 {
+	log("Enter alloc_start");
 	size_t blocks = ceildiv(bytes, KB(4));
 	size_t block_start = 0;
 
@@ -16,21 +20,31 @@ Result<void*> PMem::alloc_start(size_t bytes)
 			return Result<void*>(reinterpret_cast<void*>((block_start + 1) * KB(4)));
 	}
 
+	log("Leave alloc_start");
 	return Result<void*>();
 }
+*/
 
 Result<void*> PMem::alloc_end(size_t bytes)
 {
+	log("Enter alloc_end");
 	size_t blocks = ceildiv(bytes, KB(4));
-	size_t block_end = 0;
+	size_t block_end = map_length;
 
 	for (size_t i = map_length - 1; i != static_cast<size_t>(-1); i--)
 	{
 		if (static_cast<BlockState>(map[i]) != FREE)
 			block_end = i;
-		else if (block_end - i > blocks)
-			return Result<void*>(reinterpret_cast<void*>(i * KB(4)));
+		else if (block_end - i == blocks)
+		{
+			log("Leave alloc_end");
+			size_t address = i * KB(4);
+			size_t length = blocks * KB(4);
+			set_state(address, length, BlockState::USED);
+			return Result<void*>( reinterpret_cast<void*>(address) );
+		}
 	}
 
+	log("Fail alloc_end");
 	return Result<void*>();
 }

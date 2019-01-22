@@ -14,13 +14,15 @@ void HandlerFactory::load(char* start, char* end)
 
 void HandlerFactory::build(char* destination, int irq)
 {
-	// Copy code
+	// Get pointer to IRQ location.
+
+	u32* irq_ptr = reinterpret_cast<u32*>(destination + m_irq_offset);
+	// Copy code.
 	char* ptr = m_start;
 	while (ptr < m_end)
 		*(destination++) = *(ptr++);
 
-	// Store IRQ value
-	u32* irq_ptr = reinterpret_cast<u32*>(destination + m_irq_offset);
+	// Store IRQ value.
 	*irq_ptr = irq;
 }
 

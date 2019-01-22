@@ -35,7 +35,8 @@ static char* create_handler(size_t irq, HandlerFactory& factory)
 	if (result.is_fail())
 		CPU::out_of_memory();
 
-	char* dest = *result.result;
+	char* dest = reinterpret_cast<char*>(result.result);
+	log("Building interrupt handler at 0x%X", dest);
 	factory.build(dest, irq);
 	return dest;
 }
@@ -48,7 +49,10 @@ void Interrupt::init()
 	Result<Paging::PageTable*> result = Paging::alloc_table();
 	if (!result.is_success())
 		CPU::out_of_memory();
-	handlers = Slab<char*>(*result.result, static_cast<size_t>( MAX(INTH_END - INTH, INTH_ERR_END - INTH_ERR) ));
+
+	size_t inth_size = inth_factory.length();
+	size_t inth_err_size = inth_err_factory.length();
+	handlers = Slab<char*>(*result.result, static_cast<size_t>( MAX(inth_size, inth_err_size) ));
 
 	create_handler(0x0, inth_factory);
 	create_handler(0x1, inth_factory);

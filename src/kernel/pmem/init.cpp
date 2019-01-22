@@ -8,11 +8,16 @@
 #include <cstddef>
 #include <cstdint>
 #include <cmath>
+#include <cstring>
 
 using namespace PMem;
 
-#define KERNEL_END reinterpret_cast<size_t>(&kernel_end);
-extern u8 kernel_end;
+extern u8 _kernel_start;
+extern u8 _kernel_end;
+
+const u32 kernel_start = reinterpret_cast<size_t>(&_kernel_start);
+const u32 kernel_end = reinterpret_cast<size_t>(&_kernel_end);
+const u32 kernel_size = kernel_end - kernel_start;
 
 typedef multiboot_mmap_entry MemEntry;
 Paging::PageTable pagetable;
@@ -22,10 +27,7 @@ u8* PMem::map;
 
 static void setup_pagetable()
 {
-	for (size_t i = 0; i < 1024; i++)
-	{
-		reinterpret_cast<u32&>(pagetable.entries[i]) = 0;
-	}
+	memset(&pagetable, 0, sizeof(Paging::PageTable));
 }
 
 static MemEntry& get_next_entry(MemEntry& entry)
@@ -38,7 +40,12 @@ static MemEntry& get_next_entry(MemEntry& entry)
 static bool add_pagetable_entries_for_mementry(MemEntry& entry, size_t length_left, int& pagetable_end)
 {
 	length_left -= entry.size + 4;
-	total_memory += entry.len;
+
+	if (entry.type == MULTIBOOT_MEMORY_AVAILABLE)
+	{
+		size_t entry_end = entry.addr + entry.len;
+		total_memory = (entry_end > total_memory) ? entry_end : total_memory;
+	}
 
 	// Check if we need to add an entry.
 	MemEntry& next_entry = get_next_entry(entry);
@@ -49,23 +56,28 @@ static bool add_pagetable_entries_for_mementry(MemEntry& entry, size_t length_le
 	size_t first_area = ceilg(entry.addr, KB(4));
 	size_t last_area = floorg(entry.addr + entry.len - 1, KB(4));
 
-	// These blocks refer to blocks of 4096 states.
-	size_t blocks_needed = ceildiv(total_memory, MB(4)) - map_length;
-	size_t num_blocks = (last_area - first_area) / KB(4);
-	size_t num_blocks_to_allocate_now = (num_blocks < blocks_needed) ? num_blocks : blocks_needed;
+	// These blocks refer to areas of 4096 states.
+	// Each state refers to a blob of memory of 4 KiB.
+	// So each block refers to 4 KiB * 4096 = 16 MiB.
+	size_t blocks_needed = ceildiv(total_memory, MB(16)) - map_length;
 
-	//size_t end_block = first_block + num_blocks_to_allocate_now * KB(4);
-	//for (size_t block = first_block; block < end_block; block += KB(4))
-	for (size_t block = 0; block < num_blocks_to_allocate_now; block++)
+	if (entry.type == MULTIBOOT_MEMORY_AVAILABLE)
 	{
-		Paging::PageTableEntry& entry = pagetable.entries[pagetable_end++];
-		entry.set_address(first_area + block * KB(4));
-		entry.writable = 1;
-		entry.present = 1;
+		size_t num_blocks = (last_area - first_area) / KB(4);
+		size_t num_blocks_to_allocate_now = (num_blocks < blocks_needed) ? num_blocks : blocks_needed;
+		//size_t end_block = first_block + num_blocks_to_allocate_now * KB(4);
+		//for (size_t block = first_block; block < end_block; block += KB(4))
+		for (size_t block = 0; block < num_blocks_to_allocate_now; block++)
+		{
+			Paging::PageTableEntry& entry = pagetable.entries[pagetable_end++];
+			entry.set_address(first_area + block * KB(4));
+			entry.writable = 1;
+			entry.present = 1;
+		}
+		blocks_needed -= num_blocks_to_allocate_now;
 	}
 
-	blocks_needed -= num_blocks_to_allocate_now * 4096;
-	map_length += num_blocks_to_allocate_now * 4096;
+	//map_length += num_blocks_to_allocate_now * 4096;
 
 	return blocks_needed > 0;
 }
@@ -78,123 +90,67 @@ static void add_pagetable_entries()
 	int pagetable_end = 0;
 	if (add_pagetable_entries_for_mementry(entry, length, pagetable_end) == true)
 		CPU::out_of_memory();
-	//size_t entry_end = entry_addr + length;
 
+}
+
+static void reserve_map_entries()
+{
+	// Reserve memory from map entries.
+	log("Reserving from multiboot structure");
+	size_t length = Multiboot::mbt->mmap_length;
+	size_t entry_addr = Multiboot::mbt->mmap_addr;
+	MemEntry& entry = *reinterpret_cast<MemEntry*>(entry_addr);
+
+	while (length > 0)
+	{
+		if (entry.type != MULTIBOOT_MEMORY_AVAILABLE)
+			PMem::set_state(entry.addr, entry.len, BlockState::RESERVED);
+
+		length -= entry.size + 4;
+		entry = get_next_entry(entry);
+	}
+
+	// Reserve memory used by the kernel.
+	const size_t kstart = kernel_start - GB(3);
+	const size_t ksize = kernel_size;
+	log("Reserving for kernel, 0x%X 0x%X", kstart, ksize);
+	PMem::set_state(kstart, ksize, BlockState::RESERVED);
+
+	// Reserve memory that is used by PMem::map.
+	log("Reserving for PMem::map");
+	int index = 0;
+	Paging::PageTableEntry* pt_entry = pagetable.entries + index++;
+	while (pt_entry->present)
+	{
+		size_t address = pt_entry->get_address();
+		if (address < total_memory)
+			PMem::set_state(address, KB(4), BlockState::RESERVED);
+		pt_entry = pagetable.entries + index++;
+	}
+}
+
+static void log_memory()
+{
+	if (total_memory <= MB(4))
+		log("Total memory: %d KiB", total_memory / KB(1));
+	else
+		log("Total memory: %d MiB", total_memory / MB(1));
 }
 
 void PMem::init()
 {
 	Paging::PageDirEntry& entry = Paging::alloc_dir_entry();
 	entry.set_address(reinterpret_cast<size_t>(&pagetable) - GB(3));
+	entry.present = 1;
+	entry.writable = 1;
 	map = static_cast<u8*>(entry.get_virtual_address());
 	setup_pagetable();
 	add_pagetable_entries();
+	map_length = total_memory / KB(4);
+	reserve_map_entries();
+	log_memory();
 	log("PMem allocator ready");
 }
-
-//u8* PMem::map = reinterpret_cast<u8*>(-1);
-//u8 PMem::map[4080];
-//size_t PMem::map_length = 4080;
-/*
-static size_t total_size()
-{
-	size_t size = 0;
-
-	size_t length = Multiboot::mbt->mmap_length;
-	size_t entry_addr = Multiboot::mbt->mmap_addr;
-	size_t entry_end = entry_addr + length;
-
-	while (entry_addr < entry_end)
-	{
-		multiboot_mmap_entry* entry = reinterpret_cast<multiboot_mmap_entry*>(entry_addr);
-		size += static_cast<size_t>(entry->len);
-		entry_addr += entry->size + sizeof(u32);
-		length -= entry->size;
-	}
-
-	return size;
-}
-
-static void allocate_map()
-{
-	/*size_t length = Multiboot::mbt->mmap_length;
-	size_t entry_addr = Multiboot::mbt->mmap_addr;
-	size_t entry_end = entry_addr + length;
-
-	while (entry_addr < entry_end)
-	{
-		multiboot_mmap_entry* entry = reinterpret_cast<multiboot_mmap_entry*>(entry_addr);
-
-		size_t len = static_cast<size_t>(entry->len);
-		//size_t addr_start = static_cast<size_t>(entry->addr);
-		size_t addr_end = static_cast<size_t>(entry->addr);
-		size_t addr_start = KERNEL_END;
-		addr_start -= 0xC0000000;
-		if (addr_end > addr_start)
-		{
-			len = addr_end - addr_start;
-			if (entry->type == MULTIBOOT_MEMORY_AVAILABLE && len >= map_length && addr_end < MB(4))
-			{
-				log("Found something at 0x%X (%d, %d)", static_cast<size_t>(entry->addr), entry->type, static_cast<size_t>(entry->len));
-				map = reinterpret_cast<u8*>(entry->addr);
-				log("pmmap allocated at 0x%X", map);
-				return;
-			}
-		}
-		entry_addr += entry->size + sizeof(u32);
-	}
-
-	log("Error: no large enough memory hole found");
-	CPU::hang();*/ /*
-}
-
-static void zero_map()
-{
-	for (size_t i = 0; i < map_length; i++)
-		map[i] = BlockState::FREE;
-	log("pmmap zeroed");
-}
-
-static void populate_map()
-{
-	size_t length = Multiboot::mbt->mmap_length;
-	size_t entry_addr = Multiboot::mbt->mmap_addr;
-	size_t entry_end = entry_addr + length;
-
-	while (entry_addr < entry_end)
-	{
-		multiboot_mmap_entry* entry = reinterpret_cast<multiboot_mmap_entry*>(entry_addr);
-
-		size_t len = static_cast<size_t>(entry->len);
-		size_t addr = static_cast<size_t>(entry->addr);
-
-		if (entry->type != MULTIBOOT_MEMORY_AVAILABLE)
-			set_state(addr, len, BlockState::RESERVED);
-
-		entry_addr += entry->size + sizeof(u32);
-		length -= entry->size;
-	}
-	log("pmmap populated");
-}
-
-void PMem::init()
-{
-	size_t mem_length = total_size();
-	if (mem_length < KB(64))
-		log("Total memory size: %d B", mem_length);
-	else if (mem_length < MB(4))
-		log("Total memory size: %d KiB", mem_length / 1024);
-	else
-		log("Total memory size: %d MiB", mem_length / 1024 / 1024);
-
-	map_length = mem_length / KB(4);
-	log("Need %d KiB for pmmap", map_length / 1024);
-
-	allocate_map();
-	zero_map();
-	populate_map();
-}
-*/
 
 
 
