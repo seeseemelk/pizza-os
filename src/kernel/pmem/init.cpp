@@ -15,13 +15,13 @@ using namespace PMem;
 extern u8 _kernel_start;
 extern u8 _kernel_end;
 
-const u32 kernel_start = reinterpret_cast<size_t>(&_kernel_start);
-const u32 kernel_end = reinterpret_cast<size_t>(&_kernel_end);
-const u32 kernel_size = kernel_end - kernel_start;
+static const u32 kernel_start = reinterpret_cast<size_t>(&_kernel_start);
+static const u32 kernel_end = reinterpret_cast<size_t>(&_kernel_end);
+static const u32 kernel_size = kernel_end - kernel_start;
 
 typedef multiboot_mmap_entry MemEntry;
-Paging::PageTable pagetable;
-size_t total_memory = 0;
+static Paging::PageTable pagetable;
+static size_t total_memory = 0;
 size_t PMem::map_length = 0;
 u8* PMem::map;
 

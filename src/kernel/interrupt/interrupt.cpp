@@ -6,6 +6,8 @@
 #include "cpu.hpp"
 #include "paging.hpp"
 #include "result.hpp"
+#include "kernel.hpp"
+#include <cstring>
 
 #define MAX(x, y) ((x >= y) ? (x) : (y))
 
@@ -16,7 +18,7 @@ extern char INTH_END;
 extern char INTH_ERR;
 extern char INTH_ERR_END;
 
-IDT Interrupt::idt;
+IDT* Interrupt::idt;
 IDTR Interrupt::idtr;
 
 HandlerFactory inth_factory;
@@ -41,6 +43,29 @@ static char* create_handler(size_t irq, HandlerFactory& factory)
 	return dest;
 }
 
+static void create_idt()
+{
+	log("Allocing");
+	Result<void*> result = Kernel::alloc(sizeof(IDT));
+	log("Done");
+
+	if (result.is_fail())
+		CPU::out_of_memory();
+
+	idt = static_cast<IDT*>(result.result);
+
+	log("Memsetting");
+	memset(static_cast<void*>(idt), 0, sizeof(IDT));
+	log("Also done");
+}
+
+static void setup_idtr()
+{
+	idtr.address = reinterpret_cast<u32>(idt);
+	idtr.limit = sizeof(IDT) - 1;
+	asm("lidt %0" :: "m" (idtr));
+}
+
 void Interrupt::init()
 {
 	inth_factory.load(&INTH, &INTH_END);
@@ -53,6 +78,12 @@ void Interrupt::init()
 	size_t inth_size = inth_factory.length();
 	size_t inth_err_size = inth_err_factory.length();
 	handlers = Slab<char*>(*result.result, static_cast<size_t>( MAX(inth_size, inth_err_size) ));
+
+	log("Setting up IDT");
+	create_idt();
+	log("Setting up IDTR");
+	setup_idtr();
+	log("Creating some handlers");
 
 	create_handler(0x0, inth_factory);
 	create_handler(0x1, inth_factory);

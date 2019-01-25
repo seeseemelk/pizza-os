@@ -1,4 +1,6 @@
 #include "paging.hpp"
+#include "result.hpp"
+#include "pmem.hpp"
 #include <cmath>
 
 using namespace Paging;
@@ -31,4 +33,14 @@ size_t PageTableEntry::get_address()
 void PageTableEntry::set_address(size_t phys)
 {
 	address = phys >> 12;
+}
+
+ResultState PageTableEntry::alloc_any_memory()
+{
+	Result<void*> result = PMem::alloc_end(KB(4));
+	if (result.is_fail())
+		return FAIL;
+
+	set_address(reinterpret_cast<size_t>(result.result));
+	return SUCCESS;
 }

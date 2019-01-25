@@ -47,6 +47,7 @@ struct PageTableEntry
 
 	void set_address(size_t phys);
 	size_t get_address();
+	ResultState alloc_any_memory();
 };
 
 struct PageTable
@@ -74,6 +75,7 @@ void init();
 size_t dir_index(void* virt);
 size_t tbl_index(void* virt);
 PageDirEntry& alloc_dir_entry();
+Result<PageTable*> alloc_table(PageDirEntry** directory_entry);
 Result<PageTable*> alloc_table();
 
 }

@@ -88,7 +88,7 @@ struct IDTR
 	u32 address;
 } __attribute__((packed));
 
-extern IDT idt;
+extern IDT* idt;
 extern IDTR idtr;
 Gate& get_handler(int irq);
 

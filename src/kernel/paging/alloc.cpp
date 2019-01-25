@@ -9,11 +9,17 @@ PageDirEntry& Paging::alloc_dir_entry()
 	return directory.entries[start_entry++];
 }
 
+Result<PageTable*> Paging::alloc_table(PageDirEntry** entry)
+{
+	*entry = &alloc_dir_entry();
+	if ((*entry)->present)
+		return Result<PageTable*>(&(*entry)->get_table());
+	else
+		return (*entry)->make_table();
+}
+
 Result<PageTable*> Paging::alloc_table()
 {
-	PageDirEntry& entry = alloc_dir_entry();
-	if (entry.present)
-		return Result<PageTable*>(&entry.get_table());
-	else
-		return entry.make_table();
+	PageDirEntry* entry;
+	return alloc_table(&entry);
 }
