@@ -82,8 +82,9 @@ Result<T*> Slab<T>::alloc()
 template<typename T>
 void Slab<T>::free(T& element)
 {
-	void* ptr = *element;
-	size_t index = reinterpret_cast<size_t>(static_cast<u8*>(m_elements) - static_cast<u8*>(ptr));
+	void* ptr = &element;
+	//size_t index = reinterpret_cast<size_t>(static_cast<u8*>(m_elements) - static_cast<u8*>(ptr));
+	size_t index = static_cast<u8*>(ptr) - static_cast<u8*>(m_elements);
 	push(index);
 }
 

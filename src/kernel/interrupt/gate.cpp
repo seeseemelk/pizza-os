@@ -2,10 +2,10 @@
 
 using namespace Interrupt;
 
-void Gate::set_offset(size_t address)
+void Gate::set_offset(void* address)
 {
-	offset_1 = static_cast<u16>(address);
-	offset_2 = static_cast<u16>(address >> 16);
+	offset_1 = static_cast<u16>(reinterpret_cast<u32>(address));
+	offset_2 = static_cast<u16>(reinterpret_cast<u32>(address) >> 16);
 }
 
 size_t Gate::get_offset()

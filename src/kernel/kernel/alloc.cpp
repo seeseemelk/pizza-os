@@ -8,7 +8,7 @@
 using namespace Kernel;
 
 static Paging::PageTable* pagetable;
-static void* alloc_map;
+static u8* alloc_map;
 static size_t alloc_index = 0;
 static size_t alloced = 0;
 
@@ -19,19 +19,35 @@ void Kernel::init_alloc()
 	if (result.is_fail())
 		CPU::out_of_memory();
 
-	alloc_map = dir_entry->get_virtual_address();
+	alloc_map = static_cast<u8*>(dir_entry->get_virtual_address());
 	pagetable = result.result;
 }
 
 Result<void*> Kernel::alloc(size_t bytes)
 {
-	void* address = alloc_map;
-	alloc_map += bytes;
+	/*
+	if (alloc_index >= MB(4))
+	{
+		log("Too much allocated using Kernel::alloc");
+		CPU::out_of_memory();
+	}
+	*/
+
+	void* address = alloc_map + alloc_index;
+	alloc_index += bytes;
 
 	while (alloc_index > alloced)
 	{
-		if (pagetable->entries[alloced / 1024].alloc_any_memory() == ResultState::FAIL)
+		size_t tbl_index = Paging::tbl_index(reinterpret_cast<void*>(alloced));
+		Paging::PageTableEntry& entry = pagetable->entries[tbl_index];
+		if (entry.alloc_any_memory() == ResultState::FAIL)
 			return Result<void*>();
+		else
+		{
+			entry.present = 1;
+			entry.writable = 1;
+		}
+		alloced += KB(4);
 	}
 	return Result<void*>(address);
 }

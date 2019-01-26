@@ -11,7 +11,7 @@ public:
 	size_t length();
 private:
 	char* m_start;
-	char* m_end;
+	size_t m_length;
 	size_t m_irq_offset;
 };
 

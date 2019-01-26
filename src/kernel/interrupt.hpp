@@ -38,8 +38,12 @@
 
 /*
  * Task Gate:
+ *
  * Interrupt Gate:
+ * Disables the IF flag so that no further exceptions can be fired.
+ *
  * Trap Gate:
+ * The same as the Interrupt Gate, but it does not disable the IF flag so further exceptions can be fired.
  */
 
 namespace Interrupt
@@ -72,7 +76,7 @@ struct Gate
 	u16 offset_2;
 
 	// Members
-	void set_offset(size_t address);
+	void set_offset(void* address);
 	size_t get_offset();
 	void set_type(GateType type);
 } __attribute__((packed));

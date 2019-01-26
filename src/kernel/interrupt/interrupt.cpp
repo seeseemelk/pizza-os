@@ -33,13 +33,24 @@ extern "C" void handle_interrupt(int irq, int error_code)
 
 static char* create_handler(size_t irq, HandlerFactory& factory)
 {
+	// Allocate memory to store the interrupt handler.
 	Result<char**> result = handlers.alloc();
 	if (result.is_fail())
 		CPU::out_of_memory();
 
+	// Build the handler
 	char* dest = reinterpret_cast<char*>(result.result);
 	log("Building interrupt handler at 0x%X", dest);
 	factory.build(dest, irq);
+
+	// Setup the handler in the IDT.
+	//*
+	Gate gate = idt->gates[irq];
+	gate.present = 1;
+	gate.set_offset(dest);
+	gate.set_type(GateType::INTERRUPT);
+	// */
+
 	return dest;
 }
 

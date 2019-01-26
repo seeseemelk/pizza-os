@@ -1,10 +1,12 @@
 #include "handler.hpp"
+#include "debug.hpp"
 #include <cstdint>
+#include <cstring>
 
 void HandlerFactory::load(char* start, char* end)
 {
 	m_start = start;
-	m_end = end;
+	m_length = end - start;
 	// Find the location of the magic byte 0xFFFFFFFF
 	u32* magic_ptr = reinterpret_cast<u32*>(m_start);
 	while (*magic_ptr != 0xFFFFFFFF)
@@ -15,12 +17,10 @@ void HandlerFactory::load(char* start, char* end)
 void HandlerFactory::build(char* destination, int irq)
 {
 	// Get pointer to IRQ location.
-
 	u32* irq_ptr = reinterpret_cast<u32*>(destination + m_irq_offset);
+
 	// Copy code.
-	char* ptr = m_start;
-	while (ptr < m_end)
-		*(destination++) = *(ptr++);
+	memcpy(destination, m_start, m_length);
 
 	// Store IRQ value.
 	*irq_ptr = irq;
@@ -28,5 +28,5 @@ void HandlerFactory::build(char* destination, int irq)
 
 size_t HandlerFactory::length()
 {
-	return m_end - m_start;
+	return m_length;
 }
