@@ -25,13 +25,11 @@ void Kernel::init_alloc()
 
 Result<void*> Kernel::alloc(size_t bytes)
 {
-	/*
 	if (alloc_index >= MB(4))
 	{
 		log("Too much allocated using Kernel::alloc");
 		CPU::out_of_memory();
 	}
-	*/
 
 	void* address = alloc_map + alloc_index;
 	alloc_index += bytes;
