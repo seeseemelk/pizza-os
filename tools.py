@@ -1,3 +1,4 @@
+#!/bin/python -i
 def kb(n):
     return n * 1024
 

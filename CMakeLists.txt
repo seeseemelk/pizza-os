@@ -32,6 +32,7 @@ set(LIBCXX_INC ${PROJECT_SOURCE_DIR}/src/stdlib/libcxx/user)
 
 add_subdirectory(src/stdlib)
 add_subdirectory(src/kernel)
+add_subdirectory(src/apps)
 
 #add_custom_target(pizzaos.iso ALL
 add_custom_command(OUTPUT ${PIZZAOS_ISO}
