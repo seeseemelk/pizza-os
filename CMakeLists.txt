@@ -39,6 +39,7 @@ add_custom_command(OUTPUT ${PIZZAOS_ISO}
 	COMMAND grub-mkrescue -o pizzaos.iso isodir
 	DEPENDS ${ISODIR}/boot/grub/grub.cfg
 	DEPENDS ${ISODIR}/boot/pizzaos.elf
+	DEPENDS ${ISODIR}/boot/initrd.tar
 	COMMENT "Building ISO image"
 	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
 )
