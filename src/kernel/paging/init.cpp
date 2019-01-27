@@ -39,9 +39,10 @@ void Paging::init()
 	system_page_entry.present = 1;
 	system_page_entry.writable = 0;
 
-	//CPU::hang();
-
 	log("Has table: %b", directory.has_table(0));
+
+	log("Disabling initial sub-4MiB pagetable");
+	directory.get_entry(0).present = 0;
 }
 
 size_t Paging::dir_index(void* virt)

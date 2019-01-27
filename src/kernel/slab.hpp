@@ -19,6 +19,9 @@ public:
 	Result<T*> alloc();
 	void free(T& element);
 
+	size_t index_of(T& element);
+	T& at_index(size_t index);
+
 private:
 	size_t& peek();
 	void push(size_t);
@@ -136,6 +139,20 @@ ResultState Slab<T>::need_memory_at(void* address)
 	entry.writable = 1;
 	entry.present = 1;
 	return ResultState::SUCCESS;
+}
+
+template<typename T>
+size_t Slab<T>::index_of(T& element)
+{
+	u8* addr = reinterpret_cast<u8*>(&element);
+	return (addr - static_cast<u8*>(m_elements)) / m_element_size;
+}
+
+template<typename T>
+T& Slab<T>::at_index(size_t index)
+{
+	u8* addr = static_cast<u8*>(m_elements) + index * m_element_size;
+	return *reinterpret_cast<T*>(addr);
 }
 
 #endif
