@@ -37,6 +37,45 @@ static MemEntry& get_next_entry(MemEntry& entry)
 	return *reinterpret_cast<MemEntry*>(new_entry_ptr);
 }
 
+static void process_area(size_t& blocks_needed, int& pagetable_end, size_t first_area, size_t last_area)
+{
+	first_area = ceilg(first_area, KB(4));
+	last_area = floorg(last_area, KB(4));
+
+	if (first_area >= last_area)
+		return;
+
+	size_t num_blocks = (last_area - first_area) / KB(4);
+	size_t num_blocks_to_allocate_now = (num_blocks < blocks_needed) ? num_blocks : blocks_needed;
+	for (size_t block = 0; block < num_blocks_to_allocate_now; block++)
+	{
+		Paging::PageTableEntry& entry = pagetable.entries[pagetable_end++];
+		entry.set_address(first_area + block * KB(4));
+		entry.writable = 1;
+		entry.present = 1;
+	}
+
+	blocks_needed -= num_blocks_to_allocate_now;
+}
+
+/**
+ * Some entries might consider the memory segment the kernel is in to be 'available'.
+ * These segments we split into two different, the others we leave untouched.
+ */
+static void offset_for_kernel(size_t& blocks_needed, int& pagetable_end, size_t first_area, size_t last_area)
+{
+	static size_t phys_kernel_start = kernel_start - GB(3);
+	static size_t phys_kernel_end = kernel_end - GB(3);
+	if ((phys_kernel_start >= first_area && phys_kernel_start < last_area)
+			|| (phys_kernel_end > last_area && phys_kernel_end <= last_area))
+	{
+		process_area(blocks_needed, pagetable_end, first_area, phys_kernel_start);
+		process_area(blocks_needed, pagetable_end, phys_kernel_end, last_area);
+	}
+	else
+		process_area(blocks_needed, pagetable_end, first_area, last_area);
+}
+
 static bool add_pagetable_entries_for_mementry(MemEntry& entry, size_t length_left, int& pagetable_end)
 {
 	length_left -= entry.size + 4;
@@ -63,21 +102,8 @@ static bool add_pagetable_entries_for_mementry(MemEntry& entry, size_t length_le
 
 	if (entry.type == MULTIBOOT_MEMORY_AVAILABLE)
 	{
-		size_t num_blocks = (last_area - first_area) / KB(4);
-		size_t num_blocks_to_allocate_now = (num_blocks < blocks_needed) ? num_blocks : blocks_needed;
-		//size_t end_block = first_block + num_blocks_to_allocate_now * KB(4);
-		//for (size_t block = first_block; block < end_block; block += KB(4))
-		for (size_t block = 0; block < num_blocks_to_allocate_now; block++)
-		{
-			Paging::PageTableEntry& entry = pagetable.entries[pagetable_end++];
-			entry.set_address(first_area + block * KB(4));
-			entry.writable = 1;
-			entry.present = 1;
-		}
-		blocks_needed -= num_blocks_to_allocate_now;
+		offset_for_kernel(blocks_needed, pagetable_end, first_area, last_area);
 	}
-
-	//map_length += num_blocks_to_allocate_now * 4096;
 
 	return blocks_needed > 0;
 }
@@ -139,12 +165,18 @@ static void log_memory()
 
 void PMem::init()
 {
+	log("kernel_start: 0x%X (phys: 0x%X)", kernel_start, kernel_start - GB(3));
+	log("kernel_end: 0x%X (phys: 0x%X)", kernel_end, kernel_end - GB(3));
+
+	// Get an address for the pagetable of the PMem allocator itself.
+	// We can't using any other allocator at this point yet.
 	Paging::PageDirEntry& entry = Paging::alloc_dir_entry();
 	entry.set_address(reinterpret_cast<size_t>(&pagetable) - GB(3));
 	entry.present = 1;
 	entry.writable = 1;
 	map = static_cast<u8*>(entry.get_virtual_address());
 	setup_pagetable();
+
 	add_pagetable_entries();
 	map_length = total_memory / KB(4);
 	reserve_map_entries();

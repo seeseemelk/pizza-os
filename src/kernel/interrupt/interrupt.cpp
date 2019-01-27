@@ -44,12 +44,10 @@ static char* create_handler(size_t irq, HandlerFactory& factory)
 	factory.build(dest, irq);
 
 	// Setup the handler in the IDT.
-	//*
 	Gate gate = idt->gates[irq];
 	gate.present = 1;
 	gate.set_offset(dest);
 	gate.set_type(GateType::INTERRUPT);
-	// */
 
 	return dest;
 }

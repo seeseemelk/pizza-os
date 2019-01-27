@@ -6,6 +6,7 @@
 #include "multiboot.hpp"
 #include "interrupt.hpp"
 #include "slab.hpp"
+#include "ramdisk.hpp"
 #include "kernel/alloc.hpp"
 
 extern "C" void _init(void);
@@ -39,7 +40,11 @@ extern "C" void kernel_main(multiboot_info_t* mbt)
 	Interrupt::init();
 	log("Done");
 
-	log("Kernel main ended, hanging");
+	log("Loading ramdisk...");
+	RamDisk::init();
+	log("Done");
+
+	log("Kernel main ended");
 	CPU::hang();
 	_fini();
 }

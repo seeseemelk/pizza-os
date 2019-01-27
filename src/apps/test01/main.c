@@ -1,5 +1,4 @@
 void main()
 {
-	int i = 0;
-	i++;
+	while (1);
 }

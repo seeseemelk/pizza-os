@@ -4,6 +4,7 @@
 #include "debug.hpp"
 #include "paging.hpp"
 #include "result.hpp"
+#include <cstring>
 
 using namespace Kernel;
 
@@ -19,6 +20,7 @@ void Kernel::init_alloc()
 	if (result.is_fail())
 		CPU::out_of_memory();
 
+	//memset(dir_entry, 0, sizeof(Paging::PageDirEntry));
 	alloc_map = static_cast<u8*>(dir_entry->get_virtual_address());
 	pagetable = result.result;
 }
