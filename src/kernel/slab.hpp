@@ -78,7 +78,7 @@ Result<T*> Slab<T>::alloc()
 	}
 	return Result<T*>();
 }
-w
+
 template<typename T>
 void Slab<T>::free(T& element)
 {
