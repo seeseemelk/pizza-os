@@ -18,6 +18,7 @@ set(PIZZAOS_ISO ${CMAKE_SOURCE_DIR}/pizzaos.iso)
 
 # The directory containing the files that should be on the ISO.
 set(ISODIR ${CMAKE_SOURCE_DIR}/isodir)
+set(INITRD_TAR ${ISODIR}/boot/initrd.tar)
 
 ########################################
 ### END OF USER CONFIGURABLE SECTION ###
@@ -34,12 +35,11 @@ add_subdirectory(src/stdlib)
 add_subdirectory(src/kernel)
 add_subdirectory(src/apps)
 
-#add_custom_target(pizzaos.iso ALL
 add_custom_command(OUTPUT ${PIZZAOS_ISO}
 	COMMAND grub-mkrescue -o pizzaos.iso isodir
 	DEPENDS ${ISODIR}/boot/grub/grub.cfg
 	DEPENDS ${ISODIR}/boot/pizzaos.elf
-	DEPENDS ${ISODIR}/boot/initrd.tar
+	DEPENDS ${INITRD_TAR}
 	COMMENT "Building ISO image"
 	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
 )
@@ -48,3 +48,4 @@ add_custom_target(build_iso ALL
 	DEPENDS ${PIZZAOS_ISO}
 )
 add_dependencies(build_iso pizzaos.elf)
+add_dependencies(build_iso build_initrd)
