@@ -37,7 +37,7 @@ void RamDisk::init_ramdisk(const void* ramdisk, size_t length)
 	{
 		num_files++;
 		length -= sizeof(TarFile) + file->get_size();
-		//log("%s: %d bytes", file->filename, file->get_size());
+		log("%s: %d bytes", file->filename, file->get_size());
 		file = next_file(file);
 	}
 
