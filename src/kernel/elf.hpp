@@ -47,11 +47,12 @@ class Elf
 {
 public:
 	Elf(Reader& reader);
-	void read_header();
+	ElfHeaders::FileHeader& read_header();
 	bool is_valid();
 
 private:
 	Reader& m_reader;
+	ElfHeaders::FileHeader header;
 };
 
 #endif

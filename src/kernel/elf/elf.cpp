@@ -1,12 +1,14 @@
 #include "elf.hpp"
 
+using namespace ElfHeaders;
+
 Elf::Elf(Reader& reader)
 	: m_reader(reader)
 {
 
 }
 
-Elf::read_header()
+FileHeader& Elf::read_header()
 {
 
 }
