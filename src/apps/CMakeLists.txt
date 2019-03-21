@@ -1,17 +1,11 @@
 #list(REMOVE_ITEM APPS CMakeLists.txt)
-set(APPS "test01")
+set(APPS "mcp")
 
 foreach(APP ${APPS})
 	add_subdirectory(${APP})
 	list(APPEND APPS_TARGET_FILE ${APP}/${APP})
 endforeach(APP)
 
-#add_custom_command(
-#	OUTPUT initrd.tar
-#	COMMAND tar cf initrd.tar ${APPS}
-#	DEPENDS ${APPS}
-#	COMMENT "Building initrd.tar"
-#)
 message(${APPS_TARGET_FILE})
 add_custom_command(
 	OUTPUT initrd.tar
@@ -30,14 +24,3 @@ add_custom_command(
 add_custom_target(build_initrd
 	DEPENDS ${INITRD_TAR}
 )
-
-#add_custom_command(TARGET build_initrd
-	#OUTPUT ${INITRD_TAR}
-	#DEPENDS initrd.tar
-	#)
-
-#
-#add_custom_command(TARGET initrd.tar
-#	POST_BUILD
-#	COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:initrd.tar> ${ISODIR/boot}
-#)

@@ -33,7 +33,7 @@ static void setup_pagetable()
 static MemEntry& get_next_entry(MemEntry& entry)
 {
 	void* entry_ptr = &entry;
-	void* new_entry_ptr = entry_ptr + entry.size + 4;
+	void* new_entry_ptr = static_cast<u8*>(entry_ptr) + entry.size + 4;
 	return *reinterpret_cast<MemEntry*>(new_entry_ptr);
 }
 
@@ -82,13 +82,13 @@ static bool add_pagetable_entries_for_mementry(MemEntry& entry, size_t length_le
 
 	if (entry.type == MULTIBOOT_MEMORY_AVAILABLE)
 	{
-		size_t entry_end = entry.addr + entry.len;
+		auto entry_end = static_cast<size_t>(entry.addr + entry.len);
 		total_memory = (entry_end > total_memory) ? entry_end : total_memory;
 	}
 
 	// Check if we need to add an entry.
 	MemEntry& next_entry = get_next_entry(entry);
-	if (length_left > 0 && add_pagetable_entries_for_mementry(next_entry, length_left, pagetable_end) == false)
+	if (length_left > 0 && !add_pagetable_entries_for_mementry(next_entry, length_left, pagetable_end))
 		return false;
 
 	// Add the entry.

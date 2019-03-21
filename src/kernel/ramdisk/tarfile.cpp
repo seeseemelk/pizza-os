@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "ramdisk.hpp"
 
 using namespace RamDisk;
@@ -12,4 +13,10 @@ size_t TarFile::get_size() const
 		size = (size*8) + (this->size[i] - '0');
 	}
 	return size;
+}
+
+const char* TarFile::buffer() const
+{
+	// The contents of the file start right after the header.
+	return reinterpret_cast<const char*>(this) + 0x200;
 }

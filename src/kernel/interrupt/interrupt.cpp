@@ -86,7 +86,7 @@ void Interrupt::init()
 
 	size_t inth_size = inth_factory.length();
 	size_t inth_err_size = inth_err_factory.length();
-	handlers = Slab<char*>(*result.result, static_cast<size_t>( MAX(inth_size, inth_err_size) ));
+	handlers.init(*result.result, static_cast<size_t>( MAX(inth_size, inth_err_size) ));
 
 	log("Setting up IDT");
 	create_idt();

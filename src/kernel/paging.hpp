@@ -56,7 +56,7 @@ struct PageTable
 
 	PageTableEntry& get_entry(void* virt);
 	void* get_address();
-} __attribute__((aligned(4096),packed));
+} __attribute__((aligned(4096)));
 
 struct PageDirectory
 {
@@ -65,7 +65,7 @@ struct PageDirectory
 	PageDirEntry& get_entry(void* virt);
 	bool has_table(void* virt);
 	PageTable& get_table(void* virt);
-} __attribute__((aligned(4096),packed));
+} __attribute__((aligned(4096)));
 
 extern PageDirectory& directory;
 extern PageTable* const tables;

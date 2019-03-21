@@ -47,7 +47,7 @@ void RamDisk::init_ramdisk(const void* ramdisk, size_t length)
 	log("Total: %d files", num_files);
 }
 
-bool has_file(const char* filename)
+bool RamDisk::has_file(const char* filename)
 {
 	const TarFile* file = first_file;
 	for (size_t i = 0; i < num_files; i++)
@@ -59,7 +59,7 @@ bool has_file(const char* filename)
 	return false;
 }
 
-Result<const TarFile*> get_file(const char* filename)
+Result<const TarFile*> RamDisk::get_file(const char* filename)
 {
 	const TarFile* file = first_file;
 	for (size_t i = 0; i < num_files; i++)

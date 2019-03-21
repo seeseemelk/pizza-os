@@ -14,8 +14,8 @@ class Slab
 {
 public:
 	Slab();
-	Slab(Paging::PageTable& table);
-	Slab(Paging::PageTable& table, size_t element_size);
+	void init(Paging::PageTable& table);
+	void init(Paging::PageTable& table, size_t element_size);
 	Result<T*> alloc();
 	void free(T& element);
 
@@ -43,16 +43,17 @@ Slab<T>::Slab()
 {
 }
 
-template<typename T>
-Slab<T>::Slab(Paging::PageTable& table)
-	: Slab(table, sizeof(T))
+template <typename T>
+void Slab<T>::init(Paging::PageTable& table)
 {
+	init(table, sizeof(T));
 }
 
 template<typename T>
-Slab<T>::Slab(Paging::PageTable& table, size_t element_size)
-	: m_table(&table), m_element_size(element_size)
+void Slab<T>::init(Paging::PageTable& table, size_t element_size)
 {
+	m_table = &table;
+	m_element_size = element_size;
 	if (element_size == 0)
 	{
 		log("Element size for Slab allocator is 0");

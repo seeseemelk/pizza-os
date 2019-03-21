@@ -6,6 +6,7 @@
 using namespace Processes;
 
 Slab<Process> Processes::allocator;
+Process* Processes::current_process;
 
 static void init_allocator()
 {
@@ -15,7 +16,7 @@ static void init_allocator()
 		log("Failed to allocate a pagetable for the process allocator");
 		CPU::out_of_memory();
 	}
-	allocator = allocator.Slab(*table.result);
+	allocator.init(*table.result);
 }
 
 static void init_first_process()
@@ -27,7 +28,7 @@ static void init_first_process()
 		CPU::out_of_memory();
 	}
 	current_process = result.result;
-	current_process->pid = allocator.index_of(*current_process);
+	current_process->pid = static_cast<int>(allocator.index_of(*current_process));
 	current_process->uid = 0;
 	current_process->gid = 0;
 	current_process->state = ProcessState::STARTING;

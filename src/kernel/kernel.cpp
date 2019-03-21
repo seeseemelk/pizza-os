@@ -7,6 +7,7 @@
 #include "interrupt.hpp"
 #include "slab.hpp"
 #include "ramdisk.hpp"
+#include "elf.hpp"
 #include "kernel/alloc.hpp"
 
 extern "C" void _init(void);
@@ -43,6 +44,26 @@ extern "C" void kernel_main(multiboot_info_t* mbt)
 	log("Loading ramdisk...");
 	RamDisk::init();
 	log("Done");
+
+	auto result = RamDisk::get_file("mcp");
+	if (result.is_fail())
+	{
+		log("Could not find mcp in ramdisk");
+		CPU::hang();
+	}
+
+	log("Loading mcp...");
+	auto file = result.result;
+	TarReader reader(file);
+	Elf elf_reader(reader);
+	auto header = elf_reader.read_header();
+	if (!elf_reader.is_valid())
+	{
+		log("Found invalid ELF file");
+		CPU::hang();
+	}
+
+	log("Found valid ELF file!");
 
 	log("Kernel main ended");
 	CPU::hang();

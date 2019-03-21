@@ -29,6 +29,7 @@ namespace RamDisk
 		char filename_prefix[155];
 
 		size_t get_size() const;
+		const char* buffer() const;
 	} __attribute__((packed));
 
 	enum TypeFlag

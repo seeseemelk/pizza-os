@@ -33,7 +33,7 @@ namespace ElfHeaders
 		char sh_entsize[2];
 		char sh_num[2];
 		char shstrndx[2];
-	};
+	} __attribute__((packed));
 
 	struct ProgramHeader
 	{
@@ -52,7 +52,11 @@ public:
 
 private:
 	Reader& m_reader;
-	ElfHeaders::FileHeader header;
+	ElfHeaders::FileHeader m_header;
+	bool m_read_header = false;
+
+	bool is_magic_valid();
+	bool are_flags_valid();
 };
 
 #endif
