@@ -8,6 +8,7 @@
 #include "slab.hpp"
 #include "ramdisk.hpp"
 #include "elf.hpp"
+#include "process.hpp"
 #include "kernel/alloc.hpp"
 
 extern "C" void _init(void);
@@ -51,6 +52,10 @@ extern "C" void kernel_main(multiboot_info_t* mbt)
 		log("Could not find mcp in ramdisk");
 		CPU::hang();
 	}
+
+	log("Initialising process management...");
+	Processes::init();
+	log("Done");
 
 	log("Loading mcp...");
 	auto file = result.result;

@@ -27,7 +27,6 @@ Result<void*> PMem::alloc_start(size_t bytes)
 
 Result<void*> PMem::alloc_end(size_t bytes)
 {
-	log("Enter alloc_end");
 	size_t blocks = ceildiv(bytes, KB(4));
 	size_t block_end = map_length;
 
@@ -37,7 +36,6 @@ Result<void*> PMem::alloc_end(size_t bytes)
 			block_end = i;
 		else if (block_end - i == blocks)
 		{
-			log("Leave alloc_end");
 			size_t address = i * KB(4);
 			size_t length = blocks * KB(4);
 			set_state(address, length, BlockState::USED);
