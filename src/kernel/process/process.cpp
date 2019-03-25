@@ -6,21 +6,24 @@ using namespace Processes;
 
 ResultState Process::map_page(void* address)
 {
-	auto entry = Paging::directory.get_entry(address);
-	auto result = entry.get_or_make_table();
+	Paging::PageDirEntry& entry = Paging::directory.get_entry(address);
+	Result<Paging::PageTable*> result = entry.get_or_make_table();
 	if (result.is_fail())
 		return ResultState::FAIL;
-	auto table = result.result;
-	auto pageEntry = table->get_entry(address);
+	Paging::PageTable* table = result.result;
+	Paging::PageTableEntry& pageEntry = table->get_entry(address);
 
 	if (pageEntry.present)
 		return ResultState::SUCCESS;
 
-	auto memResult = PMem::alloc_end(KB(4));
+	Result<void*> memResult = PMem::alloc_end(KB(4));
 	if (memResult.is_fail())
 		return ResultState::FAIL;
 
 	pageEntry.set_address(reinterpret_cast<u32>(memResult.result));
+	pageEntry.writable = 1;
+	pageEntry.userspace = 1;
+	pageEntry.present = 1;
 	return ResultState::SUCCESS;
 }
 
