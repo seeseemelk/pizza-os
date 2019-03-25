@@ -1,18 +1,13 @@
-#ifndef INTERRUPT_HANDLER_FACTORY_HPP_
-#define INTERRUPT_HANDLER_FACTORY_HPP_
+/*
+ * handler.hpp
+ *
+ *  Created on: Mar 25, 2019
+ *      Author: seeseemelk
+ */
 
-#include <cstddef>
+#ifndef INTERRUPT_HANDLER_HPP_
+#define INTERRUPT_HANDLER_HPP_
 
-class HandlerFactory
-{
-public:
-	void load(char* start, char* end);
-	void build(char* destination, int irq);
-	size_t length();
-private:
-	char* m_start;
-	size_t m_length;
-	size_t m_irq_offset;
-};
+extern "C" void handle_interrupt(int irq, int error_code);
 
-#endif
+#endif /* INTERRUPT_HANDLER_HPP_ */

@@ -98,6 +98,7 @@ void CPU::init_gdt()
 		gdt[i] = {};
 
 	// Kernel code descriptor
+	// 8 -> 0x08
 	gdt[1].rw = RWCode::ALLOW_READ;
 	gdt[1].direction = Direction::GROWS_UP;
 	gdt[1].executable = true;
@@ -106,9 +107,11 @@ void CPU::init_gdt()
 	gdt[1].present = 1;
 	gdt[1].operation_size = OperationSize::BIT32;
 	gdt[1].granularity = PAGE;
-	gdt[1].set_base_limit(Kernel::kernel_start, GB(1) - 1);
+	//gdt[1].set_base_limit(Kernel::kernel_start, GB(1) - 1);
+	gdt[1].set_base_limit(0, GB(4) - 1);
 
 	// Kernel data descriptor
+	// 16 -> 0x10
 	gdt[2].rw = RWData::ALLOW_WRITE;
 	gdt[2].direction = Direction::GROWS_UP;
 	gdt[2].executable = false;
@@ -117,9 +120,11 @@ void CPU::init_gdt()
 	gdt[2].present = 1;
 	gdt[2].operation_size = OperationSize::BIT32;
 	gdt[2].granularity = PAGE;
-	gdt[2].set_base_limit(Kernel::kernel_start, GB(1) - 1);
+	//gdt[2].set_base_limit(Kernel::kernel_start, GB(1) - 1);
+	gdt[2].set_base_limit(0, GB(4) - 1);
 
 	// Userspace code descriptor
+	// 24 -> 0x18
 	gdt[3].rw = RWCode::ALLOW_READ;
 	gdt[3].direction = Direction::GROWS_UP;
 	gdt[3].executable = true;
@@ -131,6 +136,7 @@ void CPU::init_gdt()
 	gdt[3].set_base_limit(0, Kernel::kernel_start - 1);
 
 	// Userspace data descriptor
+	// 32 -> 0x20
 	gdt[4].rw = RWData::ALLOW_WRITE;
 	gdt[4].direction = Direction::GROWS_UP;
 	gdt[4].executable = false;

@@ -92,6 +92,13 @@ struct IDTR
 	u32 address;
 } __attribute__((packed));
 
+namespace PIC
+{
+void send_eoi(u8 irq);
+bool is_served(u8 irq);
+void init();
+}
+
 extern IDT* idt;
 extern IDTR idtr;
 Gate& get_handler(int irq);
