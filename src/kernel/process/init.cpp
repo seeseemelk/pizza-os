@@ -42,10 +42,10 @@ static void test_process()
 		CPU::out_of_memory();
 	}
 
-	char* ptr = reinterpret_cast<char*>(0x200);
+	/*char* ptr = reinterpret_cast<char*>(0x200);
 	ptr[0] = 'H';
 	ptr[1] = 'w';
-	ptr[2] = '\0';
+	ptr[2] = '\0';*/
 }
 
 void Processes::init()

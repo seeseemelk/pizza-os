@@ -42,6 +42,10 @@ extern "C" void kernel_main(multiboot_info_t* mbt)
 	Interrupt::init();
 	log("Done");
 
+	log("Initialising process management...");
+	Processes::init();
+	log("Done");
+
 	log("Loading ramdisk...");
 	RamDisk::init();
 	log("Done");
@@ -52,10 +56,6 @@ extern "C" void kernel_main(multiboot_info_t* mbt)
 		log("Could not find mcp in ramdisk");
 		CPU::hang();
 	}
-
-	log("Initialising process management...");
-	Processes::init();
-	log("Done");
 
 	log("Loading mcp...");
 	auto file = result.result;

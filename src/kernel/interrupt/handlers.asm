@@ -39,36 +39,3 @@ global INTH_ERR_END
 INTH_ERR:
 inth_errorcode 0xFFFFFFFF
 INTH_ERR_END:
-
-;; Macros to repeat the interrupt handlers
-;%macro repeat_inth_no_errorcode 1
-;	%rep %1
-;	global IHANDLE_%+i
-;	IHANDLE_%+i:
-;	inth_no_errorcode 1
-;	%assign i i+1
-;	%endrep
-;%endmacro
-;
-;%macro repeat_inth_errorcode 1
-;	%rep %1
-;	inth_no_errorcode 1
-;	%assign i i+1
-;	%endrep
-;%endmacro
-;
-;; Write the interrupt handlers
-;%assign i 0
-;; Exception handlers
-;repeat_inth_no_errorcode 8
-;repeat_inth_errorcode 1
-;repeat_inth_no_errorcode 1
-;repeat_inth_errorcode 5
-;repeat_inth_no_errorcode 1
-;repeat_inth_errorcode 1
-;repeat_inth_no_errorcode 3
-;
-;; Device driver handlers
-;%assign i 0x20
-;repeat_inth_errorcode 0x10
-;

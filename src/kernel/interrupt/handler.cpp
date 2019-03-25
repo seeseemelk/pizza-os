@@ -113,13 +113,14 @@ extern "C" void handle_interrupt(int irq, int error_code)
 			CPU::hang();
 			break;
 		default:
-			if (PIC::is_served(static_cast<u8>(irq)))
+			if ((irq == 7 || irq == 15) && !PIC::is_served(static_cast<u8>(irq)))
 			{
-				log("Received external IRQ 0x%X", irq);
-				PIC::send_eoi(static_cast<u8>(irq));
+				static int spur_count = 0;
+				log("Spurius IRQ 0x%X (spur_count = %d)", irq, ++spur_count);
+				return;
 			}
-			else
-				log("Spurious IRQ 0x%X", irq);
+			log("Received external IRQ 0x%X", irq);
+			PIC::send_eoi(static_cast<u8>(irq));
 			break;
 	}
 }

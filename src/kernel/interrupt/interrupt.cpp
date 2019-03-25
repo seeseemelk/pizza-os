@@ -108,12 +108,16 @@ void Interrupt::init()
 	for (size_t i = 0; i < sizeof(with_errors) / sizeof(int); i++)
 		create_handler(with_errors[i], inth_factory);
 
+	// Create handler for external devices
+	for (size_t i = 0x20; i <= 0x30; i++)
+		create_handler(i, inth_factory);
+
 	// Before enabling, the PIC interrupt vectors have to be remapped.
 	PIC::init();
 
 	log("Enabling interrupts");
 	enable();
-	log("Enabled");
+	log("Enabled interrupts");
 }
 
 void Interrupt::disable()
