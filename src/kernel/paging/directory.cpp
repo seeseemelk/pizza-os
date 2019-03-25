@@ -83,7 +83,10 @@ void* PageDirEntry::get_virtual_address()
 	return reinterpret_cast<void*>((reinterpret_cast<size_t>(this) - reinterpret_cast<size_t>(directory.entries)) / sizeof(PageDirEntry) * MB(4));
 }
 
-
+Result<PageTable*> PageDirEntry::get_or_make_table()
+{
+	return present ? Result<PageTable*>(&get_table()) : make_table();
+}
 
 
 

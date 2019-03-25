@@ -6,21 +6,25 @@ extern handle_interrupt
 
 ; Actual interrupt handler code
 %macro inth_no_errorcode 1
+	hlt
 	pushad
 	push strict dword %1
 	push 0
-	call handle_interrupt
+	mov eax, handle_interrupt
+	call eax
 	add eax, 8
 	popad
 	iretd
 %endmacro
 
 %macro inth_errorcode 1
+	hlt
 	pushad
 	push strict dword %1
 	mov eax, [esp+4]
 	push eax
-	call handle_interrupt
+	mov eax, handle_interrupt
+	call eax
 	add eax, 8
 	popad
 	iretd

@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <cstddef>
 
+extern "C" void load_kernel_segment_registers();
+
 enum DescriptorType
 {
 	CODE_OR_DATA = 1,
@@ -145,6 +147,7 @@ void CPU::init_gdt()
 	gdt_descriptor.base = reinterpret_cast<u32>(&gdt);
 	gdt_descriptor.limit = sizeof(gdt);
 	lgdt(gdt_descriptor);
+	load_kernel_segment_registers();
 }
 
 

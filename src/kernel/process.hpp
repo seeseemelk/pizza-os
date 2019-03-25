@@ -3,6 +3,8 @@
 
 #include "result.hpp"
 #include "slab.hpp"
+#include "result.hpp"
+#include <cstdint>
 
 namespace Processes
 {
@@ -22,6 +24,12 @@ namespace Processes
 		int gid;
 		ProcessState state;
 
+		Result<Process*> fork();
+		void switch_to();
+		void kill();
+		ResultState map_page(void* address);
+		ResultState map_pages(void* address, size_t blocks);
+
 	private:
 	};
 
@@ -30,9 +38,6 @@ namespace Processes
 
 	void init();
 	Result<Process*> exec_initrd(const char* filename);
-	Result<Process*> fork();
-	void switch_to(Process& process);
-	void kill(Process& process);
 }
 
 #endif

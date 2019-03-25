@@ -44,8 +44,11 @@ static char* create_handler(size_t irq, HandlerFactory& factory)
 	factory.build(dest, irq);
 
 	// Setup the handler in the IDT.
-	Gate gate = idt->gates[irq];
+	Gate& gate = idt->gates[irq];
 	gate.present = 1;
+	gate.dpl = 0;
+	gate.segment = 16;
+	gate.size = 1;
 	gate.set_offset(dest);
 	gate.set_type(GateType::INTERRUPT);
 
@@ -94,8 +97,18 @@ void Interrupt::init()
 	setup_idtr();
 	log("Creating some handlers");
 
-	create_handler(0x0, inth_factory);
-	create_handler(0x1, inth_factory);
+	/*for (int i = 0; i < 128; i++)
+	{
+		log("Int %d", i);
+		create_handler(i, inth_factory);
+	}*/
+	create_handler(8, inth_factory);
+	//create_handler(0x1, inth_factory);
+	log("Enabling interrupts");
+	asm("int $8");
+	while (1);
+	enable();
+	log("Enabled");
 }
 
 void Interrupt::disable()
