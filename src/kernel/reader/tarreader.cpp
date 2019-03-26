@@ -17,7 +17,7 @@ size_t TarReader::read(char* buf, size_t len)
 	if (len > remaining())
 		len = remaining();
 
-	memcpy(buf, m_file->buffer(), len);
+	memcpy(buf, m_file->buffer() + m_position, len);
 	m_position += m_position;
 	return len;
 }

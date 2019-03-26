@@ -61,7 +61,7 @@ extern "C" void kernel_main(multiboot_info_t* mbt)
 	auto file = result.result;
 	TarReader reader(file);
 	Elf elf_reader(reader);
-	auto header = elf_reader.read_header();
+	elf_reader.dump();
 	if (!elf_reader.is_valid())
 	{
 		log("Found invalid ELF file");
