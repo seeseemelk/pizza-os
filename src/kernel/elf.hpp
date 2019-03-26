@@ -32,7 +32,7 @@ namespace ElfHeaders
 		unsigned short ph_num;
 		unsigned short sh_entsize;
 		unsigned short sh_num;
-		char shstrndx[2];
+		unsigned short shstrndx;
 	} __attribute__((packed));
 
 	struct ProgramHeader
@@ -102,19 +102,19 @@ namespace ElfHeaders
 		SH_NUM = 0x13,
 		SH_LOOS = 0x60000000 // Start OS-Specific
 	};
+
+	struct ElfProgramReader
+	{
+		int header_index;
+		ElfHeaders::ProgramHeader header;
+	};
+
+	struct ElfSectionReader
+	{
+		int header_index;
+		ElfHeaders::SectionHeader header;
+	};
 }
-
-struct ElfProgramReader
-{
-	int header_index;
-	ElfHeaders::ProgramHeader header;
-};
-
-struct ElfSectionReader
-{
-	int header_index;
-	ElfHeaders::SectionHeader header;
-};
 
 class Elf
 {
@@ -124,22 +124,27 @@ public:
 	ElfHeaders::FileHeader& read_header();
 	bool is_valid();
 
-	void begin_read_program_header(ElfProgramReader& reader);
-	bool read_next_program_header(ElfProgramReader& reader);
+	void begin_read_program_header(ElfHeaders::ElfProgramReader& reader);
+	bool read_next_program_header(ElfHeaders::ElfProgramReader& reader);
 
-	void begin_read_section_header(ElfSectionReader& reader);
-	bool read_next_section_header(ElfSectionReader& reader);
+	void begin_read_section_header(ElfHeaders::ElfSectionReader& reader);
+	void begin_read_section_header(ElfHeaders::ElfSectionReader& reader, int index);
+	bool read_next_section_header(ElfHeaders::ElfSectionReader& reader);
+	void read_section_name(ElfHeaders::SectionHeader& header, char* dest, size_t len);
 
 private:
 	Reader& m_reader;
 	ElfHeaders::FileHeader m_header;
 	bool m_read_header = false;
+	unsigned int m_shstrtab_offset = 0;
+
+	void dump_program_headers();
+	void dump_section_headers();
 
 	bool is_magic_valid();
 	bool are_flags_valid();
 
-	void dump_program_headers();
-	void dump_section_headers();
+	void find_shstrtab_offset();
 };
 
 #endif
