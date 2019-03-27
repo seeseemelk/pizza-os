@@ -1,6 +1,8 @@
 #include "paging.hpp"
 #include "pmem.hpp"
+#include "debug.hpp"
 #include <cmath>
+#include <cstring>
 
 using namespace Paging;
 
@@ -25,6 +27,14 @@ PageTable& PageDirectory::get_table(void* virt)
 	return tables[dir_i];
 }
 
+Result<PageTable*> PageDirectory::get_or_make_table(void* virt)
+{
+	if (get_entry(virt).present)
+		return Result<PageTable*>(&get_table(virt));
+	else
+		return get_entry(virt).make_table();
+}
+
 
 //////////////////////////
 // Page Directory Entry //
@@ -42,7 +52,7 @@ void PageDirEntry::set_address(size_t phys)
 
 PageTable& PageDirEntry::get_table()
 {
-	size_t block = (this - directory.entries) / sizeof(PageDirEntry);
+	size_t block = (reinterpret_cast<size_t>(this) - reinterpret_cast<size_t>(directory.entries)) / sizeof(PageDirEntry);
 	return tables[block];
 }
 
@@ -68,7 +78,7 @@ PageTable& PageDirEntry::make_table(size_t phys)
 
 	// Clear each entry.
 	for (size_t i = 0; i < 1024; i++)
-		table.entries[i].present = 0;
+		memset(reinterpret_cast<void*>(&table.entries[i]), 0, sizeof(PageTableEntry));
 
 	// Store the directory entry.
 	set_address(phys);

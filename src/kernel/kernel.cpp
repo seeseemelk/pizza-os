@@ -68,7 +68,14 @@ extern "C" void kernel_main(multiboot_info_t* mbt)
 		CPU::hang();
 	}
 
-	log("Found valid ELF file!");
+	log("Found valid ELF file, loading it!");
+	if (elf_reader.extract() == ResultState::FAIL)
+	{
+		log("Failed to load ELF file!");
+		CPU::hang();
+	}
+
+	log("Finished");
 
 	log("Kernel main ended");
 	CPU::hang();

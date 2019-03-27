@@ -28,8 +28,8 @@ struct PageDirEntry
 	Result<PageTable*> make_table();
 	PageTable& make_table(size_t phys);
 	PageTable& get_table();
-	void* get_virtual_address();
 	Result<PageTable*> get_or_make_table();
+	void* get_virtual_address();
 };
 
 struct PageTableEntry
@@ -66,6 +66,7 @@ struct PageDirectory
 	PageDirEntry& get_entry(void* virt);
 	bool has_table(void* virt);
 	PageTable& get_table(void* virt);
+	Result<PageTable*> get_or_make_table(void* virt);
 } __attribute__((aligned(4096)));
 
 extern PageDirectory& directory;

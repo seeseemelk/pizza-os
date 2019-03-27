@@ -20,7 +20,7 @@ namespace ElfHeaders
 		char os_abi;
 		char abi_version;
 		char pad[7];
-		char type[2];
+		unsigned short type;
 		char machine[2];
 		char version_2[4];
 		char entry_point[4];
@@ -34,6 +34,17 @@ namespace ElfHeaders
 		unsigned short sh_num;
 		unsigned short shstrndx;
 	} __attribute__((packed));
+
+	enum ElfType
+	{
+		ET_NONE = 0,
+		ET_REL = 1,
+		ET_EXEC = 2,
+		ET_DYN = 3,
+		ET_CORE = 4,
+		ET_LOPROC = 0xFF00,
+		ET_HIPROC = 0xFFFF
+	};
 
 	struct ProgramHeader
 	{
@@ -49,9 +60,9 @@ namespace ElfHeaders
 		// Note that padding bytes may follow, check ph_entsize.
 	};
 
-	enum ProgramHeaderType
+	enum ProgramType
 	{
-		PH_NLL = 0x0, // NULL, but NULL is a reserved symbol.
+		PH_NULL = 0x0,
 		PH_LOAD = 0x1,
 		PH_DYNAMIC = 0x2,
 		PH_INTERP = 0x3,
@@ -62,6 +73,14 @@ namespace ElfHeaders
 		PH_HIOS = 0x6FFFFFFF,
 		PH_LOPROC = 0x70000000,
 		PH_HIPROC = 0x7FFFFFFF
+	};
+
+	enum ProgramFlags
+	{
+		PF_EXECUTE = 0x1,
+		PF_WRITE = 0x2,
+		PF_READ = 0x4,
+		PF_MASKPROC = 0xF0000000
 	};
 
 	struct SectionHeader
@@ -80,9 +99,9 @@ namespace ElfHeaders
 		// Note that padding bytes may follow, check sh_entsize.
 	};
 
-	enum SectionHeaderType
+	enum SectionType
 	{
-		SH_NLL = 0x0, // NULL, but NULL is a reserved symbol.
+		SH_NULL = 0x0,
 		SH_PROGBITS = 0x1,
 		SH_SYMTAB = 0x2,
 		SH_STRTAB = 0x3,
@@ -101,6 +120,14 @@ namespace ElfHeaders
 		SH_SYMTAB_SHNDX = 0x12,
 		SH_NUM = 0x13,
 		SH_LOOS = 0x60000000 // Start OS-Specific
+	};
+
+	enum SectionFlags
+	{
+		SHF_WRITE = 0x1, // Should be writable during process execution
+		SHF_ALLOC = 0x2, // Occupies memory during process execution
+		SHF_EXECINSTR = 0x4, // Contains executable machine instructions
+		SHF_MASKPROC = 0xF0000000 // Processor specific semantics
 	};
 
 	struct ElfProgramReader
@@ -124,6 +151,8 @@ public:
 	ElfHeaders::FileHeader& read_header();
 	bool is_valid();
 
+	ResultState extract();
+
 	void begin_read_program_header(ElfHeaders::ElfProgramReader& reader);
 	bool read_next_program_header(ElfHeaders::ElfProgramReader& reader);
 
@@ -137,6 +166,12 @@ private:
 	ElfHeaders::FileHeader m_header;
 	bool m_read_header = false;
 	unsigned int m_shstrtab_offset = 0;
+
+	ResultState extract_programs();
+	ResultState extract_program(ElfHeaders::ProgramHeader& header);
+
+	void extract_sections();
+	void extract_section(ElfHeaders::SectionHeader& header);
 
 	void dump_program_headers();
 	void dump_section_headers();

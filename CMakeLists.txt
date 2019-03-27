@@ -31,6 +31,9 @@ set(LIBC_INC ${PROJECT_SOURCE_DIR}/src/stdlib/libc/user)
 set(LIBKCXX_INC ${PROJECT_SOURCE_DIR}/src/stdlib/libcxx/kernel)
 set(LIBCXX_INC ${PROJECT_SOURCE_DIR}/src/stdlib/libcxx/user)
 
+# Linker Script for User Programs
+set(USER_LINKER_SCRIPT ${PROJECT_SOURCE_DIR}/src/stdlib/libc/user/linker.ld)
+
 add_subdirectory(src/stdlib)
 add_subdirectory(src/kernel)
 add_subdirectory(src/apps)

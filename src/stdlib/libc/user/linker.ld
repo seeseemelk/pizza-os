@@ -1,10 +1,11 @@
 ENTRY(_start)
 
-SECTION
+SECTIONS
 {
-	. = 0x0000;
+	. = 4K;
+	_start = .;
 
-	.text ALIGN(4K)
+	.text ALIGN(4K):
 	{
 		*crti.*(.init)
 		*crtbegin.o(.init)
@@ -16,18 +17,18 @@ SECTION
 		*(.fini)
 	}
 
-	.data ALIGN(4K)
+	.data ALIGN(4K):
 	{
 		*(.data)
 	}
 
-	.bss ALIGN(4K)
+	.bss ALIGN(4K):
 	{
 		*(COMMON)
 		*(.bss)
 	}
 
-	.rodata ALIGN(4K)
+	.rodata ALIGN(4K):
 	{
 		*(.rodata)
 

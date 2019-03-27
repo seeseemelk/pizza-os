@@ -30,6 +30,8 @@ Result<void*> PMem::alloc_end(size_t bytes)
 	size_t blocks = ceildiv(bytes, KB(4));
 	size_t block_end = map_length;
 
+	//log("Allocating %d continuous blocks of physical memory", blocks);
+
 	for (size_t i = map_length - 1; i != static_cast<size_t>(-1); i--)
 	{
 		if (static_cast<BlockState>(map[i]) != FREE)
@@ -39,6 +41,7 @@ Result<void*> PMem::alloc_end(size_t bytes)
 			size_t address = i * KB(4);
 			size_t length = blocks * KB(4);
 			set_state(address, length, BlockState::USED);
+			//log("Allocated at 0x%X", address);
 			return Result<void*>( reinterpret_cast<void*>(address) );
 		}
 	}

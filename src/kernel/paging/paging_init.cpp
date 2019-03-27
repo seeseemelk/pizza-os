@@ -17,7 +17,7 @@ void Paging::init()
 	log("Page directory address: 0x%X", &directory);
 	log("Page tables: 0x%X", tables);
 
-	directory.entries[0].present = 0;
+	//directory.entries[0].present = 0;
 
 	memset(static_cast<void*>(&metatable), 0, sizeof(PageTable));
 

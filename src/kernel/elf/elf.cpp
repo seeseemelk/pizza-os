@@ -46,7 +46,7 @@ bool Elf::are_flags_valid()
 	    && m_header.version_2[0] == 1 && m_header.version_2[1] == 0
 	    && m_header.version_2[1] == 0 && m_header.version_2[2] == 0
 	    && m_header.endianness == 0x01 // Parser currently only supports little endian ELF headers
-	    && m_header.type[0] == 2 && m_header.type[1] == 0 // Must be an executable
+	    && m_header.type == ElfType::ET_EXEC // Must be an executable
 	    && m_header.machine[0] == 3 && m_header.machine[1] == 0; // Must be i386
 }
 
