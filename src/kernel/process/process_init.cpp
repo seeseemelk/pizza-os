@@ -28,10 +28,10 @@ static void init_first_process()
 		CPU::out_of_memory();
 	}
 	current_process = result.result;
-	current_process->pid = static_cast<int>(allocator.index_of(*current_process));
-	current_process->uid = 0;
-	current_process->gid = 0;
-	current_process->state = ProcessState::STARTING;
+	current_process->m_pid = static_cast<int>(allocator.index_of(*current_process));
+	current_process->m_uid = 0;
+	current_process->m_gid = 0;
+	current_process->m_state = ProcessState::STARTING;
 }
 
 void Processes::init()

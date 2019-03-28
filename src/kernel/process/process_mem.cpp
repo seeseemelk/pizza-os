@@ -37,3 +37,32 @@ ResultState Process::map_pages(void* address, size_t blocks)
 	}
 	return ResultState::SUCCESS;
 }
+
+void Process::load_pagetable()
+{
+	Paging::load_directory(m_page_directory);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

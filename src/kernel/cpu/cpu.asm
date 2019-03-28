@@ -17,3 +17,9 @@ global asm_get_cr2
 asm_get_cr2:
 	mov eax, cr2
 	ret
+
+global asm_load_cr3
+asm_load_cr3:
+	mov eax, [esp + 4]
+	mov cr3, eax
+	ret

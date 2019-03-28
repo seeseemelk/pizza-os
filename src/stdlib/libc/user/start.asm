@@ -6,11 +6,7 @@ stack_bottom:
 resb 16384
 stack_top:
 
-extern _init
-extern _fini
-extern main
-
-section .text
+section _pretext
 global _start:function (_start.end - _start)
 _start:
 	mov ebp, stack_top
@@ -23,3 +19,7 @@ _start:
 .hang:
 	jmp .hang
 .end:
+
+extern _init
+extern _fini
+extern main

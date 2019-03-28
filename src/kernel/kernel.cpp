@@ -13,6 +13,7 @@
 
 extern "C" void _init(void);
 extern "C" void _fini(void);
+extern "C" void prog_test(void);
 
 extern "C" void kernel_main(multiboot_info_t* mbt)
 {

@@ -33,3 +33,9 @@ u32 CPU::get_cr2()
 {
 	return asm_get_cr2();
 }
+
+extern "C" u32 asm_load_cr3(u32);
+void CPU::load_cr3(u32 address)
+{
+	asm_load_cr3(address);
+}

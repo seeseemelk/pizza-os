@@ -3,10 +3,11 @@ ENTRY(_start)
 SECTIONS
 {
 	. = 4K;
-	_start = .;
 
 	.text ALIGN(4K):
 	{
+		*(_pretext);
+		
 		*crti.*(.init)
 		*crtbegin.o(.init)
 		EXCLUDE_FILE (*crtbegin.o *crtend.o *crti.* *crtn.o) *(.init)
