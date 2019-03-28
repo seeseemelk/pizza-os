@@ -7,15 +7,6 @@
 
 using namespace Paging;
 
-/////////////////////////
-// Namespace Functions //
-/////////////////////////
-
-void Paging::load_directory(u32 directory)
-{
-	CPU::load_cr3(directory);
-}
-
 ////////////////////
 // Page Directory //
 ////////////////////

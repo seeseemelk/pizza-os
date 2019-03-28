@@ -14,3 +14,8 @@ void Process::switch_to()
 		load_pagetable();
 	}
 }
+
+void Process::load_pagetable()
+{
+	Paging::load_directory(m_page_directory);
+}

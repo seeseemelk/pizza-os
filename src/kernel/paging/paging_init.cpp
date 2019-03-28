@@ -7,7 +7,7 @@
 using namespace Paging;
 
 extern "C" PageDirectory _system_page_directory;
-extern "C" PageTable _system_default_page_entry;
+extern "C" PageTable _system_default_page_table;
 PageDirectory& Paging::directory = _system_page_directory;
 PageTable* const Paging::tables = reinterpret_cast<PageTable*>(GB(4) - MB(4));
 PageTable Paging::metatable;
@@ -35,7 +35,7 @@ void Paging::init()
 
 	// Add the startup page table to the metatable.
 	PageTableEntry& system_page_entry = metatable.get_entry(reinterpret_cast<void*>(0xC0000000));
-	system_page_entry.set_address(reinterpret_cast<size_t>(&_system_default_page_entry) - 0xC0000000);
+	system_page_entry.set_address(reinterpret_cast<size_t>(&_system_default_page_table) - 0xC0000000);
 	system_page_entry.present = 1;
 	system_page_entry.writable = 0;
 
@@ -54,3 +54,35 @@ size_t Paging::tbl_index(void* virt)
 {
 	return (reinterpret_cast<u32>(virt) % MB(4)) / KB(4);
 }
+
+void Paging::load_directory(u32 directory)
+{
+	// Make _system_default_page_table refer to the new directory.
+	PageTableEntry& entry = _system_default_page_table.get_entry(reinterpret_cast<void*>(&_system_page_directory));
+	entry.set_address(directory);
+
+	// Load new CR3
+	CPU::load_cr3(directory);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
