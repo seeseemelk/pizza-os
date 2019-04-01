@@ -23,7 +23,7 @@ namespace ElfHeaders
 		unsigned short type;
 		char machine[2];
 		char version_2[4];
-		char entry_point[4];
+		unsigned int entry_point;
 		unsigned int ph_off;
 		unsigned int sh_off;
 		char flags[4];

@@ -2,7 +2,7 @@
 #include "paging.hpp"
 #include "pmem.hpp"
 
-using namespace Processes;
+using namespace Proc;
 
 ResultState Process::map_page(void* address)
 {

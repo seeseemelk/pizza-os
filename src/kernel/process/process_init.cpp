@@ -3,10 +3,10 @@
 #include "debug.hpp"
 #include "cpu.hpp"
 
-using namespace Processes;
+using namespace Proc;
 
-Slab<Process> Processes::allocator;
-Process* Processes::current_process;
+Slab<Process> Proc::allocator;
+Process* Proc::current_process = 0;
 
 static void init_allocator()
 {
@@ -34,8 +34,8 @@ static void init_first_process()
 	current_process->m_state = ProcessState::STARTING;
 }
 
-void Processes::init()
+void Proc::init()
 {
 	init_allocator();
-	init_first_process();
+	//init_first_process();
 }

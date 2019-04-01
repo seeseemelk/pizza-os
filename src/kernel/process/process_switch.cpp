@@ -1,18 +1,22 @@
 #include "process.hpp"
+#include "debug.hpp"
 
-using namespace Processes;
+using namespace Proc;
 
 bool Process::is_current()
 {
-	return this == Processes::current_process;
+	return this == Proc::current_process;
 }
 
 void Process::switch_to()
 {
 	if (!is_current())
 	{
+		log("Reloading pagetable");
 		load_pagetable();
 	}
+	else
+		log("Already in current process");
 }
 
 void Process::load_pagetable()

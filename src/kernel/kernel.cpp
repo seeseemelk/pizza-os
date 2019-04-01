@@ -1,15 +1,14 @@
-#include <cstddef>
-#include "debug.hpp"
 #include "cpu.hpp"
-#include "pmem.hpp"
-#include "paging.hpp"
-#include "multiboot.hpp"
+#include "debug.hpp"
 #include "interrupt.hpp"
-#include "slab.hpp"
-#include "ramdisk.hpp"
-#include "elf.hpp"
-#include "process.hpp"
 #include "kernel/alloc.hpp"
+#include "multiboot.h"
+#include "multiboot.hpp"
+#include "paging.hpp"
+#include "pmem.hpp"
+#include "process.hpp"
+#include "ramdisk.hpp"
+#include "result.hpp"
 
 extern "C" void _init(void);
 extern "C" void _fini(void);
@@ -44,22 +43,30 @@ extern "C" void kernel_main(multiboot_info_t* mbt)
 	log("Done");
 
 	log("Initialising process management...");
-	Processes::init();
+	Proc::init();
 	log("Done");
 
 	log("Loading ramdisk...");
 	RamDisk::init();
 	log("Done");
 
-	auto result = RamDisk::get_file("mcp");
+	/*auto result = RamDisk::get_file("mcp");
 	if (result.is_fail())
 	{
 		log("Could not find mcp in ramdisk");
 		CPU::hang();
-	}
+	}*/
 
 	log("Loading mcp...");
-	auto file = result.result;
+	Result<Proc::Process*> result = Proc::exec_initrd("mcp");
+	if (result.is_fail())
+	{
+		log("Failed to load mcp");
+		CPU::hang();
+	}
+
+	CPU::to_usermode(result.result->m_entry_point);
+	/*auto file = result.result;
 	TarReader reader(file);
 	Elf elf_reader(reader);
 	elf_reader.dump();
@@ -76,7 +83,12 @@ extern "C" void kernel_main(multiboot_info_t* mbt)
 		CPU::hang();
 	}
 
-	log("Finished");
+	log("Finished loading ELF file");
+
+	u32 entrypoint = elf_reader.read_header().entry_point;
+	log("Entering usermode... (entrypoint is 0x%X)", entrypoint);
+
+	Processes::*/
 
 	log("Kernel main ended");
 	CPU::hang();

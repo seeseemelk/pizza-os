@@ -7,7 +7,7 @@
 #include "paging.hpp"
 #include <cstdint>
 
-namespace Processes
+namespace Proc
 {
 	enum ProcessState
 	{
@@ -24,6 +24,7 @@ namespace Processes
 		int m_uid;
 		int m_gid;
 		ProcessState m_state;
+		u32 m_entry_point;
 
 		Result<Process*> fork();
 		bool is_current();
@@ -34,7 +35,6 @@ namespace Processes
 
 	private:
 		u32 m_page_directory;
-		intptr_t m_entry_point;
 
 		void load_pagetable();
 	};

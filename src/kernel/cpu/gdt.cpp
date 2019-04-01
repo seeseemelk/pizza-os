@@ -1,4 +1,5 @@
 #include "cpu.hpp"
+#include "cpu/tss.hpp"
 #include "kernel.hpp"
 #include <cstdint>
 #include <cstddef>
@@ -58,7 +59,7 @@ struct SegmentDescriptor
 
 	u16 limit16_19 : 4;
 	u16 available : 1;
-	u16 bit64 : 1; /* Should always be 0. */
+	u16 bit64 : 1; /* Should always be 0 */
 	u16 operation_size : 1;
 	u16 granularity : 1;
 	u16 base24_31 : 8;
@@ -74,6 +75,7 @@ struct GDTDescriptor
 
 static SegmentDescriptor gdt[6];
 static GDTDescriptor gdt_descriptor;
+static CPU::TSS tss;
 
 void SegmentDescriptor::set_base_limit(u32 address, u32 bytes)
 {
@@ -89,6 +91,30 @@ void SegmentDescriptor::set_base_limit(u32 address, u32 bytes)
 static void lgdt(GDTDescriptor& descriptor)
 {
 	asm ("lgdt %0" :: "m" (descriptor));
+}
+
+static void ltr(u16 index)
+{
+	asm ("ltr %0" :: "a" (index));
+}
+
+static void write_tss(SegmentDescriptor& descriptor, CPU::TSS& tss)
+{
+	descriptor.set_base_limit(
+			reinterpret_cast<u32>(&tss),
+			sizeof(CPU::TSS) - 1);
+
+	// Indicate that this descriptor refers to a TSS and not to a LDT.
+	descriptor.accessed = 1;
+
+	descriptor.rw = 0;
+	descriptor.direction = Direction::GROWS_UP;
+	descriptor.executable = 1; // 1 for 32 bits, 0 for 16 bits.
+	descriptor.descriptor_type = DescriptorType::SYSTEM;
+	descriptor.dpl = 3;
+	descriptor.present = 1;
+	descriptor.available = 0;
+	descriptor.granularity = Granularity::BYTE;
 }
 
 void CPU::init_gdt()
@@ -133,7 +159,7 @@ void CPU::init_gdt()
 	gdt[3].present = 1;
 	gdt[3].operation_size = OperationSize::BIT32;
 	gdt[3].granularity = PAGE;
-	gdt[3].set_base_limit(0, Kernel::kernel_start - 1);
+	gdt[3].set_base_limit(0, Kernel::kernel_start - KB(4));
 
 	// Userspace data descriptor
 	// 32 -> 0x20
@@ -145,14 +171,17 @@ void CPU::init_gdt()
 	gdt[4].present = 1;
 	gdt[4].operation_size = OperationSize::BIT32;
 	gdt[4].granularity = PAGE;
-	gdt[4].set_base_limit(0, Kernel::kernel_start - 1);
+	gdt[4].set_base_limit(0, Kernel::kernel_start - KB(4));
 
 	// GDT 5 is reserved for TSS
+	// 40 -> 0x28
+	write_tss(gdt[5], tss);
 
 	// Setup GDT Descriptor
 	gdt_descriptor.base = reinterpret_cast<u32>(&gdt);
 	gdt_descriptor.limit = sizeof(gdt);
 	lgdt(gdt_descriptor);
+	ltr(0x28);
 	load_kernel_segment_registers();
 }
 

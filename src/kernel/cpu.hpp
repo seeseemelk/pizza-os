@@ -13,6 +13,7 @@ namespace CPU
 
 	u32 get_cr2();
 	void load_cr3(u32 phys_address);
+	void to_usermode(u32 entrypoint);
 }
 
 #endif

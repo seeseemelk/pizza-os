@@ -9,6 +9,7 @@ stack_top:
 section _pretext
 global _start:function (_start.end - _start)
 _start:
+	jmp $
 	mov ebp, stack_top
 	mov esp, ebp
 

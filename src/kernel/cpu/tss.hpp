@@ -1,7 +1,8 @@
 #include "cpu.hpp"
 #include <cstdint>
 
-using namespace CPU;
+namespace CPU
+{
 
 struct TSS
 {
@@ -60,3 +61,5 @@ struct TSS
 	u16 _12;
 	u16 iomap_base;
 };
+
+}
