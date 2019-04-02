@@ -5,6 +5,7 @@
 #include "slab.hpp"
 #include "result.hpp"
 #include "paging.hpp"
+#include "elf.hpp"
 #include <cstdint>
 
 namespace Proc
@@ -25,9 +26,9 @@ namespace Proc
 		int m_gid;
 		ProcessState m_state;
 		u32 m_entry_point;
-		u32 m_syscall_stack[24];
 
 		Result<Process*> fork();
+		ResultState exec_elf(Elf& elf);
 		bool is_current();
 		void switch_to();
 		void kill();
@@ -36,6 +37,7 @@ namespace Proc
 
 	private:
 		u32 m_page_directory;
+		u32 m_syscall_stack[24];
 
 		void load_pagetable();
 	};

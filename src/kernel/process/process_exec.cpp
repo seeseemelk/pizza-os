@@ -6,6 +6,35 @@
 
 using namespace Proc;
 
+ResultState Process::exec_elf(Elf& elf)
+{
+	if (current_process == 0)
+	{
+		current_process = this;
+		m_pid = static_cast<int>(allocator.index_of(*this));
+		m_uid = 0;
+		m_gid = 0;
+		CPU::set_ring3_syscall_stack(m_syscall_stack);
+	}
+	else
+	{
+		m_uid = current_process->m_uid;
+		m_gid = current_process->m_gid;
+	}
+
+	log("Performing context switch");
+	switch_to();
+	log("Extracting program");
+	if (elf.extract() == ResultState::FAIL)
+	{
+		log("Failed to extract ELF file");
+		return ResultState::FAIL;
+	}
+
+	log("Program loaded");
+	return ResultState::SUCCESS;
+}
+
 Result<Process*> Proc::exec_initrd(const char* filename)
 {
 	log("Searching for image");
@@ -39,29 +68,7 @@ Result<Process*> Proc::exec_initrd(const char* filename)
 	process->m_entry_point = elf.read_header().entry_point;
 	process->m_state = ProcessState::STARTING;
 
-	if (current_process == 0)
-	{
-		current_process = process;
-		process->m_pid = static_cast<int>(allocator.index_of(*process));
-		process->m_uid = 0;
-		process->m_gid = 0;
-		CPU::set_ring3_syscall_stack(process->m_syscall_stack);
-	}
-	else
-	{
-		process->m_uid = current_process->m_uid;
-		process->m_gid = current_process->m_gid;
-	}
-
-	log("Performing context switch");
-	process->switch_to();
-	log("Extracting program");
-	if (elf.extract() == ResultState::FAIL)
-	{
-		log("Failed to extract ELF file");
+	if (process->exec_elf(elf) == ResultState::FAIL)
 		return Result<Process*>();
-	}
-
-	log("Program loaded");
 	return Result<Process*>(process);
 }

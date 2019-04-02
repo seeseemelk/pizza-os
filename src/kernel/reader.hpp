@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <ramdisk.hpp>
 
-class Reader
+class Reader // @suppress("Class has a virtual method and non-virtual destructor")
 {
 public:
 	enum OffsetType
@@ -18,7 +18,7 @@ public:
 	virtual size_t seek(OffsetType type, size_t address) = 0;
 };
 
-class TarReader : public Reader
+class TarReader : public Reader // @suppress("Class has a virtual method and non-virtual destructor")
 {
 public:
 	TarReader(const RamDisk::TarFile* file);
