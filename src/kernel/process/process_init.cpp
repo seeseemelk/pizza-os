@@ -19,23 +19,7 @@ static void init_allocator()
 	allocator.init(*table.result);
 }
 
-static void init_first_process()
-{
-	Result<Process*> result = allocator.alloc();
-	if (result.is_fail())
-	{
-		log("Failed to allocate first userspace process");
-		CPU::out_of_memory();
-	}
-	current_process = result.result;
-	current_process->m_pid = static_cast<int>(allocator.index_of(*current_process));
-	current_process->m_uid = 0;
-	current_process->m_gid = 0;
-	current_process->m_state = ProcessState::STARTING;
-}
-
 void Proc::init()
 {
 	init_allocator();
-	//init_first_process();
 }

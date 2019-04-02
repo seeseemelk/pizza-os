@@ -80,6 +80,9 @@ static ResultState prepare_blocks(intptr_t address, size_t num_blocks)
 
 static void constrain_block(void* address, bool writable, bool executable)
 {
+	// This will be used if the X/D extension is enabled.
+	UNUSED(executable);
+
 	Paging::PageDirEntry& dir_entry = Paging::directory.get_entry(address);
 	dir_entry.userspace = true;
 	if (writable)

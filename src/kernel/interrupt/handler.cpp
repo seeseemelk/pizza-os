@@ -6,16 +6,16 @@
 
 using namespace Interrupt;
 
-struct PageFaultCode
+enum PageFaultCode
 {
-	u32 present : 1;
-	u32 write : 1;
-	u32 user : 1;
-	u32 rsvd : 1;
-	u32 fetch : 1;
-	u32 pk : 1;
-	u32 sgx : 1;
-} __attribute__((packed));
+	present = 0b00000001,
+	write =   0b00000010,
+	user =    0b00000100,
+	rsvd =    0b00001000,
+	fetch =   0b00010000,
+	pk =      0b00100000,
+	sgx = 0x10
+};
 
 void handle_page_fault(int error_code)
 {
@@ -23,34 +23,33 @@ void handle_page_fault(int error_code)
 	log("Page Fault at address 0x%X, error: 0x%X", address, error_code);
 
 	//PageFaultCode code = static_cast<PageFaultCode>(error_code);
-	PageFaultCode& code = *reinterpret_cast<PageFaultCode*>(&error_code);
-	if (code.present)
+	if (error_code & PageFaultCode::present)
 		log("  - Caused by a page-level protection violation.");
 	else
 		log("  - Caused by a non-present page.");
 
-	if (code.write)
+	if (error_code & PageFaultCode::write)
 		log("  - Caused by a write.");
 	else
 		log("  - Caused by a read.");
 
-	if (code.fetch)
+	if (error_code & PageFaultCode::fetch)
 		log("  - Caused by an instruction fetch.");
 	else
 		log("  - Caused by an instruction that performed a read or write.");
 
-	if (code.user)
+	if (error_code & PageFaultCode::user)
 		log("  - Caused in user-mode.");
 	else
 		log("  - Caused in supervisor-mode.");
 
-	if (code.rsvd)
+	if (error_code & PageFaultCode::rsvd)
 		log("  - Caused by a reserved bit violation (some bit is set to 1 in some paging-structure entity).");
 
-	if (code.pk)
+	if (error_code & PageFaultCode::pk)
 		log("  - Caused by a protection key violation.");
 
-	if (code.sgx)
+	if (error_code & PageFaultCode::sgx)
 		log("  - Caused by a violation of SGX-specific access-control requirements.");
 
 	CPU::hang();

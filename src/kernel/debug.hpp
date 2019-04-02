@@ -5,10 +5,6 @@ extern "C" {
 #include <stdarg.h>
 }
 
-#ifndef MODULE
-#define MODULE "UNKNOWN"
-#endif
-
 namespace Debug
 {
 	void init();
@@ -21,6 +17,9 @@ namespace Debug
 
 #define log(fmt, ...) \
 	Debug::printf("[%s:%d] " fmt "\n", __FILE__, __LINE__, ## __VA_ARGS__)
+
+#define UNUSED(x) \
+	(void)(x)
 
 /*
 #define log(fmt) \
