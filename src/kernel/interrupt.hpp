@@ -106,6 +106,7 @@ Gate& get_handler(int irq);
 void init();
 void disable();
 void enable();
+void handle_interrupt();
 
 }
 

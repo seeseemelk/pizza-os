@@ -39,10 +39,3 @@ void CPU::load_cr3(u32 address)
 {
 	asm_load_cr3(address);
 }
-
-extern "C" void asm_enter_ring_3(u32);
-void CPU::to_usermode(u32 entrypoint)
-{
-	log("Entering usermode...");
-	asm_enter_ring_3(entrypoint);
-}

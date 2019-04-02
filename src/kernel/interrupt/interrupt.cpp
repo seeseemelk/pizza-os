@@ -42,7 +42,7 @@ static char* create_handler(size_t irq, HandlerFactory& factory)
 	// Setup the handler in the IDT.
 	Gate& gate = idt->gates[irq];
 	gate.present = 1;
-	gate.dpl = 3;
+	gate.dpl = 0;
 	gate.segment = 8;
 	gate.size = 1;
 	gate.set_offset(dest);

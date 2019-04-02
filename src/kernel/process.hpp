@@ -32,14 +32,22 @@ namespace Proc
 		bool is_current();
 		void switch_to();
 		void kill();
+
+		void enter_process();
+		void enter_kernel();
+
 		ResultState map_page(void* address);
 		ResultState map_pages(void* address, size_t blocks);
 
+		ResultState validate_stack_protector();
+
 	private:
 		u32 m_page_directory;
-		u32 m_syscall_stack[24];
+		u32 m_syscall_stack[34];
+		void* m_esp;
 
 		void load_pagetable();
+		void init_stack();
 	};
 
 	extern Slab<Process> allocator;

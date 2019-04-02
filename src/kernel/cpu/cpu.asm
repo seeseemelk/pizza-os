@@ -23,21 +23,3 @@ asm_load_cr3:
 	mov eax, [esp + 4]
 	mov cr3, eax
 	ret
-
-global asm_enter_ring_3
-asm_enter_ring_3:
-	sti
-	mov ebx, [esp + 4]
-
-	push 0x23 ; User data segment (0x20) with bottom 2 bits for ring 3
-	push 0
-	pushf
-	push 0x1B ; User code segment (0x18) with bottom 2 bits for ring 3
-	push ebx
-
-	mov ax, 0x23
-	mov ds, ax
-	mov es, ax
-	mov fs, ax
-	mov gs, ax
-	iret

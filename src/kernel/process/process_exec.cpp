@@ -6,6 +6,23 @@
 
 using namespace Proc;
 
+void Process::init_stack()
+{
+	size_t i = sizeof(m_syscall_stack) / sizeof(u32) - 1;
+	m_syscall_stack[i--] = 0x23; // User data segment
+	m_syscall_stack[i--] = 0;
+	m_syscall_stack[i--] = (1 << 9) | (3 << 12); // Flags
+	m_syscall_stack[i--] = 0x1B; // User code segment
+	m_syscall_stack[i--] = m_entry_point;
+	m_syscall_stack[0] = 0xDEADBEEF;
+	m_esp = m_syscall_stack + i + 1;
+}
+
+ResultState Process::validate_stack_protector()
+{
+	return m_syscall_stack[0] == 0xDEADBEEF ? ResultState::SUCCESS : ResultState::FAIL;
+}
+
 ResultState Process::exec_elf(Elf& elf)
 {
 	if (current_process == 0)
@@ -14,7 +31,7 @@ ResultState Process::exec_elf(Elf& elf)
 		m_pid = static_cast<int>(allocator.index_of(*this));
 		m_uid = 0;
 		m_gid = 0;
-		CPU::set_ring3_syscall_stack(m_syscall_stack);
+		CPU::set_ring3_syscall_stack(m_syscall_stack + sizeof(m_syscall_stack) / sizeof(u32));
 	}
 	else
 	{
@@ -30,6 +47,9 @@ ResultState Process::exec_elf(Elf& elf)
 		log("Failed to extract ELF file");
 		return ResultState::FAIL;
 	}
+
+	log("Setting up program stack");
+	init_stack();
 
 	log("Program loaded");
 	return ResultState::SUCCESS;

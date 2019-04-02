@@ -2,9 +2,13 @@
 #include "interrupt.hpp"
 #include "debug.hpp"
 #include "cpu.hpp"
+#include "process.hpp"
 #include <cstdint>
 
 using namespace Interrupt;
+
+static int last_irq;
+static int last_error_code;
 
 enum PageFaultCode
 {
@@ -22,7 +26,6 @@ void handle_page_fault(int error_code)
 	u32 address = CPU::get_cr2();
 	log("Page Fault at address 0x%X, error: 0x%X", address, error_code);
 
-	//PageFaultCode code = static_cast<PageFaultCode>(error_code);
 	if (error_code & PageFaultCode::present)
 		log("  - Caused by a page-level protection violation.");
 	else
@@ -55,11 +58,11 @@ void handle_page_fault(int error_code)
 	CPU::hang();
 }
 
-extern "C" void handle_interrupt(int irq, int error_code)
+void Interrupt::handle_interrupt()
 {
 	//log("IRQ: 0x%X, error: 0x%X", irq, error_code);
 	//log("Start handling IRQ 0x%X", irq);
-	switch (irq)
+	switch (last_irq)
 	{
 		case 0x00:
 			log("Divide Error");
@@ -94,7 +97,7 @@ extern "C" void handle_interrupt(int irq, int error_code)
 			CPU::hang();
 			break;
 		case 0x08:
-			log("Double Fault, error: 0x%X", error_code);
+			log("Double Fault, error: 0x%X", last_error_code);
 			CPU::hang();
 			break;
 		case 0x09:
@@ -102,23 +105,23 @@ extern "C" void handle_interrupt(int irq, int error_code)
 			CPU::hang();
 			break;
 		case 0x0A:
-			log("Invalid TSS, error: 0x%X", error_code);
+			log("Invalid TSS, error: 0x%X", last_error_code);
 			CPU::hang();
 			break;
 		case 0x0B:
-			log("Segment Not Present, error: 0x%X", error_code);
+			log("Segment Not Present, error: 0x%X", last_error_code);
 			CPU::hang();
 			break;
 		case 0x0C:
-			log("Stack-Segment Fault, error: 0x%X", error_code);
+			log("Stack-Segment Fault, error: 0x%X", last_error_code);
 			CPU::hang();
 			break;
 		case 0x0D:
-			log("General Protection, error: 0x%X", error_code);
+			log("General Protection, error: 0x%X", last_error_code);
 			CPU::hang();
 			break;
 		case 0x0E:
-			handle_page_fault(error_code);
+			handle_page_fault(last_error_code);
 			break;
 		case 0x0F:
 		case 0x15:
@@ -131,7 +134,7 @@ extern "C" void handle_interrupt(int irq, int error_code)
 		case 0x1C:
 		case 0x1D:
 		case 0x1F:
-			log("Reserved IRQ 0x0F, error: 0x%X", error_code);
+			log("Reserved IRQ 0x0F, error: 0x%X", last_error_code);
 			CPU::hang();
 			break;
 		case 0x10:
@@ -139,7 +142,7 @@ extern "C" void handle_interrupt(int irq, int error_code)
 			CPU::hang();
 			break;
 		case 0x11:
-			log("Alignment Check, error: 0x%X", error_code);
+			log("Alignment Check, error: 0x%X", last_error_code);
 			CPU::hang();
 			break;
 		case 0x12:
@@ -155,18 +158,24 @@ extern "C" void handle_interrupt(int irq, int error_code)
 			CPU::hang();
 			break;
 		default:
-			if ((irq == 7 || irq == 15) && !PIC::is_served(static_cast<u8>(irq)))
+			if ((last_irq == 7 || last_irq == 15) && !PIC::is_served(static_cast<u8>(last_irq)))
 			{
 				static int spur_count = 0;
-				log("Spurius IRQ 0x%X (spur_count = %d)", irq, ++spur_count);
+				log("Spurious IRQ 0x%X (spur_count = %d)", last_irq, ++spur_count);
 				return;
 			}
-			log("Received external IRQ 0x%X", irq);
-			PIC::send_eoi(static_cast<u8>(irq));
+			log("Received external IRQ 0x%X", last_irq);
+			PIC::send_eoi(static_cast<u8>(last_irq));
 			break;
 	}
 }
 
+extern "C" void handle_interrupt(int irq, int error_code)
+{
+	last_irq = irq;
+	last_error_code = error_code;
+	Proc::current_process->enter_kernel();
+}
 
 
 

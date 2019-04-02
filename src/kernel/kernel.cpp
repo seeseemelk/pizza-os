@@ -9,6 +9,7 @@
 #include "process.hpp"
 #include "ramdisk.hpp"
 #include "result.hpp"
+#include "scheduler.hpp"
 
 extern "C" void _init(void);
 extern "C" void _fini(void);
@@ -65,7 +66,12 @@ extern "C" void kernel_main(multiboot_info_t* mbt)
 		CPU::hang();
 	}
 
-	CPU::to_usermode(result.result->m_entry_point);
+	log("Passing control to scheduler");
+	Scheduler::run();
+
+	//result.result->enter_process();
+
+	//CPU::to_usermode(result.result->m_entry_point);
 	/*auto file = result.result;
 	TarReader reader(file);
 	Elf elf_reader(reader);
