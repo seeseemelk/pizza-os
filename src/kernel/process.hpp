@@ -25,6 +25,7 @@ namespace Proc
 		int m_gid;
 		ProcessState m_state;
 		u32 m_entry_point;
+		u32 m_syscall_stack[24];
 
 		Result<Process*> fork();
 		bool is_current();

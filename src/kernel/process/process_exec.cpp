@@ -45,6 +45,7 @@ Result<Process*> Proc::exec_initrd(const char* filename)
 		process->m_pid = static_cast<int>(allocator.index_of(*process));
 		process->m_uid = 0;
 		process->m_gid = 0;
+		CPU::set_ring3_syscall_stack(process->m_syscall_stack);
 	}
 	else
 	{
@@ -54,7 +55,7 @@ Result<Process*> Proc::exec_initrd(const char* filename)
 
 	log("Performing context switch");
 	process->switch_to();
-	log("Extract program");
+	log("Extracting program");
 	if (elf.extract() == ResultState::FAIL)
 	{
 		log("Failed to extract ELF file");

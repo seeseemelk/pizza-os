@@ -6,10 +6,53 @@
 
 using namespace Interrupt;
 
+struct PageFaultCode
+{
+	u32 present : 1;
+	u32 write : 1;
+	u32 user : 1;
+	u32 rsvd : 1;
+	u32 fetch : 1;
+	u32 pk : 1;
+	u32 sgx : 1;
+} __attribute__((packed));
+
 void handle_page_fault(int error_code)
 {
 	u32 address = CPU::get_cr2();
 	log("Page Fault at address 0x%X, error: 0x%X", address, error_code);
+
+	//PageFaultCode code = static_cast<PageFaultCode>(error_code);
+	PageFaultCode& code = *reinterpret_cast<PageFaultCode*>(&error_code);
+	if (code.present)
+		log("  - Caused by a page-level protection violation.");
+	else
+		log("  - Caused by a non-present page.");
+
+	if (code.write)
+		log("  - Caused by a write.");
+	else
+		log("  - Caused by a read.");
+
+	if (code.fetch)
+		log("  - Caused by an instruction fetch.");
+	else
+		log("  - Caused by an instruction that performed a read or write.");
+
+	if (code.user)
+		log("  - Caused in user-mode.");
+	else
+		log("  - Caused in supervisor-mode.");
+
+	if (code.rsvd)
+		log("  - Caused by a reserved bit violation (some bit is set to 1 in some paging-structure entity).");
+
+	if (code.pk)
+		log("  - Caused by a protection key violation.");
+
+	if (code.sgx)
+		log("  - Caused by a violation of SGX-specific access-control requirements.");
+
 	CPU::hang();
 }
 

@@ -106,7 +106,7 @@ void Interrupt::init()
 		create_handler(without_errors[i], inth_factory);
 
 	for (size_t i = 0; i < sizeof(with_errors) / sizeof(int); i++)
-		create_handler(with_errors[i], inth_factory);
+		create_handler(with_errors[i], inth_err_factory);
 
 	// Create handler for external devices
 	for (size_t i = 0x20; i <= 0x30; i++)

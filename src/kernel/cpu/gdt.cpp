@@ -115,6 +115,9 @@ static void write_tss(SegmentDescriptor& descriptor, CPU::TSS& tss)
 	descriptor.present = 1;
 	descriptor.available = 0;
 	descriptor.granularity = Granularity::BYTE;
+
+	tss.ss0 = 0x10;
+	tss.iomap_base = sizeof(CPU::TSS);
 }
 
 void CPU::init_gdt()
@@ -179,13 +182,16 @@ void CPU::init_gdt()
 
 	// Setup GDT Descriptor
 	gdt_descriptor.base = reinterpret_cast<u32>(&gdt);
-	gdt_descriptor.limit = sizeof(gdt);
+	gdt_descriptor.limit = sizeof(gdt) - 1;
 	lgdt(gdt_descriptor);
 	ltr(0x28);
 	load_kernel_segment_registers();
 }
 
-
+void CPU::set_ring3_syscall_stack(void* stack)
+{
+	tss.esp0 = reinterpret_cast<u32>(stack);
+}
 
 
 

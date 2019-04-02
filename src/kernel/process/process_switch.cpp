@@ -13,6 +13,7 @@ void Process::switch_to()
 	if (!is_current())
 	{
 		log("Reloading pagetable");
+		CPU::set_ring3_syscall_stack(m_syscall_stack);
 		load_pagetable();
 	}
 	else

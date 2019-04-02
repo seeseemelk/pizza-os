@@ -18,7 +18,7 @@ extern handle_interrupt
 
 %macro inth_errorcode 1
 	pushad
-	mov eax, [esp+4]
+	mov eax, [esp+32]
 	push eax
 	push strict dword %1
 	mov eax, handle_interrupt

@@ -13,6 +13,10 @@ ResultState Process::map_page(void* address)
 	Paging::PageTable* table = result.result;
 	Paging::PageTableEntry& pageEntry = table->get_entry(address);
 
+	entry.userspace = 1;
+	entry.present = 1;
+	entry.writable = 1;
+
 	if (pageEntry.present)
 		return ResultState::SUCCESS;
 
