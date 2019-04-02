@@ -26,6 +26,7 @@ asm_load_cr3:
 
 global asm_enter_ring_3
 asm_enter_ring_3:
+	sti
 	mov ebx, [esp + 4]
 
 	push 0x23 ; User data segment (0x20) with bottom 2 bits for ring 3

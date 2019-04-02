@@ -114,10 +114,6 @@ void Interrupt::init()
 
 	// Before enabling, the PIC interrupt vectors have to be remapped.
 	PIC::init();
-
-	log("Enabling interrupts");
-	enable();
-	log("Enabled interrupts");
 }
 
 void Interrupt::disable()
