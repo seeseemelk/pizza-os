@@ -5,9 +5,7 @@ SECTIONS
 	. = 4K;
 
 	.text ALIGN(4K):
-	{
-		*(_pretext);
-		
+	{	
 		*crti.*(.init)
 		*crtbegin.o(.init)
 		EXCLUDE_FILE (*crtbegin.o *crtend.o *crti.* *crtn.o) *(.init)

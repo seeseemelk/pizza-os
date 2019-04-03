@@ -25,6 +25,7 @@ extern "C" void asm_enter_process_interrupt(void*);
 extern "C" void asm_enter_process_normal(void*);
 void Process::enter_process()
 {
+	switch_to();
 	if (m_state == ProcessState::ALIVE)
 	{
 		asm_enter_process_normal(m_esp);

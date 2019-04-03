@@ -26,6 +26,8 @@ namespace Proc
 		int m_gid;
 		ProcessState m_state;
 		u32 m_entry_point;
+		Process* m_next_process;
+		Process* m_previous_process;
 
 		Result<Process*> fork();
 		ResultState exec_elf(Elf& elf);
@@ -41,9 +43,15 @@ namespace Proc
 
 		ResultState validate_stack_protector();
 
+		u32 peek_stack(size_t index);
+		u32 peek_stack_end(size_t index);
+		void poke_stack(size_t index, u32 value);
+		void peek_stack_relative(size_t index);
+		void poke_stack_relative(size_t index);
+
 	private:
 		u32 m_page_directory;
-		u32 m_syscall_stack[34];
+		u32 m_syscall_stack[48];
 		void* m_esp;
 
 		void load_pagetable();
@@ -52,6 +60,7 @@ namespace Proc
 
 	extern Slab<Process> allocator;
 	extern Process* current_process;
+	extern unsigned int num_processes;
 
 	void init();
 	Result<Process*> exec_initrd(const char* filename);

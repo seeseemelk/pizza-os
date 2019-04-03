@@ -27,7 +27,7 @@ HandlerFactory inth_err_factory;
 
 Slab<char*> handlers;
 
-static char* create_handler(size_t irq, HandlerFactory& factory)
+static Gate& create_handler(size_t irq, HandlerFactory& factory)
 {
 	// Allocate memory to store the interrupt handler.
 	Result<char**> result = handlers.alloc();
@@ -48,7 +48,7 @@ static char* create_handler(size_t irq, HandlerFactory& factory)
 	gate.set_offset(dest);
 	gate.set_type(GateType::INTERRUPT);
 
-	return dest;
+	return gate;
 }
 
 static void create_idt()
@@ -72,6 +72,12 @@ static void setup_idtr()
 	idtr.address = reinterpret_cast<u32>(idt);
 	idtr.limit = sizeof(IDT) - 1;
 	asm("lidt %0" :: "m" (idtr));
+}
+
+static void create_syscall()
+{
+	Gate& gate = create_handler(0x80, inth_factory);
+	gate.dpl = 3;
 }
 
 void Interrupt::init()
@@ -111,6 +117,8 @@ void Interrupt::init()
 	// Create handler for external devices
 	for (size_t i = 0x20; i <= 0x30; i++)
 		create_handler(i, inth_factory);
+
+	create_syscall();
 
 	// Before enabling, the PIC interrupt vectors have to be remapped.
 	PIC::init();

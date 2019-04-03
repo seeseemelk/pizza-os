@@ -6,6 +6,13 @@
 
 using namespace Proc;
 
+static void link_processes(Process* from, Process* to)
+{
+	to->m_next_process = from->m_next_process;
+	to->m_previous_process = from;
+	from->m_next_process = to;
+}
+
 void Process::init_stack()
 {
 	size_t i = sizeof(m_syscall_stack) / sizeof(u32) - 1;
@@ -14,8 +21,9 @@ void Process::init_stack()
 	m_syscall_stack[i--] = (1 << 9) | (3 << 12); // Flags
 	m_syscall_stack[i--] = 0x1B; // User code segment
 	m_syscall_stack[i--] = m_entry_point;
-	m_syscall_stack[0] = 0xDEADBEEF;
 	m_esp = m_syscall_stack + i + 1;
+	m_syscall_stack[0] = 0xDEADBEEF;
+	log("Entry point is at 0x%X", m_entry_point);
 }
 
 ResultState Process::validate_stack_protector()
@@ -28,15 +36,18 @@ ResultState Process::exec_elf(Elf& elf)
 	if (current_process == 0)
 	{
 		current_process = this;
-		m_pid = static_cast<int>(allocator.index_of(*this));
+		m_pid = num_processes; //static_cast<int>(allocator.index_of(*this));
 		m_uid = 0;
 		m_gid = 0;
 		CPU::set_ring3_syscall_stack(m_syscall_stack + sizeof(m_syscall_stack) / sizeof(u32));
+		m_next_process = this;
+		m_previous_process = this;
 	}
 	else
 	{
 		m_uid = current_process->m_uid;
 		m_gid = current_process->m_gid;
+		link_processes(current_process, this);
 	}
 
 	log("Performing context switch");
@@ -52,6 +63,7 @@ ResultState Process::exec_elf(Elf& elf)
 	init_stack();
 
 	log("Program loaded");
+	num_processes++;
 	return ResultState::SUCCESS;
 }
 

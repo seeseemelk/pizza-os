@@ -49,3 +49,20 @@ Result<void*> PMem::alloc_end(size_t bytes)
 	log("Fail alloc_end");
 	return Result<void*>();
 }
+
+ResultState PMem::increase_ref_count(size_t addr)
+{
+	if (map[addr / KB(4)] < BlockState::RESERVED - 1)
+	{
+		map[addr / KB(4)]++;
+		return ResultState::SUCCESS;
+	}
+	else
+		return ResultState::FAIL;
+}
+
+void PMem::free(size_t addr)
+{
+	if (map[addr / KB(4)] > BlockState::FREE)
+		map[addr / KB(4)]--;
+}

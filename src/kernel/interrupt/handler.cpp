@@ -3,6 +3,7 @@
 #include "debug.hpp"
 #include "cpu.hpp"
 #include "process.hpp"
+#include "syscall.hpp"
 #include <cstdint>
 
 using namespace Interrupt;
@@ -64,6 +65,9 @@ void Interrupt::handle_interrupt()
 	//log("Start handling IRQ 0x%X", irq);
 	switch (last_irq)
 	{
+		case 0x80:
+			Syscall::handle_syscall();
+			break;
 		case 0x00:
 			log("Divide Error");
 			CPU::hang();
