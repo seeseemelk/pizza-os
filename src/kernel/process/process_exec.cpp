@@ -36,7 +36,7 @@ ResultState Process::exec_elf(Elf& elf)
 	if (current_process == 0)
 	{
 		current_process = this;
-		m_pid = num_processes; //static_cast<int>(allocator.index_of(*this));
+		m_pid = allocator.index_of(*this);
 		m_uid = 0;
 		m_gid = 0;
 		CPU::set_ring3_syscall_stack(m_syscall_stack + sizeof(m_syscall_stack) / sizeof(u32));
@@ -63,11 +63,11 @@ ResultState Process::exec_elf(Elf& elf)
 	init_stack();
 
 	log("Program loaded");
-	num_processes++;
+	open_handle();
 	return ResultState::SUCCESS;
 }
 
-Result<Process*> Proc::exec_initrd(const char* filename)
+Result<Process*> Proc::exec_new_initrd(const char* filename)
 {
 	log("Searching for image");
 	Result<const RamDisk::TarFile*> tarResult = RamDisk::get_file(filename);

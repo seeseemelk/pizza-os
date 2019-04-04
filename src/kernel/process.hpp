@@ -49,9 +49,13 @@ namespace Proc
 		void peek_stack_relative(size_t index);
 		void poke_stack_relative(size_t index);
 
+		void open_handle();
+		void close_handle();
+
 	private:
 		u32 m_page_directory;
 		u32 m_syscall_stack[48];
+		u32 m_count_handles = 0;
 		void* m_esp;
 
 		void load_pagetable();
@@ -60,10 +64,9 @@ namespace Proc
 
 	extern Slab<Process> allocator;
 	extern Process* current_process;
-	extern unsigned int num_processes;
 
 	void init();
-	Result<Process*> exec_initrd(const char* filename);
+	Result<Process*> exec_new_initrd(const char* filename);
 }
 
 #endif

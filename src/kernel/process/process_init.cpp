@@ -7,7 +7,6 @@ using namespace Proc;
 
 Slab<Process> Proc::allocator;
 Process* Proc::current_process = 0;
-unsigned int Proc::num_processes = 0;
 
 static void init_allocator()
 {

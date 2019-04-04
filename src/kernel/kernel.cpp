@@ -59,7 +59,7 @@ extern "C" void kernel_main(multiboot_info_t* mbt)
 	}*/
 
 	log("Loading mcp...");
-	Result<Proc::Process*> result = Proc::exec_initrd("mcp");
+	Result<Proc::Process*> result = Proc::exec_new_initrd("mcp");
 	if (result.is_fail())
 	{
 		log("Failed to load mcp");

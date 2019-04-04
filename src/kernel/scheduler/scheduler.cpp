@@ -8,7 +8,8 @@ using namespace Scheduler;
 
 void Scheduler::run()
 {
-	while (1)
+	Proc::Process* mcp = Proc::current_process;
+	while (mcp->m_state != Proc::DEAD)
 	{
 		Proc::current_process->enter_process();
 		if (Proc::current_process->validate_stack_protector() == ResultState::FAIL)
@@ -18,5 +19,10 @@ void Scheduler::run()
 		}
 
 		Interrupt::handle_interrupt();
+
+		Proc::current_process->m_next_process->switch_to();
 	}
+
+	mcp->close_handle();
+	log("Main process died");
 }

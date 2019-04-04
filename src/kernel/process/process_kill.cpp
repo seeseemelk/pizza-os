@@ -52,5 +52,8 @@ void Process::kill()
 	process->m_next_process->switch_to();
 	PMem::free(process->m_page_directory);
 	unlink_process(process);
-	allocator.free(*process);
+	process->m_state = ProcessState::DEAD;
+
+	if (process->m_count_handles == 0)
+		allocator.free(*this);
 }
