@@ -7,9 +7,12 @@ foreach(APP ${APPS})
 	list(APPEND APPS_TARGET_FILE ${APP}/${APP})
 endforeach(APP)
 
+file(GLOB_RECURSE FILES ${PROJECT_SOURCE_DIR}/src/initrd/*)
+message(${FILES})
+
 add_custom_command(
 	OUTPUT initrd.tar
-	COMMAND tar -c --transform='s:^.*/::' --group=0 --owner=0 --mode=500 -f initrd.tar ${APPS_TARGET_FILE}
+	COMMAND tar --absolute-names -c --transform='s:^.*/::' --group=0 --owner=0 --mode=500 -f initrd.tar ${APPS_TARGET_FILE} ${FILES}
 	COMMENT "Creating initrd.tar"
 	DEPENDS ${APPS}
 )

@@ -3,15 +3,7 @@
 
 typedef u32(*SyscallHandler)(u32, u32, u32);
 
-static u32 exit(u32 ebx, u32 ecx, u32 edx)
-{
-	UNUSED(ebx); UNUSED(ecx); UNUSED(edx);
-	log("Called exit");
-	Proc::current_process->kill();
-	return 0;
-}
-
-SyscallHandler syscall_handlers[] = {exit};
+SyscallHandler syscall_handlers[] = {Syscall::exit};
 
 void Syscall::handle_syscall()
 {
