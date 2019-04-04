@@ -79,6 +79,7 @@ size_t tbl_index(void* virt);
 PageDirEntry& alloc_dir_entry();
 Result<PageTable*> alloc_table(PageDirEntry** directory_entry);
 Result<PageTable*> alloc_table();
+Result<PageTableEntry*> alloc_table_entry();
 void load_directory(u32 directory);
 
 }
