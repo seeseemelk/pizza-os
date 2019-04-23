@@ -3,7 +3,10 @@
 
 typedef u32(*SyscallHandler)(u32, u32, u32);
 
-SyscallHandler syscall_handlers[] = {Syscall::exit};
+SyscallHandler syscall_handlers[] = {
+		[0] = Syscall::exit,
+		[1] = Syscall::VFS::is_open,
+};
 
 void Syscall::handle_syscall()
 {

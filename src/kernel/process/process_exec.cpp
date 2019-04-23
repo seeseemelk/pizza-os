@@ -3,6 +3,7 @@
 #include "elf.hpp"
 #include "ramdisk.hpp"
 #include "reader.hpp"
+#include "vfs.hpp"
 
 using namespace Proc;
 
@@ -61,6 +62,9 @@ ResultState Process::exec_elf(Elf& elf)
 
 	log("Setting up program stack");
 	init_stack();
+
+	log("Setting up VFS");
+	VFS::init_process();
 
 	log("Program loaded");
 	open_handle();

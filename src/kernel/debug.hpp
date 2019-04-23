@@ -16,14 +16,9 @@ namespace Debug
 }
 
 #define log(fmt, ...) \
-	Debug::printf("[%s:%d] " fmt "\n", __FILE__, __LINE__, ## __VA_ARGS__)
+	::Debug::printf("[%s:%d] " fmt "\n", __FILE__, __LINE__, ## __VA_ARGS__)
 
 #define UNUSED(x) \
 	(void)(x)
-
-/*
-#define log(fmt) \
-	Debug::printf("[%s:%d] " fmt, __FILE__, __LINE__)
-*/
 
 #endif

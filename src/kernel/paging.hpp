@@ -48,6 +48,7 @@ struct PageTableEntry
 
 	void set_address(size_t phys);
 	size_t get_address();
+	void* get_virtual_address();
 	ResultState alloc_any_memory();
 };
 

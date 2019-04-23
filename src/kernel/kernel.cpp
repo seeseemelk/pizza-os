@@ -10,6 +10,7 @@
 #include "ramdisk.hpp"
 #include "result.hpp"
 #include "scheduler.hpp"
+#include "vfs.hpp"
 
 extern "C" void _init(void);
 extern "C" void _fini(void);
@@ -45,6 +46,10 @@ extern "C" void kernel_main(multiboot_info_t* mbt)
 
 	log("Initialising process management...");
 	Proc::init();
+	log("Done");
+
+	log("Initialising VFS...");
+	VFS::init();
 	log("Done");
 
 	log("Loading ramdisk...");

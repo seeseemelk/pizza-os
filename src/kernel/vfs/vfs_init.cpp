@@ -2,37 +2,46 @@
 #include "paging.hpp"
 #include "result.hpp"
 #include "debug.hpp"
+#include "cpu.hpp"
 
 using namespace VFS;
 
 Slab<File>* VFS::allocator;
-Paging::PageTableEntry* VFS::process_pagetable;
-File* VFS::descriptors;
-FileBuffer* VFS::buffers;
+Paging::PageTable* VFS::file_page;
+Paging::PageTable* VFS::buffer_page;
+/*File* VFS::descriptors;
+FileBuffer* VFS::buffers;*/
+
+static void allocate_page(Paging::PageTable*& table)
+{
+	Paging::PageDirEntry& dir_entry = Paging::alloc_dir_entry();
+	Result<Paging::PageTable*> result = dir_entry.make_table();
+	if (result.is_fail())
+	{
+		log("Failed to allocate page table for VFS functions");
+		CPU::hang();
+	}
+
+	table = result.result;
+}
 
 void VFS::init()
 {
-	allocator = Process::allocate_local(sizeof(Slab<File>*));
-
-	// We allocate an entire page directory to store process-local VFS information.
-	/*Result<Paging::PageTable*> tableResult = Paging::alloc_table();
-
-	if (tableResult.is_fail())
+	log("Allocating process-local VFS file slab allocator");
+	Result<Slab<File>*> result = Proc::allocate_local<Slab<File>*>(sizeof(Slab<File>*));
+	if (result.is_fail())
 	{
-		log("Failed to allocate page for VFS.");
+		log("Failed to allocate VFS allocator");
 		CPU::hang();
 	}
 
-	allocator.init(*tableResult.result);*/
+	allocator = result.result;
 
-	// We also allocate several bytes in process-local memory.
-	// These bytes will contain the slab allocator itself.
-	/*Result<Paging::PageTableEntry*> entryResult = Paging::alloc_table_entry();
-	if (entryResult.is_fail())
-	{
-		log("Failed to allocate page for process-memory VFS");
-		CPU::hang();
-	}
+	log("Allocating VFS file page table");
+	allocate_page(file_page);
 
-	process_pagetable = entryResult.result;*/
+	log("Allocating VFS buffer page table");
+	allocate_page(buffer_page);
+
+	log("Global VFS structures initialised");
 }

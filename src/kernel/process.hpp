@@ -65,9 +65,23 @@ namespace Proc
 
 	extern Slab<Process> allocator;
 	extern Process* current_process;
+	extern u8* process_local_page;
 
 	void init();
 	Result<Process*> exec_new_initrd(const char* filename);
+	extern unsigned int process_local_index;
+
+	template<typename T> Result<T> allocate_local(size_t bytes)
+	{
+		if (process_local_index + bytes > KB(4))
+			Result<T>();
+
+		T t = static_cast<T>(static_cast<void*>(process_local_page + process_local_index));
+		process_local_index += bytes;
+
+		return t;
+	}
+
 }
 
 #endif

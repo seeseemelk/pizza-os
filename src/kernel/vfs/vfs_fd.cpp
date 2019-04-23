@@ -3,6 +3,11 @@
 
 using namespace VFS;
 
+bool VFS::is_open(unsigned int fd)
+{
+	return false;
+}
+
 // This is not compatible with the process-local file allocator.
 /*
 Result<File*> VFS::get_file(unsigned int fd)

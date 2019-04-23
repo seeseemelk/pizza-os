@@ -35,6 +35,17 @@ void PageTableEntry::set_address(size_t phys)
 	address = phys >> 12;
 }
 
+void* PageTableEntry::get_virtual_address()
+{
+	size_t a = -MB(4);
+	size_t b = reinterpret_cast<size_t>(this);
+	size_t c = b - a;
+	size_t d = sizeof(PageTableEntry);
+	size_t e = c / d;
+	size_t f = e * KB(4);
+	return reinterpret_cast<void*>(f);
+}
+
 ResultState PageTableEntry::alloc_any_memory()
 {
 	Result<void*> result = PMem::alloc_end(KB(4));
@@ -42,5 +53,6 @@ ResultState PageTableEntry::alloc_any_memory()
 		return FAIL;
 
 	set_address(reinterpret_cast<size_t>(result.result));
+	this->present = 1;
 	return SUCCESS;
 }

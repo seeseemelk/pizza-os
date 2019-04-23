@@ -39,12 +39,9 @@ namespace VFS
 		FileBuffer buffers[4096];
 	};
 
-	//static const int MAX_FILES = KB(4) / sizeof(File);
-
 	extern Slab<File>* allocator;
-	extern Paging::PageTableEntry* process_pagetable;
-	//extern File* descriptors;
-	//extern File* buffers;
+	extern Paging::PageTable* file_page;
+	extern Paging::PageTable* buffer_page;
 
 	void init();
 

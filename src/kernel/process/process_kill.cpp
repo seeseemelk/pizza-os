@@ -2,6 +2,7 @@
 #include "paging.hpp"
 #include "pmem.hpp"
 #include "kernel.hpp"
+#include "vfs.hpp"
 
 using namespace Proc;
 
@@ -48,12 +49,25 @@ static void unlink_process(Process* process)
 void Process::kill()
 {
 	Process* process = current_process;
-	free_memory();
-	process->m_next_process->switch_to();
-	PMem::free(process->m_page_directory);
-	unlink_process(process);
-	process->m_state = ProcessState::DEAD;
 
-	if (process->m_count_handles == 0)
-		allocator.free(*this);
+	if (process == process->m_next_process)
+	{
+		// This process is the very last process to kill.
+		// We don't have to free the memory as there won't be
+		// anything using it after this function returns.
+		process->m_state = ProcessState::DEAD;
+	}
+	else
+	{
+		free_memory();
+		process->m_next_process->switch_to();
+		PMem::free(process->m_page_directory);
+		unlink_process(process);
+		process->m_state = ProcessState::DEAD;
+
+		if (process->m_count_handles == 0)
+			allocator.free(*this);
+
+		VFS::free_process();
+	}
 }
