@@ -41,5 +41,5 @@ Result<PageTableEntry*> Paging::alloc_table_entry()
 		allocation_table = result.result;
 	}
 
-	return Result<PageTableEntry*>(allocation_table->entries[allocation_table_index++]);
+	return Result<PageTableEntry*>(allocation_table->entries + allocation_table_index++);
 }

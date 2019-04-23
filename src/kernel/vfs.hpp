@@ -20,6 +20,18 @@ namespace VFS
 		FileType type;
 	};
 
+	struct FileBuffer
+	{
+		u32 read_index;
+		u32 write_ptr;
+		u8 content[4096-sizeof(u32)*2];
+	};
+
+	struct ProcessFileBuffers
+	{
+		FileBuffer buffers[4096];
+	};
+
 	extern Slab<File> allocator;
 	extern Paging::PageTableEntry* process_pagetable;
 
