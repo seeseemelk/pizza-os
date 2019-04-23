@@ -14,10 +14,17 @@ namespace VFS
 		RAMDISK
 	};
 
+	enum FileState
+	{
+		CLOSED,
+		OPEN
+	};
+
 	struct File
 	{
-		Proc::Process* process;
+		//Proc::Process* process;
 		FileType type;
+		FileState state;
 	};
 
 	struct FileBuffer
@@ -32,13 +39,20 @@ namespace VFS
 		FileBuffer buffers[4096];
 	};
 
-	extern Slab<File> allocator;
+	//static const int MAX_FILES = KB(4) / sizeof(File);
+
+	extern Slab<File>* allocator;
 	extern Paging::PageTableEntry* process_pagetable;
+	//extern File* descriptors;
+	//extern File* buffers;
 
 	void init();
 
 	void init_process();
 	void free_process();
+
+	Result<File*> get_file(unsigned int fd);
+	bool is_open(unsigned int fd);
 
 	File& allocate_file();
 	void free_file(File& file);

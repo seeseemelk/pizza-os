@@ -28,6 +28,7 @@ namespace Proc
 		u32 m_entry_point;
 		Process* m_next_process;
 		Process* m_previous_process;
+		unsigned int m_num_fd = 0;
 
 		Result<Process*> fork();
 		ResultState exec_elf(Elf& elf);
