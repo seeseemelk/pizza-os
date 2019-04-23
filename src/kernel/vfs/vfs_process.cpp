@@ -10,11 +10,6 @@ void VFS::init_process()
 {
 	log("Creating process-local VFS structures");
 	allocator->init(*file_page);
-	/*if (process_pagetable->alloc_any_memory() == ResultState::FAIL)
-	{
-		log("Failed to allocate process-memory file list");
-		CPU::hang();
-	}*/
 	log("Finished creating process-local VFS structures");
 }
 

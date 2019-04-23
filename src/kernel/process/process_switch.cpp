@@ -17,8 +17,6 @@ void Process::switch_to()
 		CPU::set_ring3_syscall_stack(m_syscall_stack + 128);
 		load_pagetable();
 	}
-	else
-		log("Already in current process");
 }
 
 extern "C" void asm_enter_process_interrupt(void*);

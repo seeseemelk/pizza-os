@@ -44,11 +44,8 @@ namespace Proc
 
 		ResultState validate_stack_protector();
 
-		u32 peek_stack(size_t index);
 		u32 peek_stack_end(size_t index);
-		void poke_stack(size_t index, u32 value);
-		void peek_stack_relative(size_t index);
-		void poke_stack_relative(size_t index);
+		void poke_stack_end(size_t index, u32 value);
 
 		void open_handle();
 		void close_handle();
