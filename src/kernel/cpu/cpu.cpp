@@ -1,6 +1,7 @@
 #include "cpu.hpp"
 #include "interrupt.hpp"
 #include "debug.hpp"
+#include "io.hpp"
 
 using namespace CPU;
 
@@ -38,4 +39,14 @@ extern "C" u32 asm_load_cr3(u32);
 void CPU::load_cr3(u32 address)
 {
 	asm_load_cr3(address);
+}
+
+IO::Port keyboardController(0x64);
+void CPU::reset()
+{
+	Interrupt::disable();
+	while (1)
+	{
+		keyboardController.outb(0xFE);
+	}
 }

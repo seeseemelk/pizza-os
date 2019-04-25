@@ -15,10 +15,13 @@ set(VERSION_PATCH 0)
 #################################
 # The location at which the ISO file will be placed.
 set(PIZZAOS_ISO ${CMAKE_SOURCE_DIR}/pizzaos.iso)
+set(PIZZAOS_TEST_ISO ${CMAKE_SOURCE_DIR}/pizzaos.test.iso)
 
 # The directory containing the files that should be on the ISO.
 set(ISODIR ${CMAKE_SOURCE_DIR}/isodir)
+set(ISODIR_TEST ${CMAKE_SOURCE_DIR}/isodir.test)
 set(INITRD_TAR ${ISODIR}/boot/initrd.tar)
+set(INITRD_TEST_TAR ${ISODIR_TEST}/boot/initrd.test.tar)
 
 ########################################
 ### END OF USER CONFIGURABLE SECTION ###
@@ -52,3 +55,18 @@ add_custom_target(build_iso ALL
 )
 add_dependencies(build_iso pizzaos.elf)
 add_dependencies(build_iso build_initrd)
+
+add_custom_command(OUTPUT ${PIZZAOS_TEST_ISO}
+	COMMAND grub-mkrescue -o pizzaos.test.iso isodir.test
+	DEPENDS ${ISODIR_TEST}/boot/grub/grub.cfg
+	DEPENDS ${ISODIR_TEST}/boot/pizzaos.test.elf
+	DEPENDS ${INITRD_TEST_TAR}
+	COMMENT "Building Test ISO image"
+	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+)
+
+add_custom_target(build_test_iso
+	DEPENDS ${PIZZAOS_TEST_ISO}
+)
+add_dependencies(build_test_iso pizzaos.test.elf)
+add_dependencies(build_test_iso build_test_initrd)

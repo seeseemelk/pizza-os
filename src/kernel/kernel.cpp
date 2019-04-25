@@ -22,86 +22,55 @@ extern "C" void kernel_main(multiboot_info_t* mbt)
 	_init();
 	Debug::init();
 
-	log("Initialising CPU...");
-	CPU::init();
-	log("Done");
+	#ifdef TEST
+		log("Running tests");
+		CPU::reset();
+	#else
+		log("Initialising CPU...");
+		CPU::init();
+		log("Done");
 
-	//Multiboot::memory_size();
+		log("Initialising PMEM allocator...");
+		PMem::init();
+		log("Done");
 
-	log("Initialising PMEM allocator...");
-	PMem::init();
-	log("Done");
+		log("Initialising paging...");
+		Paging::init();
+		log("Done");
 
-	log("Initialising paging...");
-	Paging::init();
-	log("Done");
+		log("Initialising Kernel::alloc");
+		Kernel::init_alloc();
+		log("Done");
 
-	log("Initialising Kernel::alloc");
-	Kernel::init_alloc();
-	log("Done");
+		log("Initialising interrupts...");
+		Interrupt::init();
+		log("Done");
 
-	log("Initialising interrupts...");
-	Interrupt::init();
-	log("Done");
+		log("Initialising process management...");
+		Proc::init();
+		log("Done");
 
-	log("Initialising process management...");
-	Proc::init();
-	log("Done");
+		log("Initialising VFS...");
+		VFS::init();
+		log("Done");
 
-	log("Initialising VFS...");
-	VFS::init();
-	log("Done");
+		log("Loading ramdisk...");
+		RamDisk::init();
+		log("Done");
 
-	log("Loading ramdisk...");
-	RamDisk::init();
-	log("Done");
+		log("Loading mcp...");
+		Result<Proc::Process*> result = Proc::exec_new_initrd("mcp");
+		if (result.is_fail())
+		{
+			log("Failed to load mcp");
+			CPU::hang();
+		}
 
-	/*auto result = RamDisk::get_file("mcp");
-	if (result.is_fail())
-	{
-		log("Could not find mcp in ramdisk");
+		log("Passing control to scheduler");
+		Scheduler::run();
+
+		log("Kernel main ended");
 		CPU::hang();
-	}*/
-
-	log("Loading mcp...");
-	Result<Proc::Process*> result = Proc::exec_new_initrd("mcp");
-	if (result.is_fail())
-	{
-		log("Failed to load mcp");
-		CPU::hang();
-	}
-
-	log("Passing control to scheduler");
-	Scheduler::run();
-
-	//result.result->enter_process();
-
-	//CPU::to_usermode(result.result->m_entry_point);
-	/*auto file = result.result;
-	TarReader reader(file);
-	Elf elf_reader(reader);
-	elf_reader.dump();
-	if (!elf_reader.is_valid())
-	{
-		log("Found invalid ELF file");
-		CPU::hang();
-	}
-
-	log("Found valid ELF file, loading it!");
-	if (elf_reader.extract() == ResultState::FAIL)
-	{
-		log("Failed to load ELF file!");
-		CPU::hang();
-	}
-
-	log("Finished loading ELF file");
-
-	u32 entrypoint = elf_reader.read_header().entry_point;
-	log("Entering usermode... (entrypoint is 0x%X)", entrypoint);
-
-	Processes::*/
-
-	log("Kernel main ended");
-	CPU::hang();
-	_fini();
+		_fini();
+	#endif
 }

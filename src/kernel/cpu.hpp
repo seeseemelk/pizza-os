@@ -10,6 +10,7 @@ namespace CPU
 	void halt();
 	[[noreturn]] void hang();
 	[[noreturn]] void out_of_memory();
+	[[noreturn]] void reset();
 
 	u32 get_cr2();
 	void load_cr3(u32 phys_address);

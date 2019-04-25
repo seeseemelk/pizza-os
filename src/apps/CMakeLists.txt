@@ -27,3 +27,21 @@ add_custom_command(
 add_custom_target(build_initrd
 	DEPENDS ${INITRD_TAR}
 )
+
+add_custom_command(
+	OUTPUT initrd.test.tar
+	COMMAND tar --absolute-names -c --transform='s:^.*/::' --group=0 --owner=0 --mode=500 -f initrd.test.tar ${APPS_TARGET_FILE} ${FILES}
+	COMMENT "Creating initrd.test.tar"
+	DEPENDS ${APPS}
+)
+
+add_custom_command(
+	OUTPUT ${INITRD_TEST_TAR}
+	COMMAND ${CMAKE_COMMAND} -E copy initrd.test.tar ${ISODIR_TEST}/boot
+	COMMENT "Copying initrd.test.tar"
+	DEPENDS initrd.test.tar
+)
+
+add_custom_target(build_test_initrd
+	DEPENDS ${INITRD_TEST_TAR}
+)
