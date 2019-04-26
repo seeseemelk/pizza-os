@@ -1,4 +1,4 @@
 #!/bin/sh
-set +e
+set -e
 ./build_test.sh
 ./tools/test_runner.lua

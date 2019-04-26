@@ -195,12 +195,6 @@ void CPU::set_ring3_syscall_stack(void* stack)
 	tss.esp0 = reinterpret_cast<u32>(stack);
 }
 
-TEST("gdt_example", {
-	log("Hello");
-	assertTrue("Will never fail", true);
-	assertFalse("Will always fail", true);
-})
-
 
 
 
