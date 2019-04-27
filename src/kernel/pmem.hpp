@@ -24,6 +24,10 @@ namespace PMem
 
 	ResultState increase_ref_count(size_t addr);
 	void free(size_t addr);
+	inline void free(void* addr)
+	{
+		free(reinterpret_cast<size_t>(addr));
+	}
 
 	Result<void*> alloc_end(size_t bytes);
 	Result<void*> alloc_start(size_t bytes);

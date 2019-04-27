@@ -79,7 +79,12 @@ TEST(PRE_PAGING, "page_table_entry::get_virtual_address(second_table)->1", {
 	assertEquals("Page entry virtual address incorrect", MB(4), reinterpret_cast<u32>(entry->get_virtual_address()));
 });
 
-
+TEST(PRE_PAGING, "page_table_entry::alloc_any_memory()->memory allocated", {
+	PageTableEntry entry = {};
+	assertEquals("Allocation failed", ResultState::SUCCESS, entry.alloc_any_memory());
+	assertNotEquals("No address given", 0, entry.get_address());
+	assertEquals("Entry not set as present", 1, entry.present);
+});
 
 
 

@@ -163,6 +163,11 @@ static void log_memory()
 		log("Total memory: %d MiB", total_memory / MB(1));
 }
 
+static void clear_memory_map()
+{
+	memset(map, 0, map_length);
+}
+
 void PMem::init()
 {
 	log("kernel_start: 0x%X (phys: 0x%X)", kernel_start, kernel_start - GB(3));
@@ -179,6 +184,7 @@ void PMem::init()
 
 	add_pagetable_entries();
 	map_length = total_memory / KB(4);
+	clear_memory_map();
 	reserve_map_entries();
 	log_memory();
 	log("PMem allocator ready");

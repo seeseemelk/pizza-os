@@ -48,16 +48,24 @@ local function execute_tests()
 		elseif line == "?DONE" then
 			success = true
 		elseif starts_with(line, "!") then
-			local expected, got, message
+			local expected, got, message, splitter
+			local equals = true
 			if starts_with(line, "!<<<") then
-				expected, got = line:match("<<<(.-)§(.-)>>>")
+				expected, splitter, got = line:match("<<<(.-)(#+)(.-)>>>")
+				if #splitter > 1 then
+					equals = false
+				end
 			end
 			message = line:match(">>>(.-)$")
 			
 			print()
 			print("=== TEST LOG ===")
-			for _, line in ipairs(test.log) do
-				print(line)
+			if #test.log > 0 then
+				for _, line in ipairs(test.log) do
+					print(line)
+				end
+			else
+				print(" (No output)")
 			end
 
 			print()
@@ -65,7 +73,11 @@ local function execute_tests()
 			print(string.format("Test %s failed.", test.name))
 			print(string.format("Message: %s", message))
 			if expected and got then
-				print(string.format("Expected %s, but got %s.", expected, got))
+				if equals then
+					print(string.format("Expected %s, but got %s.", expected, got))
+				else
+					print(string.format("Expected anything but %s.", expected))
+				end
 			end
 		elseif starts_with(line, "?") then
 			error("Unknown command: " .. line)

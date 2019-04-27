@@ -27,7 +27,17 @@ namespace Test
 		PRE_RAMDISK,
 		PRE_SCHEDULER,
 		OTHER,
-		COUNT
+		COUNT,
+
+		POST_CPU = PRE_PMEM,
+		POST_PMEM = PRE_PAGING,
+		POST_PAGING = PRE_ALLOC,
+		POST_ALLOC = PRE_INT,
+		POST_INT = PRE_PROC,
+		POST_PROC = PRE_VFS,
+		POST_VFS = PRE_RAMDISK,
+		POST_RAMDISK = PRE_SCHEDULER,
+		POST_SCHEDULER = PRE_SCHEDULER
 	};
 
 	extern UnitTestNode* groups[];
@@ -44,6 +54,9 @@ namespace Test
 		void assertTrue(const char* msg, bool value);
 		void assertFalse(const char* msg, bool value);
 		void assertEquals(const char* msg, u32 expected, u32 got);
+		void assertEquals(const char* msg, u32 expected, void* got);
+		void assertNotEquals(const char* msg, u32 not_expected, u32 got);
+		void assertNotEquals(const char* msg, u32 not_expected, void* got);
 	}
 }
 

@@ -1,36 +1,15 @@
 #include "pmem.hpp"
 #include "cpu.hpp"
 #include "debug.hpp"
+#include "test.hpp"
 #include <cmath>
 
 using namespace PMem;
-
-/* This contains bugs but also isn't used.
-Result<void*> PMem::alloc_start(size_t bytes)
-{
-	log("Enter alloc_start");
-	size_t blocks = ceildiv(bytes, KB(4));
-	size_t block_start = 0;
-
-	for (size_t i = 0; i < map_length; i++)
-	{
-		if (static_cast<BlockState>(map[i]) != FREE)
-			block_start = i;
-		else if (i - block_start > blocks)
-			return Result<void*>(reinterpret_cast<void*>((block_start + 1) * KB(4)));
-	}
-
-	log("Leave alloc_start");
-	return Result<void*>();
-}
-*/
 
 Result<void*> PMem::alloc_end(size_t bytes)
 {
 	size_t blocks = ceildiv(bytes, KB(4));
 	size_t block_end = map_length;
-
-	//log("Allocating %d continuous blocks of physical memory", blocks);
 
 	for (size_t i = map_length - 1; i != static_cast<size_t>(-1); i--)
 	{
@@ -41,7 +20,6 @@ Result<void*> PMem::alloc_end(size_t bytes)
 			size_t address = i * KB(4);
 			size_t length = blocks * KB(4);
 			set_state(address, length, BlockState::USED);
-			//log("Allocated at 0x%X", address);
 			return Result<void*>( reinterpret_cast<void*>(address) );
 		}
 	}
@@ -66,3 +44,19 @@ void PMem::free(size_t addr)
 	if (map[addr / KB(4)] > BlockState::FREE)
 		map[addr / KB(4)]--;
 }
+
+TEST(POST_PMEM, "PMem::increase_ref_count/free()->ref_count increased,decreased", {
+	size_t addr = KB(4)*4;
+	assertEquals("Ref count not correctly initialised", 0, PMem::get_state(addr));
+	assertEquals("Ref count not increased", ResultState::SUCCESS, PMem::increase_ref_count(addr));
+	assertEquals("Ref count not correctly set", 1, PMem::get_state(addr));
+	PMem::free(addr);
+	assertEquals("Ref count not correctly freed", 0, PMem::get_state(addr));
+});
+
+TEST(POST_PMEM, "PMem::alloc_end()->state is 1", {
+	Result<void*> result = PMem::alloc_end(1);
+	assertTrue("Could not allocate", result.is_success());
+	assertEquals("Incorrect block state", 1, PMem::get_state(reinterpret_cast<size_t>(result.result)));
+	PMem::free(result.result);
+});

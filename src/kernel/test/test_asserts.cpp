@@ -39,9 +39,27 @@ void Asserts::assertEquals(const char* msg, u32 expected, u32 got)
 {
 	if (got != expected)
 	{
-		::Debug::printf("!<<<0x%X§0x%X>>>%s\n", expected, got, msg);
+		::Debug::printf("!<<<0x%X#0x%X>>>%s\n", expected, got, msg);
 		fail();
 	}
+}
+
+void Asserts::assertEquals(const char* msg, u32 expected, void* got)
+{
+	return assertEquals(msg, expected, reinterpret_cast<u32>(got));
+}
+
+void Asserts::assertNotEquals(const char* msg, u32 not_expected, u32 got)
+{
+	if (got == not_expected)
+	{
+		::Debug::printf("!<<<0x%X##0x%X>>>%s\n", not_expected, got, msg);
+	}
+}
+
+void Asserts::assertNotEquals(const char* msg, u32 not_expected, void* got)
+{
+	assertNotEquals(msg, not_expected, reinterpret_cast<u32>(got));
 }
 
 #endif
