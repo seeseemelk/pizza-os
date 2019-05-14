@@ -3,3 +3,7 @@ theme:
     name: readthedocs
 nav:
     - Introduction: index.md
+    - Simple Overview:
+        - Introduction: overview/introduction.md
+        - The Boot Process: overview/booting.md
+        - Bootloader: overview/bootloader.md
