@@ -1,6 +1,7 @@
 #ifdef TESTING
 #include "test.hpp"
 #include "debug.hpp"
+#include "process.hpp"
 
 using namespace Test;
 

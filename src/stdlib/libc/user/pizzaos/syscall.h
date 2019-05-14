@@ -13,6 +13,11 @@ void syscall_exit(void);
 /* VFS syscalls. */
 bool syscall_vfs_is_open(u32 fd);
 
+/* Process syscalls. */
+u32 syscall_process_pid(void);
+u32 syscall_process_uid(void);
+u32 syscall_process_gid(void);
+
 /* Ramdisk syscalls. */
 u32 syscall_ramdisk_open(const char* filename);
 void syscall_ramdisk_close(u32 descriptor);

@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 #include "debug.hpp"
+#include "result.hpp"
 
 namespace Test
 {
@@ -46,6 +47,26 @@ namespace Test
 	void end_tests();
 	void execute_tests(size_t group);
 
+	namespace Utils
+	{
+		u32 testSyscall(u32 syscall, u32 ebx, u32 ecx, u32 edx);
+
+		inline u32 testSyscall(u32 syscall, u32 ebx, u32 ecx)
+		{
+			return testSyscall(syscall, ebx, ecx, 0);
+		}
+
+		inline u32 testSyscall(u32 syscall, u32 ebx)
+		{
+			return testSyscall(syscall, ebx, 0, 0);
+		}
+
+		inline u32 testSyscall(u32 syscall)
+		{
+			return testSyscall(syscall, 0, 0, 0);
+		}
+	}
+
 	namespace Asserts
 	{
 		void fail();
@@ -57,6 +78,13 @@ namespace Test
 		void assertEquals(const char* msg, u32 expected, void* got);
 		void assertNotEquals(const char* msg, u32 not_expected, u32 got);
 		void assertNotEquals(const char* msg, u32 not_expected, void* got);
+
+		template<class T>
+		T require(Result<T> result)
+		{
+			assertTrue("ResultState was false", result.is_success());
+			return result.result;
+		}
 	}
 }
 
@@ -68,6 +96,7 @@ namespace Test
 #define TEST(GROUP, NAME, x) \
 	static void __TESTING_MAKE_NAME2(_unitTest_, __LINE__) () { \
 		using namespace ::Test::Asserts; \
+		using namespace ::Test::Utils; \
 		x \
 	} \
 	__attribute__((constructor)) static void __TESTING_MAKE_NAME2(_setupUnitTest_, __LINE__)() \

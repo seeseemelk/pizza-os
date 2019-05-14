@@ -37,7 +37,7 @@ ResultState Process::exec_elf(Elf& elf)
 	if (current_process == 0)
 	{
 		current_process = this;
-		m_pid = allocator.index_of(*this);
+		m_pid = allocator.index_of(*this) + 1;
 		m_uid = 0;
 		m_gid = 0;
 		CPU::set_ring3_syscall_stack(m_syscall_stack + sizeof(m_syscall_stack) / sizeof(u32));

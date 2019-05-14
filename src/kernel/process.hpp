@@ -66,6 +66,7 @@ namespace Proc
 
 	void init();
 	Result<Process*> exec_new_initrd(const char* filename);
+	Result<Process*> exec_empty();
 	extern unsigned int process_local_index;
 
 	template<typename T> Result<T> allocate_local(size_t bytes)

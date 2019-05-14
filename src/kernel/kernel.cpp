@@ -11,6 +11,7 @@
 #include "result.hpp"
 #include "scheduler.hpp"
 #include "vfs.hpp"
+#include "syscall.hpp"
 #include "test.hpp"
 
 extern "C" void _init(void);
@@ -71,6 +72,10 @@ extern "C" void kernel_main(multiboot_info_t* mbt)
 	#endif
 	log("Initialising VFS...");
 	VFS::init();
+	log("Done");
+
+	log("Initialising syscalls...");
+	Syscall::initialise();
 	log("Done");
 
 	#ifdef TESTING

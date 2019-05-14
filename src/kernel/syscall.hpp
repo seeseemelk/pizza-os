@@ -6,6 +6,7 @@
 namespace Syscall
 {
 	void handle_syscall();
+	void initialise();
 
 	// Common syscalls.
 	u32 exit(u32, u32, u32);
@@ -17,6 +18,15 @@ namespace Syscall
 		u32 get_buffer(u32, u32, u32);
 	}
 
+	// Process syscalls.
+	namespace Process
+	{
+		u32 pid(u32, u32, u32);
+		u32 uid(u32, u32, u32);
+		u32 gid(u32, u32, u32);
+	}
+
+	// I/O syscalls.
 	namespace IO
 	{
 		void disable_port(u16 port);
