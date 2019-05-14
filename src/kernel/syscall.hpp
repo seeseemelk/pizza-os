@@ -17,6 +17,11 @@ namespace Syscall
 		u32 get_buffer(u32, u32, u32);
 	}
 
+	namespace IO
+	{
+		void disable_port(u16 port);
+	}
+
 	// Ramdisk syscalls.
 	namespace Ramdisk
 	{

@@ -84,7 +84,7 @@ namespace Test
 
 #else
 
-#define TEST(x) \
+#define TEST(GROUP, NAME, x) \
 		;
 
 #endif
