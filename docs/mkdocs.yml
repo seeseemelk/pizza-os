@@ -1,4 +1,5 @@
 site_name: PizzaOS Documentation
-theme: readthedocs
+theme:
+    name: readthedocs
 nav:
     - Introduction: index.md
