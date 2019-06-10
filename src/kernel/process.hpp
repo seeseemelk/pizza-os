@@ -50,6 +50,8 @@ namespace Proc
 		void open_handle();
 		void close_handle();
 
+		void init();
+
 	private:
 		u32 m_page_directory;
 		u32 m_syscall_stack[48];
@@ -65,8 +67,8 @@ namespace Proc
 	extern u8* process_local_page;
 
 	void init();
-	Result<Process*> exec_new_initrd(const char* filename);
 	Result<Process*> exec_empty();
+	Result<Process*> exec_new_initrd(const char* filename);
 	extern unsigned int process_local_index;
 
 	template<typename T> Result<T> allocate_local(size_t bytes)

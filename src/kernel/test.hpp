@@ -5,6 +5,7 @@
 #include "debug.hpp"
 #include "result.hpp"
 
+#ifdef TESTING
 namespace Test
 {
 	typedef void(*UnitTest)();
@@ -85,8 +86,11 @@ namespace Test
 			assertTrue("ResultState was false", result.is_success());
 			return result.result;
 		}
+
+		void require(ResultState result);
 	}
 }
+#endif
 
 #ifdef TESTING
 

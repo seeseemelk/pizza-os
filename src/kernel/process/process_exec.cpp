@@ -27,13 +27,9 @@ void Process::init_stack()
 	log("Entry point is at 0x%X", m_entry_point);
 }
 
-ResultState Process::validate_stack_protector()
+void Process::init()
 {
-	return m_syscall_stack[0] == 0xDEADBEEF ? ResultState::SUCCESS : ResultState::FAIL;
-}
-
-ResultState Process::exec_elf(Elf& elf)
-{
+	log("Initialising Process");
 	if (current_process == 0)
 	{
 		current_process = this;
@@ -53,12 +49,6 @@ ResultState Process::exec_elf(Elf& elf)
 
 	log("Performing context switch");
 	switch_to();
-	log("Extracting program");
-	if (elf.extract() == ResultState::FAIL)
-	{
-		log("Failed to extract ELF file");
-		return ResultState::FAIL;
-	}
 
 	log("Setting up program stack");
 	init_stack();
@@ -68,6 +58,24 @@ ResultState Process::exec_elf(Elf& elf)
 
 	log("Program loaded");
 	open_handle();
+}
+
+ResultState Process::validate_stack_protector()
+{
+	return m_syscall_stack[0] == 0xDEADBEEF ? ResultState::SUCCESS : ResultState::FAIL;
+}
+
+ResultState Process::exec_elf(Elf& elf)
+{
+	init();
+
+	log("Extracting program");
+	if (elf.extract() == ResultState::FAIL)
+	{
+		log("Failed to extract ELF file");
+		return ResultState::FAIL;
+	}
+
 	return ResultState::SUCCESS;
 }
 
@@ -108,3 +116,44 @@ Result<Process*> Proc::exec_new_initrd(const char* filename)
 		return Result<Process*>();
 	return Result<Process*>(process);
 }
+
+Result<Process*> Proc::exec_empty()
+{
+	log("Creating new empty process");
+	Result<Process*> processResult = Proc::allocator.alloc();
+	if (processResult.is_fail())
+	{
+		log("Failed to create new process");
+		return Result<Process*>();
+	}
+
+	Process* process = processResult.result;
+	process->m_state = ProcessState::STARTING;
+	process->init();
+
+	return Result<Process*>(process);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,12 +1,15 @@
+#ifdef TESTING
 #include "test.hpp"
 #include "process.hpp"
 
 u32 Test::Utils::testSyscall(u32 syscall, u32 ebx, u32 ecx, u32 edx)
 {
-	if (Proc::current_process == nullptr)
-		Test::Asserts::require(Proc::exec_empty());
+	using namespace Test::Asserts;
 
-	Proc::current_process->map_page(reinterpret_cast<void*>(KB(4)));
+	if (Proc::current_process == nullptr)
+		require(Proc::exec_empty());
+
+	require(Proc::current_process->map_page(reinterpret_cast<void*>(KB(4))));
 
 	/* Shell code to use for testing:
 	 * 0:  b8 33 22 11 00          mov    eax,0x112233
@@ -53,3 +56,4 @@ u32 Test::Utils::testSyscall(u32 syscall, u32 ebx, u32 ecx, u32 edx)
 
 	return *reinterpret_cast<u32*>(mem);
 }
+#endif

@@ -62,4 +62,10 @@ void Asserts::assertNotEquals(const char* msg, u32 not_expected, void* got)
 	assertNotEquals(msg, not_expected, reinterpret_cast<u32>(got));
 }
 
+void Asserts::require(ResultState result)
+{
+	if (result == ResultState::SUCCESS)
+		fail("ResultState was false");
+}
+
 #endif
