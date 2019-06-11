@@ -1,5 +1,6 @@
 #include "process.hpp"
 #include "debug.hpp"
+#include "cpu.hpp"
 
 using namespace Proc;
 
@@ -11,6 +12,12 @@ bool Process::is_current()
 extern "C" void asm_switch_to_process();
 void Process::switch_to()
 {
+	if (m_state == ProcessState::DEAD)
+	{
+		log("Attempt to execute dead process detected");
+		CPU::hang();
+	}
+
 	if (!is_current())
 	{
 		log("Reloading pagetable");

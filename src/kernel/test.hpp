@@ -70,9 +70,9 @@ namespace Test
 
 	namespace Asserts
 	{
-		void fail();
-		void fail(const char* msg);
-		void failStr(const char* msg, const char* expected, const char* got);
+		[[noreturn]] void fail();
+		[[noreturn]] void fail(const char* msg);
+		[[noreturn]] void failStr(const char* msg, const char* expected, const char* got);
 		void assertTrue(const char* msg, bool value);
 		void assertFalse(const char* msg, bool value);
 		void assertEquals(const char* msg, u32 expected, u32 got);

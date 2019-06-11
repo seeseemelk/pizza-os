@@ -11,24 +11,24 @@ using namespace Paging;
 // Page Directory //
 ////////////////////
 
-PageDirEntry& PageDirectory::get_entry(void* virt)
+PageDirEntry& PageDirectory::get_entry(const void* virt)
 {
 	size_t dir_i = dir_index(virt);
 	return directory.entries[dir_i];
 }
 
-bool PageDirectory::has_table(void* virt)
+bool PageDirectory::has_table(const void* virt)
 {
 	return get_entry(virt).present;
 }
 
-PageTable& PageDirectory::get_table(void* virt)
+PageTable& PageDirectory::get_table(const void* virt)
 {
 	size_t dir_i = dir_index(virt);
 	return tables[dir_i];
 }
 
-Result<PageTable*> PageDirectory::get_or_make_table(void* virt)
+Result<PageTable*> PageDirectory::get_or_make_table(const void* virt)
 {
 	if (get_entry(virt).present)
 		return Result<PageTable*>(&get_table(virt));

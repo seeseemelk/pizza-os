@@ -1,59 +1,75 @@
 #ifdef TESTING
 #include "test.hpp"
 #include "process.hpp"
+#include "scheduler.hpp"
+
+extern "C" u8 test_syscall_payload_start;
+extern "C" u8 test_syscall_payload_end;
+static const size_t size = &test_syscall_payload_end - &test_syscall_payload_start;
+
+static void writeSyscallPayload(u8* mem)
+{
+	log("Writing syscall payload with size %d", size);
+	log("Copying from 0x%X to 0x%X", &test_syscall_payload_start, mem);
+	for (size_t i = 0; i < size; i++)
+	{
+		mem[i] = (&test_syscall_payload_start)[i];
+	}
+}
+
+static void setSyscallParameters(u8* mem, u32 syscall, u32 ebx, u32 ecx, u32 edx)
+{
+	log("Setting syscall parameters");
+	for (size_t i = 0; i < size; i++)
+	{
+		u32* mem32 = reinterpret_cast<u32*>(mem + i);
+		switch (*mem32)
+		{
+		case 0x00112233:
+			*mem32 = syscall;
+			break;
+		case 0x44556677:
+			*mem32 = ebx;
+			break;
+		case 0x8899aabb:
+			*mem32 = ecx;
+			break;
+		case 0xccddeeff:
+			*mem32 = edx;
+			break;
+		}
+	}
+}
 
 u32 Test::Utils::testSyscall(u32 syscall, u32 ebx, u32 ecx, u32 edx)
 {
 	using namespace Test::Asserts;
 
 	if (Proc::current_process == nullptr)
+	{
+		log("Loading new process");
 		require(Proc::exec_empty());
-
-	require(Proc::current_process->map_page(reinterpret_cast<void*>(KB(4))));
-
-	/* Shell code to use for testing:
-	 * 0:  b8 33 22 11 00          mov    eax,0x112233
-	 * 5:  bb 77 66 55 44          mov    ebx,0x44556677
-	 * a:  b9 bb aa 99 88          mov    ecx,0x8899aabb
-	 * f:  ba ff ee dd cc          mov    edx,0xccddeeff
-	 * 14: cd 50                   int    0x50
-	 * 16: a3 04 10 00 00          mov    ds:0x1004,eax
-	 * 1b: 31 c0                   xor    eax,eax
-	 * 1d: cd 80                   int    0x80
-	 */
+		//require(Proc::current_process->map_page(reinterpret_cast<void*>(KB(4))));
+	}
 
 	u8* mem = reinterpret_cast<u8*>(KB(4));
 
-	mem[0x00] = 0xB8;
+	if (!Proc::current_process->is_mapped(mem))
+		require(Proc::current_process->map_page(reinterpret_cast<void*>(KB(4))));
 
-	mem[0x05] = 0xBB;
+	writeSyscallPayload(mem);
+	setSyscallParameters(mem, syscall, ebx, ecx, edx);
 
-	mem[0x0A] = 0xB9;
+	*reinterpret_cast<u32*>(0x1404) = 0x13371337;
 
-	mem[0x0F] = 0xBA;
+	log("Executing syscall");
+	while (*reinterpret_cast<u32*>(0x1404) != 0xDEADDEAD)
+	{
+		log("Value is: 0x%X", *reinterpret_cast<u32*>(0x1404));
+		Scheduler::run_process();
+	}
+	log("Signal detected, process payload finished");
 
-	mem[0x14] = 0xCD;
-	mem[0x15] = 0x80;
-
-	mem[0x16] = 0xA3;
-	mem[0x17] = 0x04;
-	mem[0x18] = 0x10;
-	mem[0x19] = 0x00;
-	mem[0x1A] = 0x00;
-
-	mem[0x1B] = 0x31;
-	mem[0x1C] = 0xC0;
-
-	mem[0x1D] = 0xCD;
-	mem[0x1E] = 0x80;
-
-	*reinterpret_cast<u32*>(mem + 0x01) = syscall;
-	*reinterpret_cast<u32*>(mem + 0x06) = ebx;
-	*reinterpret_cast<u32*>(mem + 0x0B) = ecx;
-	*reinterpret_cast<u32*>(mem + 0x10) = edx;
-
-	Proc::current_process->enter_process();
-
-	return *reinterpret_cast<u32*>(mem);
+	return *reinterpret_cast<u32*>(0x1400);
 }
 #endif

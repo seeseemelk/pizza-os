@@ -29,7 +29,7 @@ void Process::init_stack()
 
 void Process::init()
 {
-	log("Initialising Process");
+	log("Initialising process");
 	if (current_process == 0)
 	{
 		current_process = this;
@@ -129,6 +129,7 @@ Result<Process*> Proc::exec_empty()
 
 	Process* process = processResult.result;
 	process->m_state = ProcessState::STARTING;
+	process->m_entry_point = 0x1000;
 	process->init();
 
 	return Result<Process*>(process);

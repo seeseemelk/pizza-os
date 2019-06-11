@@ -6,18 +6,18 @@
 using namespace Test;
 using namespace Asserts;
 
-void Asserts::fail()
+[[noreturn]] void Asserts::fail()
 {
 	CPU::reset();
 }
 
-void Asserts::fail(const char* msg)
+[[noreturn]] void Asserts::fail(const char* msg)
 {
 	::Debug::printf("!>>>%s\n", msg);
 	fail();
 }
 
-void Asserts::failStr(const char* msg, const char* expected, const char* got)
+[[noreturn]] void Asserts::failStr(const char* msg, const char* expected, const char* got)
 {
 	::Debug::printf("!<<<%s§%s>>>%s\n", expected, got, msg);
 	fail();
@@ -64,8 +64,8 @@ void Asserts::assertNotEquals(const char* msg, u32 not_expected, void* got)
 
 void Asserts::require(ResultState result)
 {
-	if (result == ResultState::SUCCESS)
-		fail("ResultState was false");
+	if (result != ResultState::SUCCESS)
+		fail("ResultState was not SUCCESS");
 }
 
 #endif

@@ -45,12 +45,12 @@ void Paging::init()
 	directory.get_entry(0).present = 0;
 }
 
-size_t Paging::dir_index(void* virt)
+size_t Paging::dir_index(const void* virt)
 {
 	return reinterpret_cast<u32>(virt) / MB(4);
 }
 
-size_t Paging::tbl_index(void* virt)
+size_t Paging::tbl_index(const void* virt)
 {
 	return (reinterpret_cast<u32>(virt) % MB(4)) / KB(4);
 }

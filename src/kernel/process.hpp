@@ -39,6 +39,7 @@ namespace Proc
 		void enter_process();
 		void enter_kernel();
 
+		bool is_mapped(void* address);
 		ResultState map_page(void* address);
 		ResultState map_pages(void* address, size_t blocks);
 

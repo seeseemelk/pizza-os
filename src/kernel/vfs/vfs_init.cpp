@@ -1,4 +1,5 @@
 #include "vfs.hpp"
+#include "vfs/vfs_private.hpp"
 #include "paging.hpp"
 #include "result.hpp"
 #include "debug.hpp"
@@ -42,6 +43,9 @@ void VFS::init()
 
 	log("Allocating VFS buffer page table");
 	allocate_page(buffer_page);
+
+	log("Initialising mounts system");
+	init_mounts();
 
 	log("Global VFS structures initialised");
 }

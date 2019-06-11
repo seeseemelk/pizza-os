@@ -24,9 +24,16 @@ u32 Syscall::Process::gid(u32 a, u32 b, u32 c)
 	return Proc::current_process->m_gid;
 }
 
-TEST(OTHER, "syscall debug", {
+u32 Syscall::Process::yield(u32 a, u32 b, u32 c)
+{
+	UNUSED(a); UNUSED(b); UNUSED(c);
+	return 0;
+}
+
+TEST(OTHER, "syscall PROCESS_PID", {
 	Proc::Process* proc = require(Proc::exec_empty());
-	assertEquals("Expected syscall to return PID", proc->m_pid, testSyscall(SYSCALL_PROCESS_PID));
+	proc->m_pid = 0xDEADBEEF;
+	assertEquals("Expected syscall to return PID (A)", proc->m_pid, testSyscall(SYSCALL_PROCESS_PID));
 	proc->m_pid++;
-	assertEquals("Expected syscall to return PID", proc->m_pid, testSyscall(SYSCALL_PROCESS_PID));
+	assertEquals("Expected syscall to return PID (B)", proc->m_pid, testSyscall(SYSCALL_PROCESS_PID));
 });

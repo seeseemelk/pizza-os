@@ -24,6 +24,7 @@ namespace Syscall
 		u32 pid(u32, u32, u32);
 		u32 uid(u32, u32, u32);
 		u32 gid(u32, u32, u32);
+		u32 yield(u32, u32, u32);
 	}
 
 	// I/O syscalls.

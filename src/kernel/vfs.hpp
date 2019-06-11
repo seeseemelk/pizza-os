@@ -1,6 +1,7 @@
 #ifndef VFS_HPP_
 #define VFS_HPP_
 
+#include <pizzaos/limits.h>
 #include "process.hpp"
 #include "slab.hpp"
 
@@ -39,9 +40,17 @@ namespace VFS
 		FileBuffer buffers[4096];
 	};
 
+	struct Mount
+	{
+		Proc::Process* fs_host;
+		char path[PATH_MAX];
+		Mount* next_mount = nullptr;
+	};
+
 	extern Slab<File>* allocator;
 	extern Paging::PageTable* file_page;
 	extern Paging::PageTable* buffer_page;
+	extern Mount* last_mount;
 
 	void init();
 
@@ -53,6 +62,8 @@ namespace VFS
 
 	File& allocate_file();
 	void free_file(File& file);
+
+	ResultState mount(char* path, Proc::Process* process);
 }
 
 #endif

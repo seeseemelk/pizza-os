@@ -10,8 +10,23 @@ local function check_state(state, line)
 end
 --]]
 
+local verbose = false
+
 local function starts_with(line, str)
 	return #line >= #str and line:sub(1, #str) == str
+end
+
+local function print_test_log(log)
+	print()
+	print("=== TEST LOG ===")
+	if #log > 0 then
+		for _, line in ipairs(log) do
+			print(line)
+		end
+	else
+		print(" (No output)")
+	end
+
 end
 
 local function execute_tests()
@@ -20,6 +35,7 @@ local function execute_tests()
 	local state = "print"
 	local line = ph:read("*l")
 	local success = false
+	local finsihed = false
 
 	local testCount = 0
 	local testIndex = 0
@@ -47,6 +63,7 @@ local function execute_tests()
 			print("GROUP " .. groupName)
 		elseif line == "?DONE" then
 			success = true
+			finished = true
 		elseif starts_with(line, "!") then
 			local expected, got, message, splitter
 			local equals = true
@@ -58,15 +75,7 @@ local function execute_tests()
 			end
 			message = line:match(">>>(.-)$")
 			
-			print()
-			print("=== TEST LOG ===")
-			if #test.log > 0 then
-				for _, line in ipairs(test.log) do
-					print(line)
-				end
-			else
-				print(" (No output)")
-			end
+			print_test_log(test.log)
 
 			print()
 			print("=== FAILURE INFORMATION ===")
@@ -79,10 +88,14 @@ local function execute_tests()
 					print(string.format("Expected anything but %s.", expected))
 				end
 			end
+			finished = true
 		elseif starts_with(line, "?") then
 			error("Unknown command: " .. line)
 		else
 			test.log[#test.log + 1] = line
+			if verbose then
+				print("[QEMU] " .. line)
+			end
 		end
 
 		--[[
@@ -98,11 +111,24 @@ local function execute_tests()
 	if success then
 		print()
 		print("All tests ran successfully")
+	elseif not finished then
+		print_test_log(test.log)
+		print()
+		print("PizzaOS stopped unexpectedly")
 	end
 	return success
 end
 
-local function main(arg)
+local function main(args)
+	for _, arg in ipairs(args) do
+		if arg == "-v" or arg == "--verbose" then
+			verbose = true
+		else
+			print("Invalid argument " .. arg)
+			return 1
+		end
+	end
+
 	print("Executing unit tests")
 	if execute_tests() then
 		return 0

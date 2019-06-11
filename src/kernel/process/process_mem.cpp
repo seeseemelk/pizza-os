@@ -6,6 +6,7 @@ using namespace Proc;
 
 ResultState Process::map_page(void* address)
 {
+	switch_to();
 	Paging::PageDirEntry& entry = Paging::directory.get_entry(address);
 	Result<Paging::PageTable*> result = entry.get_or_make_table();
 	if (result.is_fail())
@@ -33,6 +34,7 @@ ResultState Process::map_page(void* address)
 
 ResultState Process::map_pages(void* address, size_t blocks)
 {
+	switch_to();
 	for (size_t i = 0; i < blocks; i++)
 	{
 		if (map_page(address) == ResultState::FAIL)
@@ -42,7 +44,17 @@ ResultState Process::map_pages(void* address, size_t blocks)
 	return ResultState::SUCCESS;
 }
 
+bool Process::is_mapped(void* address)
+{
+	switch_to();
+	Paging::PageDirEntry& entry = Paging::directory.get_entry(address);
+	if (!entry.present)
+		return false;
 
+	Paging::PageTableEntry& tbl_entry = entry.get_table().get_entry(address);
+
+	return tbl_entry.present;
+}
 
 
 

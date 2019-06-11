@@ -4,6 +4,7 @@
 namespace Scheduler
 {
 	void run();
+	void run_process();
 }
 
 #endif

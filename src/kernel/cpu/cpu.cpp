@@ -2,6 +2,7 @@
 #include "interrupt.hpp"
 #include "debug.hpp"
 #include "io.hpp"
+#include "test.hpp"
 
 using namespace CPU;
 
@@ -15,6 +16,7 @@ void CPU::halt()
 	asm("hlt");
 }
 
+#ifndef TESTING
 [[noreturn]] void CPU::hang()
 {
 	Interrupt::disable();
@@ -22,6 +24,12 @@ void CPU::halt()
 	while (true)
 		halt();
 }
+#else
+[[noreturn]] void CPU::hang()
+{
+	Test::Asserts::fail("Kernel hanging");
+}
+#endif
 
 [[noreturn]] void CPU::out_of_memory()
 {
@@ -42,7 +50,7 @@ void CPU::load_cr3(u32 address)
 }
 
 IO::Port keyboardController(0x64);
-void CPU::reset()
+[[noreturn]] void CPU::reset()
 {
 	Interrupt::disable();
 	while (1)

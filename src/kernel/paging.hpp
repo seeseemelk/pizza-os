@@ -56,7 +56,7 @@ struct PageTable
 {
 	PageTableEntry entries[1024];
 
-	PageTableEntry& get_entry(void* virt);
+	PageTableEntry& get_entry(const void* virt);
 	void* get_address();
 } __attribute__((aligned(4096)));
 
@@ -64,10 +64,10 @@ struct PageDirectory
 {
 	PageDirEntry entries[1024];
 
-	PageDirEntry& get_entry(void* virt);
-	bool has_table(void* virt);
-	PageTable& get_table(void* virt);
-	Result<PageTable*> get_or_make_table(void* virt);
+	PageDirEntry& get_entry(const void* virt);
+	bool has_table(const void* virt);
+	PageTable& get_table(const void* virt);
+	Result<PageTable*> get_or_make_table(const void* virt);
 } __attribute__((aligned(4096)));
 
 extern PageDirectory& directory;
@@ -75,8 +75,8 @@ extern PageTable* const tables;
 extern PageTable metatable;
 
 void init();
-size_t dir_index(void* virt);
-size_t tbl_index(void* virt);
+size_t dir_index(const void* virt);
+size_t tbl_index(const void* virt);
 PageDirEntry& alloc_dir_entry();
 Result<PageTable*> alloc_table(PageDirEntry** directory_entry);
 Result<PageTable*> alloc_table();

@@ -61,7 +61,7 @@ void handle_page_fault(int error_code)
 
 void Interrupt::handle_interrupt()
 {
-	//log("IRQ: 0x%X, error: 0x%X", irq, error_code);
+	log("IRQ: 0x%X, error: 0x%X", last_irq, last_error_code);
 	//log("Start handling IRQ 0x%X", irq);
 	switch (last_irq)
 	{

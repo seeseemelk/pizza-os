@@ -13,8 +13,9 @@ void Syscall::initialise()
 	syscall_handlers[SYSCALL_EXIT] = Syscall::exit;
 	syscall_handlers[SYSCALL_VFS_ISOPEN] = Syscall::VFS::is_open;
 	syscall_handlers[SYSCALL_PROCESS_PID] = Syscall::Process::pid;
-	syscall_handlers[SYSCALL_PROCESS_UID] = Syscall::Process::uid;
 	syscall_handlers[SYSCALL_PROCESS_GID] = Syscall::Process::gid;
+	syscall_handlers[SYSCALL_PROCESS_UID] = Syscall::Process::uid;
+	syscall_handlers[SYSCALL_PROCESS_YIELD] = Syscall::Process::yield;
 	syscall_handlers[SYSCALL_DEBUG_PRINT] = Syscall::Debug::print;
 }
 
@@ -37,6 +38,7 @@ void Syscall::handle_syscall()
 		SyscallHandler handler = syscall_handlers[eax];
 		if (handler != nullptr)
 		{
+			log("Syscall 0x%X executed", eax);
 			u32 result = handler(ebx, ecx, edx);
 			Proc::current_process->poke_stack_end(-6, result);
 		}
