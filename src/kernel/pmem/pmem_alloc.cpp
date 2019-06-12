@@ -45,7 +45,7 @@ void PMem::free(size_t addr)
 		map[addr / KB(4)]--;
 }
 
-TEST(POST_PMEM, "PMem::increase_ref_count/free()->ref_count increased,decreased", {
+TEST(POST_PMEM, "PMem::increase_ref_count/free() -> ref_count increased and decreased", {
 	size_t addr = KB(4)*4;
 	assertEquals("Ref count not correctly initialised", 0, PMem::get_state(addr));
 	assertEquals("Ref count not increased", ResultState::SUCCESS, PMem::increase_ref_count(addr));
@@ -54,7 +54,7 @@ TEST(POST_PMEM, "PMem::increase_ref_count/free()->ref_count increased,decreased"
 	assertEquals("Ref count not correctly freed", 0, PMem::get_state(addr));
 });
 
-TEST(POST_PMEM, "PMem::alloc_end()->state is 1", {
+TEST(POST_PMEM, "PMem::alloc_end() -> state is 1", {
 	Result<void*> result = PMem::alloc_end(1);
 	assertTrue("Could not allocate", result.is_success());
 	assertEquals("Incorrect block state", 1, PMem::get_state(reinterpret_cast<size_t>(result.result)));

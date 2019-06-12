@@ -38,9 +38,9 @@ SafeResult Safe::strnlen(size_t& result, const char* src, size_t limit)
 	return SafeResult::OK;
 }
 
-TEST(OTHER, "strnlen normal", {
+/*TEST(OTHER, "Safe::strnlen normal", {
 	const char* str = "hello, world!";
 	size_t result;
 	assertEquals("strnlen failed", SafeResult::OK, Safe::strnlen(result, str, 128));
 	assertEquals("strnlen returned an invalid result", 13, result);
-});
+});*/
