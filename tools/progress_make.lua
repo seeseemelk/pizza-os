@@ -66,7 +66,8 @@ local function main(progress_file, width)
 		line = io.read("*l")
 	end
 	
-	print()
+	clear_bar(line_count, width)
+	flush()
 end
 
 main(...)
