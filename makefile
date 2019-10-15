@@ -5,8 +5,8 @@ export LD := i386-elf-ld
 export ASM := nasm
 
 # Common flags
-export CFLAGS = -Wall -Wextra -ffreestanding -std=gnu17 -nostdlib -O3
-export CXXFLAGS = -Wall -Wextra -ffreestanding -std=gnu++17 -nostdlib -fno-exceptions -fno-rtti -O3 -fomit-frame-pointer
+export CFLAGS = -Wall -Wextra -ffreestanding -std=gnu17 -nostdlib -O0 -ggdb
+export CXXFLAGS = -Wall -Wextra -ffreestanding -std=gnu++17 -nostdlib -fno-exceptions -fno-rtti -O0 -ggdb -fomit-frame-pointer
 
 # Flags for kernel/user space
 export CFLAGS_KERNEL = $(CFLAGS)
@@ -34,23 +34,29 @@ export PIZZAOS_TEST_ELF := $(BUILDDIR)/pizzaos.test.elf
 export DEFAULTMAKE := $(abspath default.make)
 include $(DEFAULTMAKE)
 
-.PHONY: clean all all_verbose test_verbose test check crt_obj libkc libc libkcxx kernel_test
+.PHONY: clean all build_all build_test test check crt_obj libkc libc libkcxx kernel_test
 
 all:
 	@mkdir -p $(BUILDDIR)
-	@$(MAKE) -n all_verbose > $(BUILDDIR)/progress.txt
-	@$(MAKE) all_verbose | tools/progress_make.lua $(BUILDDIR)/progress.txt `tput cols`
+	@$(MAKE) -n build_all > $(BUILDDIR)/progress.txt
+	@$(MAKE) build_all | tools/progress_make.lua $(BUILDDIR)/progress.txt `tput cols`
 
-check test: test_verbose
+check test:
 	@mkdir -p $(BUILDDIR)
-	@$(MAKE) -n test_verbose > $(BUILDDIR)/progress.txt
-	@$(MAKE) test_verbose | tools/progress_make.lua $(BUILDDIR)/progress.txt `tput cols`
-	./tools/test_runner.lua -v
+	@$(MAKE) -n build_test > $(BUILDDIR)/progress.txt
+	@$(MAKE) build_test | tools/progress_make.lua $(BUILDDIR)/progress.txt `tput cols`
+	./tools/test_runner.lua $(TEST_ARG) 2>&1
 
-all_verbose: pizzaos.iso
+test_verbose:
+	@mkdir -p $(BUILDDIR)
+	@$(MAKE) -n build_test > $(BUILDDIR)/progress.txt
+	@$(MAKE) build_test | tools/progress_make.lua $(BUILDDIR)/progress.txt `tput cols`
+	./tools/test_runner.lua -v 2>&1
+
+build_all: pizzaos.iso
 	echo "Build finished"
 
-test_verbose: pizzaos.test.iso
+build_test: pizzaos.test.iso
 
 crt_obj:
 	+BUILDDIR=$(BUILDDIR)/libc $(MAKE) -C src/stdlib/libc/crt $(CRT_OBJ)
@@ -84,5 +90,3 @@ clean:
 	rm -rf $(BUILDDIR)
 	@echo "Build directory cleaned"
 	@echo
-
-#include src/stdlib/libc/makefile
