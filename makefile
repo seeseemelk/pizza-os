@@ -34,34 +34,51 @@ export PIZZAOS_TEST_ELF := $(BUILDDIR)/pizzaos.test.elf
 export DEFAULTMAKE := $(abspath default.make)
 include $(DEFAULTMAKE)
 
-.PHONY: clean all_verbose
+.PHONY: clean all all_verbose test_verbose test check crt_obj libkc libc libkcxx kernel_test
 
 all:
 	@mkdir -p $(BUILDDIR)
 	@$(MAKE) -n all_verbose > $(BUILDDIR)/progress.txt
 	@$(MAKE) all_verbose | tools/progress_make.lua $(BUILDDIR)/progress.txt `tput cols`
 
-all_verbose: pizzaos.iso $(PIZZAOS_TEST_ELF)
+check test: test_verbose
+	@mkdir -p $(BUILDDIR)
+	@$(MAKE) -n test_verbose > $(BUILDDIR)/progress.txt
+	@$(MAKE) test_verbose | tools/progress_make.lua $(BUILDDIR)/progress.txt `tput cols`
+	./tools/test_runner.lua -v
+
+all_verbose: pizzaos.iso
 	echo "Build finished"
 
-$(CRT_OBJ):
-	+BUILDDIR=$(BUILDDIR)/libc $(MAKE) -C src/stdlib/libc/crt $@
+test_verbose: pizzaos.test.iso
 
-$(LIBKC):
-	+BUILDDIR=$(BUILDDIR)/libc $(MAKE) -C src/stdlib/libc/kernel $@
+crt_obj:
+	+BUILDDIR=$(BUILDDIR)/libc $(MAKE) -C src/stdlib/libc/crt $(CRT_OBJ)
 
-$(LIBC): $(LIBKC)
-	+BUILDDIR=$(BUILDDIR)/libc $(MAKE) -C src/stdlib/libc/user $@
+libkc:
+	+BUILDDIR=$(BUILDDIR)/libc $(MAKE) -C src/stdlib/libc/kernel $(LIBKC)
 
-$(LIBKCXX):
-	+BUILDDIR=$(BUILDDIR)/libcxx $(MAKE) -C src/stdlib/libcxx/kernel $@
+libc: libkc
+	+BUILDDIR=$(BUILDDIR)/libc $(MAKE) -C src/stdlib/libc/user $(LIBC)
 
-$(PIZZAOS_ELF) $(PIZZAOS_TEST_ELF): $(LIBKC) $(LIBKCXX) $(CRT_OBJ)
-	+$(MAKE) -C src/kernel $@
+libkcxx:
+	+BUILDDIR=$(BUILDDIR)/libcxx $(MAKE) -C src/stdlib/libcxx/kernel $(LIBKCXX)
+
+$(PIZZAOS_ELF): libkc libkcxx crt_obj
+	+$(MAKE) -C src/kernel $(PIZZAOS_ELF)
+
+$(PIZZAOS_TEST_ELF): libkc libkcxx crt_obj
+	+$(MAKE) -C src/kernel $(PIZZAOS_TEST_ELF)
 
 pizzaos.iso: $(PIZZAOS_ELF) isodir/boot/grub/grub.cfg
 	$(STATUS) GENISO $@
+	cp $(PIZZAOS_ELF) isodir/boot
 	grub-mkrescue -o pizzaos.iso isodir 2>&1
+
+pizzaos.test.iso: $(PIZZAOS_TEST_ELF) isodir.test/boot/grub/grub.cfg
+	$(STATUS) GENISO $@
+	cp $(PIZZAOS_TEST_ELF) isodir.test/boot
+	grub-mkrescue -o pizzaos.test.iso isodir.test 2>&1
 
 clean:
 	rm -rf $(BUILDDIR)
