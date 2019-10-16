@@ -17,7 +17,7 @@ $(PIZZAOS_ELF): $(OBJ) linker.ld
 $(PIZZAOS_TEST_ELF): $(OBJ_TEST) linker.ld
 	$(STATUS_LD)
 	$(MKDIR)
-	$(LD) -o $@ $(LD_FLAGS) $(CRT_OBJ) $(OBJ_TEST)
+	$(LD) -o $@ $(LD_FLAGS) $(CRTI) $(CRTBEGIN) $(OBJ_TEST) $(CRTEND) $(CRTN)
 
 $(PIZZABUILD)/%.cpp.o: %.cpp
 	$(STATUS_KCXX)

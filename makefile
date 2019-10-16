@@ -5,8 +5,8 @@ export LD := i386-elf-ld
 export ASM := nasm
 
 # Common flags
-export CFLAGS = -Wall -Wextra -ffreestanding -std=gnu17 -nostdlib -O0 -ggdb
-export CXXFLAGS = -Wall -Wextra -ffreestanding -std=gnu++17 -nostdlib -fno-exceptions -fno-rtti -O0 -ggdb -fomit-frame-pointer
+export CFLAGS = -Wall -Wextra -ffreestanding -std=gnu17 -nostdlib -O0 -ggdb -fdiagnostics-color=always
+export CXXFLAGS = -Wall -Wextra -ffreestanding -std=gnu++17 -nostdlib -fno-exceptions -fno-rtti -O0 -ggdb -fomit-frame-pointer -fdiagnostics-color=always
 
 # Flags for kernel/user space
 export CFLAGS_KERNEL = $(CFLAGS)
@@ -31,33 +31,35 @@ export LIBKCXX := $(BUILDDIR)/libcxx/libkcxx.a
 export PIZZAOS_ELF := $(BUILDDIR)/pizzaos.elf
 export PIZZAOS_TEST_ELF := $(BUILDDIR)/pizzaos.test.elf
 
+SHELL = /bin/bash
+.SHELLFLAGS = -o pipefail -c
+
 # Useful macros
 export DEFAULTMAKE := $(abspath default.make)
 include $(DEFAULTMAKE)
 
-.PHONY: clean all build_all build_test test check crt_obj libkc libc libkcxx kernel_test
+.PHONY: clean all build_all build_test test check crt_obj libkc libc libkcxx kernel_test build_test_progress
 
 all:
 	@mkdir -p $(BUILDDIR)
 	@$(MAKE) -n build_all > $(BUILDDIR)/progress.txt
-	@$(MAKE) build_all | tools/progress_make.lua $(BUILDDIR)/progress.txt `tput cols`
+	@$(MAKE) build_all 2>&1 | tools/progress_make.lua $(BUILDDIR)/progress.txt `tput cols`
 
-check test:
-	@mkdir -p $(BUILDDIR)
-	@$(MAKE) -n build_test > $(BUILDDIR)/progress.txt
-	@$(MAKE) build_test | tools/progress_make.lua $(BUILDDIR)/progress.txt `tput cols`
+check test: build_test_progress
 	./tools/test_runner.lua $(TEST_ARG) 2>&1
 
-test_verbose:
-	@mkdir -p $(BUILDDIR)
-	@$(MAKE) -n build_test > $(BUILDDIR)/progress.txt
-	@$(MAKE) build_test | tools/progress_make.lua $(BUILDDIR)/progress.txt `tput cols`
+test_verbose: build_test_progress
 	./tools/test_runner.lua -v 2>&1
 
 build_all: pizzaos.iso
 	echo "Build finished"
 
 build_test: pizzaos.test.iso
+
+build_test_progress:
+	@mkdir -p $(BUILDDIR)
+	@$(MAKE) -n build_test > $(BUILDDIR)/progress.txt
+	@$(MAKE) build_test 2>&1 | tools/progress_make.lua $(BUILDDIR)/progress.txt `tput cols`
 
 crt_obj:
 	+BUILDDIR=$(BUILDDIR)/libc $(MAKE) -C src/stdlib/libc/crt all
