@@ -5,8 +5,8 @@ export LD := i386-elf-ld
 export ASM := nasm
 
 # Common flags
-export CFLAGS = -Wall -Wextra -ffreestanding -std=gnu17 -nostdlib -O0 -ggdb
-export CXXFLAGS = -Wall -Wextra -ffreestanding -std=gnu++17 -nostdlib -fno-exceptions -fno-rtti -O0 -ggdb -fomit-frame-pointer
+export CFLAGS = -Wall -Wextra -ffreestanding -std=gnu17 -nostdlib -O0 #-ggdb
+export CXXFLAGS = -Wall -Wextra -ffreestanding -std=gnu++17 -nostdlib -fno-exceptions -fno-rtti -O0 #-ggdb -fomit-frame-pointer
 
 # Flags for kernel/user space
 export CFLAGS_KERNEL = $(CFLAGS)
