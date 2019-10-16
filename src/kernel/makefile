@@ -5,12 +5,14 @@ PIZZABUILD := $(BUILDDIR)/pizzaos
 SRC = $(patsubst ./%, %, $(shell find . -name '*.c' -print) $(shell find . -name '*.cpp' -print) $(shell find . -name '*.asm' -print))
 OBJ = $(SRC:%=$(PIZZABUILD)/%.o)
 OBJ_TEST = $(SRC:%=$(PIZZABUILD)/%.test.o)
+CRTBEGIN = $(shell $(CXX) --print-file-name=crtbegin.o)
+CRTEND = $(shell $(CXX) --print-file-name=crtend.o)
 LD_FLAGS = -T linker.ld -L$(BUILDDIR)/libc -L$(BUILDDIR)/libcxx --whole-archive -lkc -lkcxx 
 
 $(PIZZAOS_ELF): $(OBJ) linker.ld
 	$(STATUS_LD)
 	$(MKDIR)
-	$(LD) -o $@ $(LD_FLAGS) $(CRT_OBJ) $(OBJ)
+	$(LD) -o $@ $(LD_FLAGS) $(CRTI) $(CRTBEGIN) $(OBJ) $(CRTEND) $(CRTN)
 
 $(PIZZAOS_TEST_ELF): $(OBJ_TEST) linker.ld
 	$(STATUS_LD)

@@ -5,8 +5,8 @@ export LD := i386-elf-ld
 export ASM := nasm
 
 # Common flags
-export CFLAGS = -Wall -Wextra -ffreestanding -std=gnu17 -nostdlib -O0 #-ggdb
-export CXXFLAGS = -Wall -Wextra -ffreestanding -std=gnu++17 -nostdlib -fno-exceptions -fno-rtti -O0 #-ggdb -fomit-frame-pointer
+export CFLAGS = -Wall -Wextra -ffreestanding -std=gnu17 -nostdlib -O0 -ggdb
+export CXXFLAGS = -Wall -Wextra -ffreestanding -std=gnu++17 -nostdlib -fno-exceptions -fno-rtti -O0 -ggdb -fomit-frame-pointer
 
 # Flags for kernel/user space
 export CFLAGS_KERNEL = $(CFLAGS)
@@ -22,7 +22,8 @@ export INCLUDE_LIBKCXX := $(abspath src/stdlib/libcxx/kernel)
 export BUILDDIR := $(abspath build)
 
 # Libraries
-export CRT_OBJ := $(BUILDDIR)/libc/crt.o
+export CRTI := $(BUILDDIR)/libc/crt/crti.o
+export CRTN := $(BUILDDIR)/libc/crt/crtn.o
 export LIBC := $(BUILDDIR)/libc/libc.a
 export LIBKC := $(BUILDDIR)/libc/libkc.a
 export LIBCXX := $(BUILDDIR)libcxx/libcxx.a
@@ -59,7 +60,7 @@ build_all: pizzaos.iso
 build_test: pizzaos.test.iso
 
 crt_obj:
-	+BUILDDIR=$(BUILDDIR)/libc $(MAKE) -C src/stdlib/libc/crt $(CRT_OBJ)
+	+BUILDDIR=$(BUILDDIR)/libc $(MAKE) -C src/stdlib/libc/crt all
 
 libkc:
 	+BUILDDIR=$(BUILDDIR)/libc $(MAKE) -C src/stdlib/libc/kernel $(LIBKC)

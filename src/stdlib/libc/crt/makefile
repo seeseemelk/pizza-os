@@ -3,9 +3,7 @@ include $(DEFAULTMAKE)
 SRC = $(wildcard *.asm)
 OBJ = $(SRC:%.asm=$(BUILDDIR)/crt/%.o)
 
-$(CRT_OBJ): $(OBJ)
-	$(STATUS_LD)
-	$(LD) -i -o $@ $^
+all: $(OBJ)
 
 $(BUILDDIR)/crt/%.o: %.asm
 	$(STATUS_KASM)
