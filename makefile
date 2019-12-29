@@ -80,7 +80,7 @@ $(PIZZAOS_TEST_ELF): libkc libkcxx crt_obj
 	+$(MAKE) -C src/kernel $(PIZZAOS_TEST_ELF)
 
 pizzaos.iso: $(PIZZAOS_ELF) isodir/boot/grub/grub.cfg
-	$(STATUS) GENISO $@
+	@$(STATUS) GENISO $@
 	cp $(PIZZAOS_ELF) isodir/boot
 	grub-mkrescue -o pizzaos.iso isodir 2>&1
 

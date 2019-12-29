@@ -12,7 +12,6 @@ bool Safe::exists(const void* addr)
 	log("table_index: 0x%X", Paging::tbl_index(addr));
 	log("Address: 0x%X", (GB(4) - MB(4)) + Paging::dir_index(addr) * KB(4) + Paging::tbl_index(addr) * 4);
 	log("A");
-	while (1);
 	Paging::PageDirEntry& dir = Paging::directory.get_entry(addr);
 	if (!dir.present)
 		return false;

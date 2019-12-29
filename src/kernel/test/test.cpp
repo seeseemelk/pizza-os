@@ -50,6 +50,7 @@ void Test::execute_tests(size_t group)
 	size_t test_count = 0;
 	while (next_test != nullptr)
 	{
+		//while (1);
 		::Debug::printf("?RUN_TEST %s\n", next_test->name);
 		next_test->current();
 		next_test = next_test->next;
