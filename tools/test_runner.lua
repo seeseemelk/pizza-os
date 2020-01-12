@@ -2,14 +2,6 @@
 
 local command = "qemu-system-i386 -cdrom pizzaos.test.iso -m 16M -gdb tcp::1234 -serial stdio -display none -no-reboot"
 
---[[
-local function check_state(state, line)
-	if state == "print" then
-		--if line:sub(1,1) == "?" then
-	end
-end
---]]
-
 local verbose = false
 
 local function starts_with(line, str)
@@ -43,7 +35,8 @@ local function execute_tests()
 		name = nil,
 		log = {}
 	}
-
+	local testDescription
+	local currentLineLength
 
 	while line ~= nil do
 		--state = check_state(state, line)
@@ -52,12 +45,19 @@ local function execute_tests()
 			testCount = tonumber(line:match("(%d+)$"))
 			--print("TEST COUNT: " .. testCount)
 		elseif starts_with(line, "?TEST_GOOD") then
+			if not verbose then
+				io.write("\r" .. string.rep(" ", currentLineLength) .. "\r")
+			end
+			print(" => OK " .. testDescription)
 		elseif starts_with(line, "?RUN_TEST") then
 			test.name = line:match("^?RUN_TEST (.+)$")
 			test.log = {}
 			testIndex = testIndex + 1
-			print(string.format(" => RUNNING %s (%d/%d %d%%)",
-					test.name, testIndex, testCount, testIndex / testCount * 100))
+			testDescription = string.format("%s (%d/%d %d%%)", test.name, testIndex, testCount, testIndex / testCount * 100)
+			local statusLine = " => RUNNING " .. testDescription
+			currentLineLength = #statusLine
+			io.write(statusLine)
+			io.flush()
 		elseif starts_with(line, "?RUN_GROUP") then
 			local groupName = line:match("(%S+)$")
 			print("GROUP " .. groupName)
@@ -123,8 +123,13 @@ local function main(args)
 	for _, arg in ipairs(args) do
 		if arg == "-v" or arg == "--verbose" then
 			verbose = true
+		elseif arg == "-S" then
+			command = command .. " " .. arg
 		else
 			print("Invalid argument " .. arg)
+			print("Options:")
+			print("    -v, --verbose   Enable verbose execution")
+			print("    -S              Pause before running")
 			return 1
 		end
 	end
