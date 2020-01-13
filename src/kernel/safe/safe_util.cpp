@@ -13,6 +13,9 @@ bool Safe::exists(const void* addr)
 	log("Address: 0x%X", (GB(4) - MB(4)) + Paging::dir_index(addr) * KB(4) + Paging::tbl_index(addr) * 4);
 	log("A");
 	Paging::PageDirEntry& dir = Paging::directory.get_entry(addr);
+	Paging::debug_dump(dir);
+	log("Address actual: 0x%X", &dir);
+	log("Content: 0x%X", dir);
 	if (!dir.present)
 		return false;
 	log("Dir is: 0x%X", dir.present);
@@ -34,10 +37,10 @@ int Safe::protection_level(const void* addr)
 		return 1;
 }
 
-TEST(OTHER, "Safe::exists(kernel_memory) -> true", {
-	assertEquals("Safe::exists failed", true, Safe::exists(reinterpret_cast<void*>(&Safe::exists)));
-});
-
 TEST(OTHER, "Safe::exists(non_existant_memory) -> false", {
 	assertEquals("Safe::exists failed", false, Safe::exists(nullptr));
+});
+
+TEST(OTHER, "Safe::exists(kernel_memory) -> true", {
+	assertEquals("Safe::exists failed", true, Safe::exists(reinterpret_cast<void*>(0xC0000000)));
 });

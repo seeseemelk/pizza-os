@@ -64,18 +64,18 @@ extern "C" void kernel_main(multiboot_info_t* mbt)
 		Test::execute_tests(Test::Group::PRE_PROC);
 	#endif
 	log("Initialising process management...");
-	Proc::init();
+	//Proc::init();
 	log("Done");
 
 	#ifdef TESTING
 		Test::execute_tests(Test::Group::PRE_VFS);
 	#endif
 	log("Initialising VFS...");
-	VFS::init();
+	//VFS::init();
 	log("Done");
 
 	log("Initialising syscalls...");
-	Syscall::initialise();
+	//Syscall::initialise();
 	log("Done");
 
 	#ifdef TESTING

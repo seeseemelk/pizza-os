@@ -58,6 +58,9 @@ local function execute_tests()
 			currentLineLength = #statusLine
 			io.write(statusLine)
 			io.flush()
+			if verbose then
+				print()
+			end
 		elseif starts_with(line, "?RUN_GROUP") then
 			local groupName = line:match("(%S+)$")
 			print("GROUP " .. groupName)
@@ -74,6 +77,11 @@ local function execute_tests()
 				end
 			end
 			message = line:match(">>>(.-)$")
+
+			if not verbose then
+				io.write("\r" .. string.rep(" ", currentLineLength) .. "\r")
+			end
+			print(" => FAIL " .. testDescription)
 			
 			print_test_log(test.log)
 

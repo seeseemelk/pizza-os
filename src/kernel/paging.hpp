@@ -82,6 +82,9 @@ Result<PageTable*> alloc_table(PageDirEntry** directory_entry);
 Result<PageTable*> alloc_table();
 Result<PageTableEntry*> alloc_table_entry();
 void load_directory(u32 directory);
+void debug_dump(PageDirEntry& entry);
+void debug_dump(PageTableEntry& entry);
+//void debug_dump();
 
 }
 
