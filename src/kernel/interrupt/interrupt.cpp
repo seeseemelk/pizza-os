@@ -36,7 +36,6 @@ static Gate& create_handler(size_t irq, HandlerFactory& factory)
 
 	// Build the handler
 	char* dest = reinterpret_cast<char*>(result.result);
-	log("Building interrupt handler at 0x%X", dest);
 	factory.build(dest, irq);
 
 	// Setup the handler in the IDT.
@@ -97,7 +96,6 @@ void Interrupt::init()
 	create_idt();
 	log("Setting up IDTR");
 	setup_idtr();
-	log("Creating some handlers");
 
 	static const unsigned int without_errors[] =
 			{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06,

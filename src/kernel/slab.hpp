@@ -115,7 +115,6 @@ Result<size_t> Slab<T>::pop()
 		ResultState state = need_memory_at(m_free + m_free_index);
 		if (state == ResultState::FAIL)
 			return Result<size_t>();
-		log("Address: 0x%X", m_free + m_free_index);
 		m_free[m_free_index] = (m_capacity - (m_free_created--) - 1) * m_element_size;
 	}
 

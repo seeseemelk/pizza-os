@@ -5,6 +5,20 @@
 #include <cstddef>
 #include <cstdint>
 
+/**
+ * This module takes care of managing the mappings between the physical memory
+ * space and virtual memory space.
+ *
+ * Here is a simplified memory map of the virtual memory space:
+ *
+ * |--------|------------------|---------------|-------------|
+ * | UNUSED | USERSPACE MEMORY | KERNEL MEMORY | PAGE TABLES |
+ * |--------|------------------|---------------|-------------|
+ * 0      4KiB               3GiB          3GiB-4MiB       4GiB
+ * 0     0x1000          0xC000_0000                   0xFFFF_FFFF
+ *                                                           |
+ *                                                       Metatable
+ */
 namespace Paging
 {
 
@@ -66,25 +80,53 @@ struct PageDirectory
 
 	PageDirEntry& get_entry(const void* virt);
 	bool has_table(const void* virt);
-	PageTable& get_table(const void* virt);
-	Result<PageTable*> get_or_make_table(const void* virt);
 } __attribute__((aligned(4096)));
 
+/**
+ *
+ */
 extern PageDirectory& directory;
+
+/**
+ * This pointer is an array to every PageTable in existence.
+ * Effectively, it is a pointer to the last 4 MiB of the virtual memory space.
+ */
 extern PageTable* const tables;
-extern PageTable metatable;
+
+/**
+ * This pointer points to the metatable.
+ * The metatable is a page table that contains entries to map other page tables
+ * to virtual memory so that they can be easily manipulated.
+ * Effectively, it is a pointer to the last 4 KiB of the virtual memory space.
+ */
+extern PageTable& metatable;
 
 void init();
+
 size_t dir_index(const void* virt);
 size_t tbl_index(const void* virt);
+
+// Methods to find and manipulate page tables and their entries.
+PageTableEntry& get_meta_entry(const void* virt);
+PageTable& get_table(const void* virt);
+Result<PageTable*> get_or_make_table(const void* virt);
 PageDirEntry& alloc_dir_entry();
 Result<PageTable*> alloc_table(PageDirEntry** directory_entry);
 Result<PageTable*> alloc_table();
 Result<PageTableEntry*> alloc_table_entry();
+
+/**
+ * Loads a new page directory.
+ * @param directory The physical address of the page directory to load.
+ */
 void load_directory(u32 directory);
+
+// Debug methods
 void debug_dump(PageDirEntry& entry);
+void debug_dump(PageTable& table);
 void debug_dump(PageTableEntry& entry);
-//void debug_dump();
+void debug_dump();
+void debug_dump_metatable();
 
 }
 

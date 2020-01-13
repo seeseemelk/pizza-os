@@ -19,6 +19,7 @@ namespace PMem
 	};
 
 	void init();
+	void fix_pagetable();
 	BlockState get_state(size_t addr);
 	void set_state(size_t start_addr, size_t bytes_length, BlockState state);
 

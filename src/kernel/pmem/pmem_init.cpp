@@ -177,9 +177,10 @@ void PMem::init()
 	// We can't using any other allocator at this point yet.
 	Paging::PageDirEntry& entry = Paging::alloc_dir_entry();
 	entry.set_address(reinterpret_cast<size_t>(&pagetable) - GB(3));
-	entry.present = 1;
 	entry.writable = 1;
+	entry.present = 1;
 	map = static_cast<u8*>(entry.get_virtual_address());
+	log("Virtual address of memory map: 0x%X", map);
 	setup_pagetable();
 
 	add_pagetable_entries();
@@ -190,7 +191,13 @@ void PMem::init()
 	log("PMem allocator ready");
 }
 
-
+void PMem::fix_pagetable()
+{
+	Paging::PageTableEntry& meta_entry = Paging::get_meta_entry(map);
+	log("Meta entry: 0x%X", meta_entry.get_virtual_address());
+	meta_entry.set_address(reinterpret_cast<size_t>(&pagetable) - GB(3));
+	meta_entry.present = 1;
+}
 
 
 

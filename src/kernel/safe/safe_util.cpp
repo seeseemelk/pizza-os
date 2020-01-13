@@ -7,24 +7,12 @@ using namespace Safe;
 
 bool Safe::exists(const void* addr)
 {
-	log("Address: 0x%X", addr);
-	log("Dir_index: 0x%X", Paging::dir_index(addr));
-	log("table_index: 0x%X", Paging::tbl_index(addr));
-	log("Address: 0x%X", (GB(4) - MB(4)) + Paging::dir_index(addr) * KB(4) + Paging::tbl_index(addr) * 4);
-	log("A");
 	Paging::PageDirEntry& dir = Paging::directory.get_entry(addr);
-	Paging::debug_dump(dir);
-	log("Address actual: 0x%X", &dir);
-	log("Content: 0x%X", dir);
 	if (!dir.present)
 		return false;
-	log("Dir is: 0x%X", dir.present);
 	Paging::PageTableEntry& table = dir.get_table().get_entry(addr);
-	log("Table entry: 0x%X", &table);
-	log("Table contents: 0x%X", table);
 	if (!table.present)
 		return false;
-	log("C");
 	return true;
 }
 

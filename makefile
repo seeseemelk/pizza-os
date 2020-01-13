@@ -85,7 +85,7 @@ pizzaos.iso: $(PIZZAOS_ELF) isodir/boot/grub/grub.cfg
 	grub-mkrescue -o pizzaos.iso isodir 2>&1
 
 pizzaos.test.iso: $(PIZZAOS_TEST_ELF) isodir.test/boot/grub/grub.cfg
-	$(STATUS) GENISO $@
+	@$(STATUS) GENISO $@
 	cp $(PIZZAOS_TEST_ELF) isodir.test/boot
 	grub-mkrescue -o pizzaos.test.iso isodir.test 2>&1
 

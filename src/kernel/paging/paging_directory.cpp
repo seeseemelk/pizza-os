@@ -8,34 +8,37 @@
 using namespace Paging;
 
 ////////////////////
+// Global methods //
+////////////////////
+
+PageTable& Paging::get_table(const void* virt)
+{
+	size_t dir_i = dir_index(virt);
+	return tables[dir_i];
+}
+
+Result<PageTable*> Paging::get_or_make_table(const void* virt)
+{
+	if (directory.get_entry(virt).present)
+		return Result<PageTable*>(&get_table(virt));
+	else
+		return directory.get_entry(virt).make_table();
+}
+
+////////////////////
 // Page Directory //
 ////////////////////
 
 PageDirEntry& PageDirectory::get_entry(const void* virt)
 {
 	size_t dir_i = dir_index(virt);
-	return directory.entries[dir_i];
+	return entries[dir_i];
 }
 
 bool PageDirectory::has_table(const void* virt)
 {
 	return get_entry(virt).present;
 }
-
-PageTable& PageDirectory::get_table(const void* virt)
-{
-	size_t dir_i = dir_index(virt);
-	return tables[dir_i];
-}
-
-Result<PageTable*> PageDirectory::get_or_make_table(const void* virt)
-{
-	if (get_entry(virt).present)
-		return Result<PageTable*>(&get_table(virt));
-	else
-		return get_entry(virt).make_table();
-}
-
 
 //////////////////////////
 // Page Directory Entry //
@@ -54,6 +57,7 @@ void PageDirEntry::set_address(size_t phys)
 PageTable& PageDirEntry::get_table()
 {
 	size_t block = (reinterpret_cast<size_t>(this) - reinterpret_cast<size_t>(directory.entries)) / sizeof(PageDirEntry);
+	log("Block = %d, address = 0x%X", block, reinterpret_cast<size_t>(tables + block));
 	return tables[block];
 }
 
