@@ -22,12 +22,12 @@ $(PIZZAOS_TEST_ELF): $(OBJ_TEST) linker.ld
 $(PIZZABUILD)/%.cpp.o: %.cpp
 	$(STATUS_KCXX)
 	$(MKDIR)
-	$(CXX) $(CXXFLAGS_KERNEL) -MMD -I$(INCLUDE_LIBKCXX) -I$(INCLUDE_LIBKC) -I$(CURDIR) -c -o $@ $<
+	$(CXX) $(CXXFLAGS_KERNEL) -MMD -I$(INCLUDE_LIBKCXX) -I$(INCLUDE_LIBKC) -I. -c -o $@ $<
 
 $(PIZZABUILD)/%.cpp.test.o: %.cpp
 	$(STATUS_KCXX)
 	$(MKDIR)
-	$(CXX) $(CXXFLAGS_KERNEL) -MMD -I$(INCLUDE_LIBKCXX) -I$(INCLUDE_LIBKC) -I$(CURDIR) -DTESTING=1 -c -o $@ $<
+	$(CXX) $(CXXFLAGS_KERNEL) -MMD -I$(INCLUDE_LIBKCXX) -I$(INCLUDE_LIBKC) -I. -DTESTING=1 -c -o $@ $<
 	
 $(PIZZABUILD)/%.asm.o: %.asm
 	$(STATUS_KASM)
@@ -40,3 +40,4 @@ $(PIZZABUILD)/%.asm.test.o: %.asm
 	$(ASM) -f elf32 -MD -DTESTING=1 -o $@ $<
 
 -include $(OBJ:.o=.d)
+-include $(OBJ_TEST:.o=.d)
