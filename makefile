@@ -39,7 +39,7 @@ SHELL = /bin/bash
 export DEFAULTMAKE := $(abspath default.make)
 include $(DEFAULTMAKE)
 
-.PHONY: clean all build_all build_test test check crt_obj libkc libc libkcxx kernel_test build_test_progress initrd
+.PHONY: clean all build_all build_test test check crt_obj libkc libc libkcxx kernel_test build_test_progress initrd apps
 
 all:
 	@mkdir -p $(BUILDDIR)
@@ -51,6 +51,9 @@ check test: build_test_progress
 
 test_verbose: build_test_progress
 	./tools/test_runner.lua -v 2>&1
+
+apps:
+	+BUILDDIR=$(BUILDDIR)/apps $(MAKE) -C src/apps all
 
 build_all: pizzaos.iso
 	echo "Build finished"
@@ -81,7 +84,7 @@ $(PIZZAOS_TEST_ELF): libkc libkcxx crt_obj
 	+$(MAKE) -C src/kernel $(PIZZAOS_TEST_ELF)
 	
 initrd:
-$(INITRD_TAR): initrd
+$(INITRD_TAR): initrd apps
 	+$(MAKE) -C src/initrd $(INITRD_TAR)
 
 pizzaos.iso: $(PIZZAOS_ELF) $(INITRD_TAR) isodir/boot/grub/grub.cfg
