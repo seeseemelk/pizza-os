@@ -30,6 +30,7 @@ export LIBCXX := $(BUILDDIR)libcxx/libcxx.a
 export LIBKCXX := $(BUILDDIR)/libcxx/libkcxx.a
 export PIZZAOS_ELF := $(BUILDDIR)/pizzaos.elf
 export PIZZAOS_TEST_ELF := $(BUILDDIR)/pizzaos.test.elf
+export INITRD_TAR := $(BUILDDIR)/initrd.tar
 
 SHELL = /bin/bash
 .SHELLFLAGS = -o pipefail -c
@@ -38,7 +39,7 @@ SHELL = /bin/bash
 export DEFAULTMAKE := $(abspath default.make)
 include $(DEFAULTMAKE)
 
-.PHONY: clean all build_all build_test test check crt_obj libkc libc libkcxx kernel_test build_test_progress
+.PHONY: clean all build_all build_test test check crt_obj libkc libc libkcxx kernel_test build_test_progress initrd
 
 all:
 	@mkdir -p $(BUILDDIR)
@@ -78,18 +79,23 @@ $(PIZZAOS_ELF): libkc libkcxx crt_obj
 
 $(PIZZAOS_TEST_ELF): libkc libkcxx crt_obj
 	+$(MAKE) -C src/kernel $(PIZZAOS_TEST_ELF)
+	
+initrd:
+$(INITRD_TAR): initrd
+	+$(MAKE) -C src/initrd $(INITRD_TAR)
 
-pizzaos.iso: $(PIZZAOS_ELF) isodir/boot/grub/grub.cfg
+pizzaos.iso: $(PIZZAOS_ELF) $(INITRD_TAR) isodir/boot/grub/grub.cfg
 	@$(STATUS) GENISO $@
-	cp $(PIZZAOS_ELF) isodir/boot
+	cp $(PIZZAOS_ELF) $(INITRD_TAR) isodir/boot
 	grub-mkrescue -o pizzaos.iso isodir 2>&1
 
-pizzaos.test.iso: $(PIZZAOS_TEST_ELF) isodir.test/boot/grub/grub.cfg
+pizzaos.test.iso: $(PIZZAOS_TEST_ELF) $(INITRD_TAR) isodir.test/boot/grub/grub.cfg
 	@$(STATUS) GENISO $@
-	cp $(PIZZAOS_TEST_ELF) isodir.test/boot
+	cp $(PIZZAOS_TEST_ELF) $(INITRD_TAR) isodir.test/boot
 	grub-mkrescue -o pizzaos.test.iso isodir.test 2>&1
 
 clean:
 	rm -rf $(BUILDDIR)
+	rm -f pizzaos.iso pizzaos.test.iso isodir/boot/initrd.tar isodir/boot/pizzaos.elf isodir.test/boot/initrd.tar isodir.test/boot/pizzaos.test.elf
 	@echo "Build directory cleaned"
 	@echo

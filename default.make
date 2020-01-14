@@ -6,3 +6,4 @@ STATUS_AR = $(STATUS) ARCHIVE $@
 STATUS_KCC = $(STATUS) "COMPILE:K" $(abspath $<)
 STATUS_KCXX = $(STATUS) "COMPILE:K" $(abspath $<)
 STATUS_KASM = $(STATUS) "ASSEMBLE:K" $(abspath $<)
+STATUS_TAR = $(STATUS) TAR $@

@@ -1,4 +1,4 @@
 #!/bin/sh
 set -e
-./build.sh
+make all
 bochs -q

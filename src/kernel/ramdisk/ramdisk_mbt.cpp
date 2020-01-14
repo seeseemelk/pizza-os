@@ -23,5 +23,4 @@ void RamDisk::init()
 	size_t initrd_length = module->mod_end - module->mod_start;
 	log("Module starts at 0x%X and is %d bytes long", initrd_addr, initrd_length);
 	init_ramdisk(initrd_addr, initrd_length);
-
 }
