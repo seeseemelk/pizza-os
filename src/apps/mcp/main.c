@@ -9,7 +9,6 @@ void main()
 		syscall_exit();
 	}
 
-
 	syscall_debug_log("Checking if FD 0 is open");
 	bool result = syscall_vfs_is_open(0);
 	if (result == true)
@@ -20,6 +19,6 @@ void main()
 
 	while (1)
 	{
-		//syscall(0xAAAAAAAA, 0xBBBBBBBB, 0xCCCCCCCC, 0xDDDDDDDD);
+		syscall(0xAAAAAAAA, 0xBBBBBBBB, 0xCCCCCCCC, 0xDDDDDDDD);
 	}
 }

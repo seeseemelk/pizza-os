@@ -9,7 +9,7 @@ using namespace VFS;
 void VFS::init_process()
 {
 	log("Creating process-local VFS structures");
-	allocator->init(*file_page);
+	//allocator->init(*file_page);
 	log("Finished creating process-local VFS structures");
 }
 

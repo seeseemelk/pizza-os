@@ -14,7 +14,7 @@ section .text
 
 		call _init
 		call main
-		call _fini
+		;call _fini
 
 	.hang:
 		jmp .hang

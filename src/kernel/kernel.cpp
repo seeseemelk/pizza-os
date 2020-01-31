@@ -64,7 +64,7 @@ extern "C" void kernel_main(multiboot_info_t* mbt)
 		Test::execute_tests(Test::Group::PRE_PROC);
 	#endif
 	log("Initialising process management...");
-	//Proc::init();
+	Proc::init();
 	log("Done");
 
 	#ifdef TESTING
@@ -89,20 +89,19 @@ extern "C" void kernel_main(multiboot_info_t* mbt)
 		Test::execute_tests(Test::Group::OTHER);
 		Test::end_tests();
 		CPU::reset();
-	#else
-		log("Loading mcp...");
-		Result<Proc::Process*> result = Proc::exec_new_initrd("mcp");
-		if (result.is_fail())
-		{
-			log("Failed to load mcp");
-			CPU::hang();
-		}
-
-		log("Passing control to scheduler");
-		Scheduler::run();
-
-		log("Kernel main ended");
-		CPU::hang();
-		_fini();
 	#endif
+	log("Loading mcp...");
+	Result<Proc::Process*> result = Proc::exec_new_initrd("mcp");
+	if (result.is_fail())
+	{
+		log("Failed to load mcp");
+		CPU::hang();
+	}
+
+	log("Passing control to scheduler");
+	Scheduler::run();
+
+	log("Kernel main ended");
+	CPU::hang();
+	_fini();
 }

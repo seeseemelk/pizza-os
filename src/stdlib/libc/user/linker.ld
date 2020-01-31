@@ -7,9 +7,9 @@ SECTIONS
 	.text ALIGN(4K):
 	{	
 		*crti.*(.init)
-		*crtbegin.o(.init)
+		*crtbegin.*(.init)
 		EXCLUDE_FILE (*crtbegin.o *crtend.o *crti.* *crtn.o) *(.init)
-		*crtend.o(.init)
+		*crtend.*(.init)
 		*crtn.*(.init)
 
 		*(.text)
