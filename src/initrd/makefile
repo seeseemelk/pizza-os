@@ -1,10 +1,9 @@
 include $(DEFAULTMAKE)
 
-COPY = $(shell find . -type f -not -name makefile -print)
 APPS = mcp
+COPY = $(shell find . -type f -not -name makefile -print) $(addprefix $(BUILDDIR)/pkg/,$(APPS)/$(APPS))
 
-$(info ${COPY})
 $(INITRD_TAR): $(COPY)
 	$(STATUS_TAR)
 	$(MKDIR)
-	tar cf $@ $(COPY) $(APPS:%=$(BUILDDIR)/pkg/%)
+	tar cf $@ $(COPY) --transform='s:.*/::'

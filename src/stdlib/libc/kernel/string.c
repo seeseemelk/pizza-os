@@ -62,6 +62,14 @@ size_t strlen(const char* str)
 	return i;
 }
 
+size_t strnlen(const char* str, size_t maxlen)
+{
+	size_t i = 0;
+	while (str[i] != 0 && i < maxlen)
+		i++;
+	return i;
+}
+
 int strcmp(const char* str1, const char* str2)
 {
 	size_t len1 = strlen(str1);
@@ -76,19 +84,14 @@ int strcmp(const char* str1, const char* str2)
 
 int strncmp(const char* str1, const char* str2, size_t n)
 {
-	size_t len1 = strlen(str1);
-	size_t len2 = strlen(str2);
-	if (len1 < n)
-		n = len1;
-	if (len2 < n)
-		n = len2;
-
 	for (size_t i = 0; i < n; i++)
 	{
 		if (str1[i] < str2[i])
 			return -1;
 		else if (str1[i] > str2[i])
 			return 1;
+		else if (str1[i] == 0 && str2[i] == 0)
+			return 0;
 	}
 	return 0;
 }

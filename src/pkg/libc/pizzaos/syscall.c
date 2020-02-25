@@ -23,7 +23,6 @@ void syscall_debug_log2(const char* fmt, u32 a)
 	syscall(SYSCALL_DEBUG_PRINT, fmt, a);
 }
 
-
 void syscall_debug_log(const char* fmt)
 {
 	syscall(SYSCALL_DEBUG_PRINT, fmt);

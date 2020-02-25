@@ -9,7 +9,7 @@ $(BUILDDIR)/libc.a: $(OBJ)
 	$(AR) rc $@ $^
 
 $(BUILDDIR)/user/%.c.o: %.c
-	$(STATUS_KCC)
+	$(STATUS_CC)
 	$(MKDIR)
 	$(CC) $(CFLAGS_USER) -I$(INCLUDE_LIBKC) -I. -MMD -c -o $@ $<
 

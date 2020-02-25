@@ -1,4 +1,4 @@
-#include <pizzaos/syscall.h>
+#include "../libc/include/pizzaos/syscall.h"
 
 void main()
 {
@@ -8,7 +8,6 @@ void main()
 		syscall_debug_log2("We are process: %d", syscall_process_pid());
 		syscall_exit();
 	}
-
 
 	syscall_debug_log("Checking if FD 0 is open");
 	bool result = syscall_vfs_is_open(0);
@@ -20,6 +19,6 @@ void main()
 
 	while (1)
 	{
-		//syscall(0xAAAAAAAA, 0xBBBBBBBB, 0xCCCCCCCC, 0xDDDDDDDD);
+		syscall(0xAAAAAAAA, 0xBBBBBBBB, 0xCCCCCCCC, 0xDDDDDDDD);
 	}
 }

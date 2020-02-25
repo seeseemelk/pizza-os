@@ -19,3 +19,11 @@ char* strdup(const char* src)
 {
 	return strndup(src, SIZE_MAX);
 }
+
+size_t strlen(const char* src)
+{
+	size_t i = 0;
+	while (src[i] != 0)
+		i++;
+	return i;
+}

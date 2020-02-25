@@ -1,8 +1,12 @@
 include $(DEFAULTMAKE)
+include $(INCLUDES)
 
-$(BUILDDIR)/mcp: main.c
+$(BUILDDIR)/mcp: $(BUILDDIR)/main.o $(BUILDDIR)/../libc/libc.a
+	$(STATUS_LD)
 	$(MKDIR)
-	touch $(BUILDDIR)/mcp
-	echo Building MCP
+	$(LD) $(LDFLAGS_USER) -o $@ $<
 
-	
+$(BUILDDIR)/main.o: main.c
+	$(STATUS_CC)
+	$(MKDIR)
+	$(CC) $(CFLAGS_USER) -MMD -c -o $@ $<

@@ -1,0 +1,1 @@
+INCLUDE_LIBC = $(PKG_DIR)/libc/include

@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <cstddef>
 #include <cstring>
+#include <cmath>
 
 using namespace RamDisk;
 
@@ -23,7 +24,8 @@ static bool is_zero_block(const void* buf)
 static const TarFile* next_file(const TarFile* file)
 {
 	const u8* file_addr = reinterpret_cast<const u8*>(file);
-	file_addr += 512 + file->get_size();
+	size_t file_size = ceilg(file->get_size(), 0x200);
+	file_addr += 512 + file_size;
 	return reinterpret_cast<const TarFile*>(file_addr);
 }
 
@@ -33,16 +35,17 @@ void RamDisk::init_ramdisk(const void* ramdisk, size_t length)
 	const TarFile* file = first_file;
 
 	log("Listing ramdisk contents:");
-	while (!is_zero_block(file)) // && length > 0)
+	while (!is_zero_block(file))
 	{
 		num_files++;
 		length -= sizeof(TarFile) + file->get_size();
-		log("%s: %d bytes", file->filename, file->get_size());
+		size_t address = reinterpret_cast<size_t>(file) - reinterpret_cast<size_t>(first_file);
+		log("(0x%X) %s: %d bytes", address, file->filename, file->get_size());
 		file = next_file(file);
 	}
 
-	//if (!is_zero_block(file))
-	//	log("Encountered end of tar file prematurely");
+	if (!is_zero_block(file))
+		log("Encountered end of tar file prematurely");
 
 	log("Total: %d files", num_files);
 }
