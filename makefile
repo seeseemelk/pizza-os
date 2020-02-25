@@ -53,7 +53,7 @@ test_verbose: build_test_progress
 	./tools/test_runner.lua -v 2>&1
 
 apps:
-	+BUILDDIR=$(BUILDDIR)/apps $(MAKE) -C src/apps all
+	+BUILDDIR=$(BUILDDIR)/pkg $(MAKE) -C src/pkg all
 
 build_all: pizzaos.iso
 	echo "Build finished"

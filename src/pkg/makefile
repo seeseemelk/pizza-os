@@ -1,12 +1,15 @@
 include $(DEFAULTMAKE)
 
 APPS := mcp
+LIBS := libc
 
 APP_EXECUTABLES := $(APPS:%=$(BUILDDIR)/%)
 
-all: $(APP_EXECUTABLES)
+all: $(APPS)
 
 _ignore:
 .PHONY: _ignore
-$(APP_EXECUTABLES): _ignore
+$(APPS) $(LIBS): _ignore
 	+BUILDDIR=$(BUILDDIR)/$(notdir $@) $(MAKE) -C $(notdir $@) $(BUILDDIR)/$(notdir $@)/$(notdir $@)
+
+mcp: libc
