@@ -1,11 +1,12 @@
 include $(DEFAULTMAKE)
+include include.make
 
 SRC = $(patsubst ./%, %, $(shell find . -name '*.c' -print) $(shell find . -name '*.asm' -print))
 OBJ = $(SRC:%=$(BUILDDIR)/%.o)
 CRTBEGIN = $(shell $(CXX) --print-file-name=crtbegin.o)
 CRTEND = $(shell $(CXX) --print-file-name=crtend.o)
 
-$(BUILDDIR)/libc.a: $(OBJ) $(wildcard $(USER_COMMON)) $(wildcard $(USER_LIBC)) \
+$(LIBC_OBJ): $(OBJ) $(wildcard $(USER_COMMON)) $(wildcard $(USER_LIBC)) \
 		$(BUILDDIR)/crti.o $(BUILDDIR)/crti.o
 	$(STATUS_AR)
 	$(MKDIR)

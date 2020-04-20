@@ -23,7 +23,7 @@ export INCLUDE_LIBKCXX := $(abspath src/stdlib/libcxx/kernel)
 export BUILDDIR := $(abspath build)
 
 # Source directories
-export PKG_DIR := $(abspath src/pkg)
+export PKGDIR := $(abspath src/pkg)
 
 # Libraries
 export CRTI := $(BUILDDIR)/libc/crt/crti.o
