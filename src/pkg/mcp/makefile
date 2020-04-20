@@ -1,7 +1,7 @@
 include $(DEFAULTMAKE)
 include $(INCLUDES)
 
-$(BUILDDIR)/mcp: $(BUILDDIR)/main.o $(BUILDDIR)/../libc/libc.a
+$(BUILDDIR)/mcp: $(BUILDDIR)/main.o $(PKGBUILDDIR)/libc/libc.a
 	$(STATUS_LD)
 	$(MKDIR)
 	$(LD) $(LDFLAGS_USER) -o $@ $<

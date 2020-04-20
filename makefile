@@ -94,7 +94,7 @@ $(PIZZAOS_TEST_ELF): libkc libkcxx crt_obj
 	
 initrd: apps
 
-$(INITRD_TAR): initrd
+$(INITRD_TAR): initrd apps
 	+$(MAKE) -C src/initrd $(INITRD_TAR)
 
 pizzaos.iso: $(PIZZAOS_ELF) $(INITRD_TAR) isodir/boot/grub/grub.cfg

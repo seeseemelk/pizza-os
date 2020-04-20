@@ -19,6 +19,7 @@ LIBS := libc
 # === End of user configurable options ===
 # ========================================
 
+export PKGBUILDDIR := $(BUILDDIR)
 export INCLUDES := $(abspath includes.make)
 APP_EXECUTABLES := $(APPS:%=$(BUILDDIR)/%)
 
@@ -29,4 +30,5 @@ mcp: libc
 _always:
 .PHONY: always $(APPS) $(LIBS)
 $(APPS) $(LIBS): always
-	+BUILDDIR=$(BUILDDIR)/$(notdir $@) $(MAKE) -C $(notdir $@)
+	+BUILDDIR=$(PKGBUILDDIR)/$(notdir $@) $(MAKE) -C $(notdir $@)
+
