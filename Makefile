@@ -115,5 +115,8 @@ clean:
 
 qemu: all
 	qemu-system-i386 -cdrom pizzaos.iso -m 16M -gdb tcp::1234 -serial stdio $(QEMU_ARGS)
+
+bochs: all
+	bochs -q
 	
 _always:
