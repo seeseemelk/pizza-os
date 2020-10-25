@@ -112,5 +112,8 @@ clean:
 	rm -f pizzaos.iso pizzaos.test.iso isodir/boot/initrd.tar isodir/boot/pizzaos.elf isodir.test/boot/initrd.tar isodir.test/boot/pizzaos.test.elf
 	@echo "Build directory cleaned"
 	@echo
+
+qemu: all
+	qemu-system-i386 -cdrom pizzaos.iso -m 16M -gdb tcp::1234 -serial stdio $(QEMU_ARGS)
 	
 _always:
