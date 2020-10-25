@@ -1,4 +1,4 @@
-#!/usr/bin/luajit
+#!/usr/bin/env lua5.1
 
 local command = "qemu-system-i386 -cdrom pizzaos.test.iso -m 16M -gdb tcp::1234 -serial stdio -display none -no-reboot"
 
