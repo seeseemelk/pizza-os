@@ -1,6 +1,6 @@
+#include "libc/stdint.hpp"
 #include "safe.hpp"
 #include "test.hpp"
-#include <cstdint>
 
 using namespace Safe;
 

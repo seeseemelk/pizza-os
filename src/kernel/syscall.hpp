@@ -1,7 +1,7 @@
 #ifndef SYSCALL_HPP_
 #define SYSCALL_HPP_
 
-#include <cstdint>
+#include "libc/stdint.hpp"
 
 namespace Syscall
 {

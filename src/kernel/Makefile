@@ -1,4 +1,5 @@
-include $(DEFAULTMAKE)
+include $(BASEMAKE)
+include $(PKGDIR)/pizzaos/Makefile.include
 
 PIZZABUILD := $(BUILDDIR)/pizzaos
 
@@ -7,7 +8,7 @@ OBJ = $(SRC:%=$(PIZZABUILD)/%.o)
 OBJ_TEST = $(SRC:%=$(PIZZABUILD)/%.test.o)
 CRTBEGIN = $(shell $(CXX) --print-file-name=crtbegin.o)
 CRTEND = $(shell $(CXX) --print-file-name=crtend.o)
-LD_FLAGS = -T linker.ld -L$(BUILDDIR)/libc -L$(BUILDDIR)/libcxx --whole-archive -lkc -lkcxx 
+LD_FLAGS = -T linker.ld
 
 $(PIZZAOS_ELF): $(OBJ) linker.ld
 	$(STATUS_LD)
@@ -22,12 +23,12 @@ $(PIZZAOS_TEST_ELF): $(OBJ_TEST) linker.ld
 $(PIZZABUILD)/%.cpp.o: %.cpp
 	$(STATUS_KCXX)
 	$(MKDIR)
-	$(CXX) $(CXXFLAGS_KERNEL) -MMD -I$(INCLUDE_LIBKCXX) -I$(INCLUDE_LIBKC) -I. -c -o $@ $<
+	$(CXX) $(CXXFLAGS_KERNEL) -MMD -MP -I. -I$(PIZZAOS_INCLUDE) -c -o $@ $<
 
 $(PIZZABUILD)/%.cpp.test.o: %.cpp
 	$(STATUS_KCXX)
 	$(MKDIR)
-	$(CXX) $(CXXFLAGS_KERNEL) -MMD -I$(INCLUDE_LIBKCXX) -I$(INCLUDE_LIBKC) -I. -DTESTING=1 -c -o $@ $<
+	$(CXX) $(CXXFLAGS_KERNEL) -MMD -MP -I. -I$(PIZZAOS_INCLUDE) -DTESTING=1 -c -o $@ $<
 	
 $(PIZZABUILD)/%.asm.o: %.asm
 	$(STATUS_KASM)

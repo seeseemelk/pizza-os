@@ -1,8 +1,8 @@
 #ifndef READER_HPP_
 #define READER_HPP_
 
-#include <cstddef>
-#include <ramdisk.hpp>
+#include "libc/stddef.hpp"
+#include "ramdisk.hpp"
 
 class Reader // @suppress("Class has a virtual method and non-virtual destructor")
 {
@@ -18,12 +18,13 @@ public:
 	virtual size_t seek(OffsetType type, size_t address) = 0;
 };
 
-class TarReader : public Reader // @suppress("Class has a virtual method and non-virtual destructor")
+class TarReader final : public Reader // @suppress("Class has a virtual method and non-virtual destructor")
 {
 public:
 	TarReader(const RamDisk::TarFile* file);
-	size_t read(char* buf, size_t len) final;
-	size_t seek(OffsetType type, size_t address) final;
+
+	size_t read(char* buf, size_t len) override;
+	size_t seek(OffsetType type, size_t address) override;
 	size_t remaining();
 
 private:

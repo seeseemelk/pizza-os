@@ -27,8 +27,8 @@ int Safe::protection_level(const void* addr)
 
 TEST(OTHER, "Safe::exists(non_existant_memory) -> false", {
 	assertEquals("Safe::exists failed", false, Safe::exists(nullptr));
-});
+})
 
 TEST(OTHER, "Safe::exists(kernel_memory) -> true", {
 	assertEquals("Safe::exists failed", true, Safe::exists(reinterpret_cast<void*>(0xC0000000)));
-});
+})

@@ -1,14 +1,15 @@
 #include "pmem.hpp"
-#include "debug.hpp"
-#include "multiboot.hpp"
+
 #include "cpu.hpp"
-#include "paging.hpp"
+#include "debug.hpp"
 #include "kernel.hpp"
+#include "libc/math.hpp"
+#include "libc/stddef.hpp"
+#include "libc/stdint.hpp"
+#include "libc/string.hpp"
+#include "multiboot.hpp"
+#include "paging.hpp"
 #include "result.hpp"
-#include <cstddef>
-#include <cstdint>
-#include <cmath>
-#include <cstring>
 
 using namespace PMem;
 

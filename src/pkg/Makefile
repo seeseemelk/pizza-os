@@ -1,5 +1,4 @@
-include $(DEFAULTMAKE)
-include libc/include.make
+include $(wildcard */Makefile.include)
 
 export CRTI := $(BUILDDIR)/libc/crti.o
 export CRTN := $(BUILDDIR)/libc/crtn.o
@@ -12,8 +11,7 @@ export LDFLAGS_USER := $(LDFLAGS) -T $(PKGDIR)/libc/linker.ld \
 	-L$(BUILDDIR)/libc -L$(BUILDDIR)/libcxx --whole-archive -lc \
 	--gc-sections
 
-APPS := mcp
-LIBS := libc
+BUILD := mcp
 
 # ========================================
 # === End of user configurable options ===
@@ -21,12 +19,16 @@ LIBS := libc
 export PKGBUILDDIR := $(BUILDDIR)
 APP_EXECUTABLES := $(APPS:%=$(BUILDDIR)/%)
 
-all: $(APPS)
+all: $(BUILD)
 
+# Program dependencies
 mcp: libc
+pizzaos:
+libc:
+# End of program dependencies
 
 _always:
-.PHONY: always $(APPS) $(LIBS)
-$(APPS) $(LIBS): always
+.PHONY: $(BUILD)
+$(BUILD):
 	+BUILDDIR=$(PKGBUILDDIR)/$(notdir $@) $(MAKE) -C $(notdir $@)
 

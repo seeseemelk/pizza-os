@@ -1,9 +1,7 @@
 #ifndef DEBUG_HPP_
 #define DEBUG_HPP_
 
-extern "C" {
-#include <stdarg.h>
-}
+#include "libc/stdarg.hpp"
 
 namespace Debug
 {

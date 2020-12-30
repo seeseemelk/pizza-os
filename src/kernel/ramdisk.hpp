@@ -1,8 +1,8 @@
 #ifndef RAMDISK_HPP_
 #define RAMDISK_HPP_
 
+#include "libc/stddef.hpp"
 #include "result.hpp"
-#include <cstddef>
 
 namespace RamDisk
 {

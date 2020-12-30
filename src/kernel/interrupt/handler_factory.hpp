@@ -1,7 +1,7 @@
 #ifndef INTERRUPT_HANDLER_FACTORY_HPP_
 #define INTERRUPT_HANDLER_FACTORY_HPP_
 
-#include <cstddef>
+#include "libc/stddef.hpp"
 
 class HandlerFactory
 {

@@ -8,7 +8,7 @@
 #ifndef IO_HPP_
 #define IO_HPP_
 
-#include <cstdint>
+#include "libc/stdint.hpp"
 
 namespace IO
 {

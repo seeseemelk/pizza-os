@@ -1,4 +1,4 @@
-#include <cstdint>
+#include "libc/stdint.hpp"
 #include "ramdisk.hpp"
 
 using namespace RamDisk;

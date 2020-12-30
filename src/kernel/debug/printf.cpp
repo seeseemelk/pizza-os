@@ -1,9 +1,8 @@
 #include "debug.hpp"
-#include <cstddef>
-extern "C"
-{
-	#include <stdarg.h>
-}
+
+#include "libc/stdarg.hpp"
+#include "libc/stddef.hpp"
+
 
 using namespace Debug;
 

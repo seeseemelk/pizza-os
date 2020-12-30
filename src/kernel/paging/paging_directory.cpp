@@ -1,9 +1,10 @@
 #include "paging.hpp"
-#include "pmem.hpp"
-#include "debug.hpp"
+
 #include "cpu.hpp"
-#include <cmath>
-#include <cstring>
+#include "debug.hpp"
+#include "libc/math.hpp"
+#include "libc/string.hpp"
+#include "pmem.hpp"
 
 using namespace Paging;
 

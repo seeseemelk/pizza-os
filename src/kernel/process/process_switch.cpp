@@ -1,6 +1,7 @@
 #include "process.hpp"
-#include "debug.hpp"
+
 #include "cpu.hpp"
+#include "debug.hpp"
 
 using namespace Proc;
 

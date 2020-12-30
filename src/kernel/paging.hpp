@@ -1,9 +1,9 @@
 #ifndef PAGING_HPP_
 #define PAGING_HPP_
 
+#include "libc/stddef.hpp"
+#include "libc/stdint.hpp"
 #include "result.hpp"
-#include <cstddef>
-#include <cstdint>
 
 /**
  * This module takes care of managing the mappings between the physical memory

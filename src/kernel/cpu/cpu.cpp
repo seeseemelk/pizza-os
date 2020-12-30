@@ -1,6 +1,7 @@
 #include "cpu.hpp"
-#include "interrupt.hpp"
+
 #include "debug.hpp"
+#include "interrupt.hpp"
 #include "io.hpp"
 #include "test.hpp"
 

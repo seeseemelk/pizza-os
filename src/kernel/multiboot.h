@@ -206,7 +206,7 @@ struct multiboot_info
 		{
 			multiboot_uint32_t framebuffer_palette_addr;
 			multiboot_uint16_t framebuffer_palette_num_colors;
-		};
+		} a;
 		struct
 		{
 			multiboot_uint8_t framebuffer_red_field_position;
@@ -215,7 +215,7 @@ struct multiboot_info
 			multiboot_uint8_t framebuffer_green_mask_size;
 			multiboot_uint8_t framebuffer_blue_field_position;
 			multiboot_uint8_t framebuffer_blue_mask_size;
-		};
+		} b;
 	};
 };
 typedef struct multiboot_info multiboot_info_t;

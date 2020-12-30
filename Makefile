@@ -5,8 +5,12 @@ export LD := i386-elf-ld
 export ASM := nasm
 
 # Common flags
-export CFLAGS = -Wall -Wextra -ffreestanding -std=gnu17 -nostdlib -O0 -ggdb -fdiagnostics-color=always
-export CXXFLAGS = -Wall -Wextra -ffreestanding -std=gnu++17 -nostdlib -fno-exceptions -fno-rtti -O0 -ggdb -fomit-frame-pointer -fdiagnostics-color=always
+export CFLAGS = \
+	-Wall -Wextra -Werror -pedantic -ffreestanding -std=gnu17 -nostdlib -O0 \
+	-ggdb -fdiagnostics-color=always
+export CXXFLAGS = \
+	-Wall -Wextra -Werror -pedantic -ffreestanding -std=gnu++17 -nostdlib \
+	-fno-exceptions -fno-rtti -O0 -ggdb -fomit-frame-pointer -fdiagnostics-color=always
 export LDFLAGS =
 
 # Flags for kernel/user space
@@ -26,12 +30,12 @@ export BUILDDIR := $(abspath build)
 export PKGDIR := $(abspath src/pkg)
 
 # Libraries
-export CRTI := $(BUILDDIR)/libc/crt/crti.o
-export CRTN := $(BUILDDIR)/libc/crt/crtn.o
-export LIBC := $(BUILDDIR)/libc/libc.a
-export LIBKC := $(BUILDDIR)/libc/libkc.a
-export LIBCXX := $(BUILDDIR)libcxx/libcxx.a
-export LIBKCXX := $(BUILDDIR)/libcxx/libkcxx.a
+#export CRTI := $(BUILDDIR)/libc/crt/crti.o
+#export CRTN := $(BUILDDIR)/libc/crt/crtn.o
+#export LIBC := $(BUILDDIR)/libc/libc.a
+#export LIBKC := $(BUILDDIR)/libc/libkc.a
+#export LIBCXX := $(BUILDDIR)libcxx/libcxx.a
+#export LIBKCXX := $(BUILDDIR)/libcxx/libkcxx.a
 export PIZZAOS_ELF := $(BUILDDIR)/pizzaos.elf
 export PIZZAOS_TEST_ELF := $(BUILDDIR)/pizzaos.test.elf
 export INITRD_TAR := $(BUILDDIR)/initrd.tar
@@ -45,8 +49,8 @@ SHELL = /bin/bash
 .SHELLFLAGS = -o pipefail -c
 
 # Useful macros
-export DEFAULTMAKE := $(abspath default.make)
-include $(DEFAULTMAKE)
+export BASEMAKE := $(abspath Makefile.base)
+include $(BASEMAKE)
 
 .PHONY: clean all build_all build_test test check crt_obj libkc libc libkcxx kernel_test build_test_progress initrd apps _always
 
@@ -74,22 +78,22 @@ build_test_progress:
 	@$(MAKE) -n build_test > $(BUILDDIR)/progress.txt
 	@$(MAKE) build_test 2>&1 | tools/progress_make.lua $(BUILDDIR)/progress.txt `tput cols`
 
-crt_obj:
-	+BUILDDIR=$(BUILDDIR)/libc $(MAKE) -C src/stdlib/libc/crt all
+#crt_obj:
+#	+BUILDDIR=$(BUILDDIR)/libc $(MAKE) -C src/stdlib/libc/crt all
+#
+#libkc: crt_obj
+#	+BUILDDIR=$(BUILDDIR)/libc $(MAKE) -C src/stdlib/libc/kernel $(LIBKC)
+#
+#libc: libkc
+#	+BUILDDIR=$(BUILDDIR)/libc $(MAKE) -C src/stdlib/libc/user $(LIBC)
+#
+#libkcxx: libkc
+#	+BUILDDIR=$(BUILDDIR)/libcxx $(MAKE) -C src/stdlib/libcxx/kernel $(LIBKCXX)
 
-libkc: crt_obj
-	+BUILDDIR=$(BUILDDIR)/libc $(MAKE) -C src/stdlib/libc/kernel $(LIBKC)
-
-libc: libkc
-	+BUILDDIR=$(BUILDDIR)/libc $(MAKE) -C src/stdlib/libc/user $(LIBC)
-
-libkcxx: libkc
-	+BUILDDIR=$(BUILDDIR)/libcxx $(MAKE) -C src/stdlib/libcxx/kernel $(LIBKCXX)
-
-$(PIZZAOS_ELF): libkc libkcxx crt_obj
+$(PIZZAOS_ELF): #libkc libkcxx crt_obj
 	+$(MAKE) -C src/kernel $(PIZZAOS_ELF)
 
-$(PIZZAOS_TEST_ELF): libkc libkcxx crt_obj
+$(PIZZAOS_TEST_ELF): #libkc libkcxx crt_obj
 	+$(MAKE) -C src/kernel $(PIZZAOS_TEST_ELF)
 	
 initrd: apps

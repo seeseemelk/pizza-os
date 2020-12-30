@@ -5,7 +5,7 @@
 #ifndef SAFE_HPP_
 #define SAFE_HPP_
 
-#include <stddef.h>
+#include "libc/stddef.hpp"
 
 namespace Safe
 {

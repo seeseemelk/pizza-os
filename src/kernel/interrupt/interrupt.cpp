@@ -1,14 +1,14 @@
-#include "interrupt.hpp"
-#include "debug.hpp"
-#include "slab.hpp"
-#include "paging.hpp"
 #include "cpu.hpp"
-#include "paging.hpp"
-#include "result.hpp"
-#include "kernel.hpp"
+#include "debug.hpp"
 #include "interrupt/handler_factory.hpp"
 #include "interrupt/handler.hpp"
-#include <cstring>
+#include "interrupt.hpp"
+#include "kernel.hpp"
+#include "libc/string.hpp"
+#include "paging.hpp"
+#include "paging.hpp"
+#include "result.hpp"
+#include "slab.hpp"
 
 #define MAX(x, y) ((x >= y) ? (x) : (y))
 

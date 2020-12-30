@@ -1,7 +1,8 @@
 #include "process.hpp"
+
+#include "kernel.hpp"
 #include "paging.hpp"
 #include "pmem.hpp"
-#include "kernel.hpp"
 #include "vfs.hpp"
 
 using namespace Proc;

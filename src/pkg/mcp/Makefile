@@ -1,7 +1,7 @@
-include $(DEFAULTMAKE)
-include $(PKGDIR)/libc/include.make
+include $(BASEMAKE)
+include $(PKGDIR)/mcp/Makefile.include
 
-$(BUILDDIR)/mcp: $(BUILDDIR)/main.o $(LIBC_OBJ)
+$(MCP): $(BUILDDIR)/main.o $(LIBS)
 	$(STATUS_LD)
 	$(MKDIR)
 	$(LD) $(LDFLAGS_USER) -o $@ $<

@@ -1,10 +1,11 @@
 #include "paging.hpp"
-#include "debug.hpp"
+
 #include "cpu.hpp"
-#include "test.hpp"
+#include "debug.hpp"
+#include "libc/math.hpp"
+#include "libc/string.hpp"
 #include "pmem.hpp"
-#include <cmath>
-#include <cstring>
+#include "test.hpp"
 
 using namespace Paging;
 
@@ -87,32 +88,32 @@ void Paging::load_directory(u32 directory)
 TEST(PRE_PAGING, "Paging::dir_index(0) -> 0",
 {
 	assertEquals("Expected a value of 0", 0, Paging::dir_index(0));
-});
+})
 
 TEST(PRE_PAGING, "Paging::dir_index(0x0040_0000) -> 1",
 {
 	assertEquals("Expected a value of 1", 1, Paging::dir_index(reinterpret_cast<void*>(0x400000)));
-});
+})
 
 TEST(PRE_PAGING, "Paging::dir_index(0xFFFF_FFFF) -> 1023",
 {
 	assertEquals("Expected a value of 1023", 1023, Paging::dir_index(reinterpret_cast<void*>(0xFFFFFFFF)));
-});
+})
 
 TEST(PRE_PAGING, "Paging::tbl_index(0) -> 0",
 {
 	assertEquals("Expected a value of 0", 0, Paging::tbl_index(0));
-});
+})
 
 TEST(PRE_PAGING, "Paging::tbl_index(0x0040_0000) -> 0",
 {
 	assertEquals("Expected a value of 0", 0, Paging::tbl_index(reinterpret_cast<void*>(0x400000)));
-});
+})
 
 TEST(PRE_PAGING, "Paging::tbl_index(0x0040_1000) -> 1",
 {
 	assertEquals("Expected a value of 1", 1, Paging::tbl_index(reinterpret_cast<void*>(0x401000)));
-});
+})
 
 
 

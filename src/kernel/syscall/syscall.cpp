@@ -1,8 +1,10 @@
 #include "syscall.hpp"
-#include "process.hpp"
-#include "debug.hpp"
+
+#include <pizzaos/syscallnums.h>
+
 #include "cpu.hpp"
-#include <syscall_nums.h>
+#include "debug.hpp"
+#include "process.hpp"
 
 typedef u32(*SyscallHandler)(u32, u32, u32);
 

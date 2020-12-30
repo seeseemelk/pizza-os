@@ -1,8 +1,9 @@
 #include "pmem.hpp"
+
 #include "cpu.hpp"
 #include "debug.hpp"
+#include "libc/math.hpp"
 #include "test.hpp"
-#include <cmath>
 
 using namespace PMem;
 
@@ -52,11 +53,11 @@ TEST(POST_PMEM, "PMem::increase_ref_count/free() -> ref_count increased and decr
 	assertEquals("Ref count not correctly set", 1, PMem::get_state(addr));
 	PMem::free(addr);
 	assertEquals("Ref count not correctly freed", 0, PMem::get_state(addr));
-});
+})
 
 TEST(POST_PMEM, "PMem::alloc_end() -> state is 1", {
 	Result<void*> result = PMem::alloc_end(1);
 	assertTrue("Could not allocate", result.is_success());
 	assertEquals("Incorrect block state", 1, PMem::get_state(reinterpret_cast<size_t>(result.result)));
 	PMem::free(result.result);
-});
+})

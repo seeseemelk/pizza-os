@@ -2,5 +2,6 @@
 
 void* malloc(size_t bytes)
 {
+	(void) bytes;
 	return NULL;
 }

@@ -1,8 +1,9 @@
 #include "paging.hpp"
-#include "result.hpp"
+
+#include "libc/math.hpp"
 #include "pmem.hpp"
+#include "result.hpp"
 #include "test.hpp"
-#include <cmath>
 
 using namespace Paging;
 
@@ -62,29 +63,29 @@ TEST(PRE_PAGING, "page_table_entry::get_address()", {
 	PageTableEntry entry;
 	entry.set_address(0x12345000);
 	assertEquals("Page entry address not correctly stored", 0x12345000, entry.get_address());
-});
+})
 
 TEST(PRE_PAGING, "page_table_entry::get_virtual_address(first_entry) -> 0", {
 	PageTableEntry* entry = reinterpret_cast<PageTableEntry*>(-MB(4));
 	assertEquals("Page entry virtual address incorrect", 0, reinterpret_cast<u32>(entry->get_virtual_address()));
-});
+})
 
 TEST(PRE_PAGING, "page_table_entry::get_virtual_address(second_entry) -> 1", {
 	PageTableEntry* entry = reinterpret_cast<PageTableEntry*>(-MB(4) + sizeof(PageTableEntry));
 	assertEquals("Page entry virtual address incorrect", KB(4), reinterpret_cast<u32>(entry->get_virtual_address()));
-});
+})
 
 TEST(PRE_PAGING, "page_table_entry::get_virtual_address(second_table) -> 1", {
 	PageTableEntry* entry = reinterpret_cast<PageTableEntry*>(-MB(4) + sizeof(PageTable));
 	assertEquals("Page entry virtual address incorrect", MB(4), reinterpret_cast<u32>(entry->get_virtual_address()));
-});
+})
 
 TEST(PRE_PAGING, "page_table_entry::alloc_any_memory() -> memory allocated", {
 	PageTableEntry entry = {};
 	assertEquals("Allocation failed", ResultState::SUCCESS, entry.alloc_any_memory());
 	assertNotEquals("No address given", 0, entry.get_address());
 	assertEquals("Entry not set as present", 1, entry.present);
-});
+})
 
 
 

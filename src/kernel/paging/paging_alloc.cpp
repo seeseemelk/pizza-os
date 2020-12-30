@@ -1,4 +1,5 @@
 #include "paging.hpp"
+
 #include "debug.hpp"
 
 using namespace Paging;
@@ -26,7 +27,7 @@ Result<PageTable*> Paging::alloc_table()
 	return alloc_table(&entry);
 }
 
-size_t allocation_table_index = 0;;
+size_t allocation_table_index = 0;
 PageTable* allocation_table = nullptr;
 Result<PageTableEntry*> Paging::alloc_table_entry()
 {

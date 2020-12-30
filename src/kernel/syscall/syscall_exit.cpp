@@ -1,6 +1,7 @@
 #include "syscall.hpp"
-#include "process.hpp"
+
 #include "debug.hpp"
+#include "process.hpp"
 
 u32 Syscall::exit(u32 ebx, u32 ecx, u32 edx)
 {

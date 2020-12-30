@@ -1,10 +1,10 @@
-#include "cpu.hpp"
 #include "cpu/tss.hpp"
-#include "kernel.hpp"
-#include "test.hpp"
+#include "cpu.hpp"
 #include "debug.hpp"
-#include <cstdint>
-#include <cstddef>
+#include "kernel.hpp"
+#include "libc/stddef.hpp"
+#include "libc/stdint.hpp"
+#include "test.hpp"
 
 extern "C" void load_kernel_segment_registers();
 

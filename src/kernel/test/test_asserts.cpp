@@ -1,7 +1,8 @@
 #ifdef TESTING
 #include "test.hpp"
-#include "debug.hpp"
+
 #include "cpu.hpp"
+#include "debug.hpp"
 
 using namespace Test;
 using namespace Asserts;

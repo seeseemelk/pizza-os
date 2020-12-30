@@ -1,13 +1,12 @@
 #ifndef SLAB_HPP_
 #define SLAB_HPP_
 
-#include "paging.hpp"
-#include "result.hpp"
-#include "pmem.hpp"
 #include "cpu.hpp"
-#include "result.hpp"
 #include "debug.hpp"
-#include <cstdint>
+#include "libc/stdint.hpp"
+#include "paging.hpp"
+#include "pmem.hpp"
+#include "result.hpp"
 
 template<typename T>
 class Slab

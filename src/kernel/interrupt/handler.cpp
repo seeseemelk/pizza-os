@@ -1,10 +1,10 @@
+#include "cpu.hpp"
+#include "debug.hpp"
 #include "interrupt/handler.hpp"
 #include "interrupt.hpp"
-#include "debug.hpp"
-#include "cpu.hpp"
+#include "libc/stdint.hpp"
 #include "process.hpp"
 #include "syscall.hpp"
-#include <cstdint>
 
 using namespace Interrupt;
 

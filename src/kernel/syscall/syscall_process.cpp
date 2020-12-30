@@ -1,8 +1,11 @@
+#include <pizzaos/syscallnums.h>
+
 #include "syscall.hpp"
-#include "process.hpp"
+
 #include "debug.hpp"
+#include "process.hpp"
 #include "test.hpp"
-#include <syscall_nums.h>
+
 
 using namespace Syscall;
 
@@ -36,4 +39,4 @@ TEST(OTHER, "syscall PROCESS_PID", {
 	assertEquals("Expected syscall to return PID (A)", proc->m_pid, testSyscall(SYSCALL_PROCESS_PID));
 	proc->m_pid++;
 	assertEquals("Expected syscall to return PID (B)", proc->m_pid, testSyscall(SYSCALL_PROCESS_PID));*/
-});
+})

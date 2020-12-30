@@ -10,9 +10,9 @@
 #include "ramdisk.hpp"
 #include "result.hpp"
 #include "scheduler.hpp"
-#include "vfs.hpp"
 #include "syscall.hpp"
 #include "test.hpp"
+#include "vfs.hpp"
 
 extern "C" void _init(void);
 extern "C" void _fini(void);

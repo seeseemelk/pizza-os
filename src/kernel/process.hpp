@@ -1,12 +1,12 @@
 #ifndef PROCESS_HPP_
 #define PROCESS_HPP_
 
+#include "elf.hpp"
+#include "libc/stdint.hpp"
+#include "paging.hpp"
+#include "result.hpp"
 #include "result.hpp"
 #include "slab.hpp"
-#include "result.hpp"
-#include "paging.hpp"
-#include "elf.hpp"
-#include <cstdint>
 
 namespace Proc
 {

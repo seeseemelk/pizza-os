@@ -1,6 +1,6 @@
-#include <reader.hpp>
-#include <cstring>
+#include "libc/string.hpp"
 #include "ramdisk.hpp"
+#include "reader.hpp"
 
 TarReader::TarReader(const RamDisk::TarFile* file)
 	: m_file(file), m_size(file->get_size())

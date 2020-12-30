@@ -8,8 +8,8 @@
 #ifndef INTERRUPT_HPP_
 #define INTERRUPT_HPP_
 
-#include <cstdint>
-#include <cstddef>
+#include "libc/stddef.hpp"
+#include "libc/stdint.hpp"
 
 /* INTERRUPT LIST
  * 00	#DE	Divide Error

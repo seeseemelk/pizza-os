@@ -1,8 +1,9 @@
 #include "ramdisk.hpp"
-#include "debug.hpp"
-#include "multiboot.hpp"
+
 #include "cpu.hpp"
-#include <cstdint>
+#include "debug.hpp"
+#include "libc/stdint.hpp"
+#include "multiboot.hpp"
 
 using namespace RamDisk;
 

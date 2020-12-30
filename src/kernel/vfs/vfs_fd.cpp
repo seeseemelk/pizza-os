@@ -1,10 +1,12 @@
 #include "vfs.hpp"
+
 #include "process.hpp"
 
 using namespace VFS;
 
 bool VFS::is_open(unsigned int fd)
 {
+	UNUSED(fd);
 	return false;
 }
 

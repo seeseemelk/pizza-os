@@ -1,5 +1,5 @@
 #include "io.hpp"
-#include <cstdint>
+#include "libc/stdint.hpp"
 
 using namespace IO;
 

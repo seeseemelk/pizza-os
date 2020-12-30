@@ -1,0 +1,2 @@
+PIZZAOS :=
+PIZZAOS_INCLUDE := $(PKGDIR)/pizzaos/include

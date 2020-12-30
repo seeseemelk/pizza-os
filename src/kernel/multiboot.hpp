@@ -1,11 +1,12 @@
 #ifndef MULTIBOOT_HPP_
 #define MULTIBOOT_HPP_
 
+#include "libc/stddef.hpp"
+
 extern "C"
 {
 #include "multiboot.h"
 }
-#include <cstddef>
 
 namespace Multiboot
 {

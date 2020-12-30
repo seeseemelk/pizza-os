@@ -1,7 +1,8 @@
 #include "interrupt/handler_factory.hpp"
+
 #include "debug.hpp"
-#include <cstdint>
-#include <cstring>
+#include "libc/stdint.hpp"
+#include "libc/string.hpp"
 
 void HandlerFactory::load(char* start, char* end)
 {

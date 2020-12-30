@@ -1,9 +1,10 @@
 #include "vfs.hpp"
 #include "vfs/vfs_private.hpp"
+
+#include "cpu.hpp"
+#include "debug.hpp"
 #include "paging.hpp"
 #include "result.hpp"
-#include "debug.hpp"
-#include "cpu.hpp"
 
 using namespace VFS;
 

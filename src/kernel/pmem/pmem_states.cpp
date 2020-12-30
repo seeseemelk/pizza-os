@@ -1,8 +1,9 @@
 #include "pmem.hpp"
-#include "debug.hpp"
+
 #include "cpu.hpp"
+#include "debug.hpp"
+#include "libc/math.hpp"
 #include "test.hpp"
-#include <cmath>
 
 using namespace PMem;
 
@@ -31,4 +32,4 @@ BlockState PMem::get_state(size_t addr)
 
 TEST(POST_PMEM, "PMem::get_state(known_block) -> unused", {
 	assertEquals("Block state is not unused", BlockState::FREE, PMem::get_state(KB(4)*4));
-});
+})

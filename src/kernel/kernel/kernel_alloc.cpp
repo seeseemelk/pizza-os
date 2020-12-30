@@ -1,10 +1,11 @@
 #include "kernel.hpp"
-#include "kernel/alloc.hpp"
+
 #include "cpu.hpp"
 #include "debug.hpp"
+#include "kernel/alloc.hpp"
+#include "libc/string.hpp"
 #include "paging.hpp"
 #include "result.hpp"
-#include <cstring>
 
 using namespace Kernel;
 

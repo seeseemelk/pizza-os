@@ -1,11 +1,12 @@
 #include "elf.hpp"
-#include "pmem.hpp"
-#include "paging.hpp"
-#include "debug.hpp"
+
 #include "cpu.hpp"
+#include "debug.hpp"
+#include "libc/math.hpp"
+#include "libc/stdint.hpp"
+#include "paging.hpp"
+#include "pmem.hpp"
 #include "process.hpp"
-#include <cstdint>
-#include <cmath>
 
 using namespace ElfHeaders;
 

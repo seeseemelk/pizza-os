@@ -1,8 +1,8 @@
 #ifndef PMEM_HPP_
 #define PMEM_HPP_
 
-#include <cstddef>
-#include <cstdint>
+#include "libc/stddef.hpp"
+#include "libc/stdint.hpp"
 #include "result.hpp"
 
 namespace PMem

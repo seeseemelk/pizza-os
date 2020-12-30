@@ -1,7 +1,8 @@
 #include "process.hpp"
-#include "paging.hpp"
-#include "debug.hpp"
+
 #include "cpu.hpp"
+#include "debug.hpp"
+#include "paging.hpp"
 
 using namespace Proc;
 

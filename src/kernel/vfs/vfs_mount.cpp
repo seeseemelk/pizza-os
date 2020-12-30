@@ -1,11 +1,12 @@
 #include "vfs.hpp"
 #include "vfs/vfs_private.hpp"
-#include "slab.hpp"
-#include "paging.hpp"
-#include "result.hpp"
+
 #include "cpu.hpp"
 #include "debug.hpp"
+#include "paging.hpp"
+#include "result.hpp"
 #include "safe.hpp"
+#include "slab.hpp"
 
 using namespace VFS;
 

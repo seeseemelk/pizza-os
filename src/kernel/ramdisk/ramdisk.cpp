@@ -1,9 +1,10 @@
 #include "ramdisk.hpp"
+
 #include "debug.hpp"
-#include <cstdint>
-#include <cstddef>
-#include <cstring>
-#include <cmath>
+#include "libc/math.hpp"
+#include "libc/stddef.hpp"
+#include "libc/stdint.hpp"
+#include "libc/string.hpp"
 
 using namespace RamDisk;
 

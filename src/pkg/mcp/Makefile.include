@@ -1,0 +1,5 @@
+include $(PKGDIR)/libc/Makefile.include
+
+MCP := $(PKGBUILDDIR)/mcp/mcp
+
+$(MCP): $(LIBC)

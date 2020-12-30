@@ -1,8 +1,9 @@
 #include "scheduler.hpp"
+
+#include "cpu.hpp"
+#include "debug.hpp"
 #include "interrupt.hpp"
 #include "process.hpp"
-#include "debug.hpp"
-#include "cpu.hpp"
 
 using namespace Scheduler;
 

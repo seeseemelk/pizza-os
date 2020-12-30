@@ -1,7 +1,8 @@
 #include "vfs.hpp"
-#include "paging.hpp"
-#include "debug.hpp"
+
 #include "cpu.hpp"
+#include "debug.hpp"
+#include "paging.hpp"
 #include "pmem.hpp"
 
 using namespace VFS;

@@ -1,8 +1,9 @@
 #ifndef TEST_HPP_
 #define TEST_HPP_
-#include <cstddef>
-#include <cstdint>
+
 #include "debug.hpp"
+#include "libc/stddef.hpp"
+#include "libc/stdint.hpp"
 #include "result.hpp"
 
 #ifdef TESTING
@@ -117,8 +118,7 @@ namespace Test
 
 #else
 
-#define TEST(GROUP, NAME, x) \
-		;
+#define TEST(GROUP, NAME, x)
 
 #endif
 

@@ -1,9 +1,10 @@
 #ifndef VFS_HPP_
 #define VFS_HPP_
 
-#include <pizzaos/limits.h>
 #include "process.hpp"
 #include "slab.hpp"
+
+#include <pizzaos/limits.h>
 
 namespace VFS
 {

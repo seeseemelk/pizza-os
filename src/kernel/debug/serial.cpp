@@ -1,5 +1,5 @@
-#include "debug.hpp"
 #include "config.hpp"
+#include "debug.hpp"
 #include "io.hpp"
 
 #define DATA_AVAILABLE (1<<0)
