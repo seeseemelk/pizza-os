@@ -1,6 +1,6 @@
 include $(BASEMAKE)
 
-APPS = mcp
+#APPS = mcp
 COPY = $(shell find . -type f -not -name makefile -print) $(addprefix $(BUILDDIR)/pkg/,$(APPS)/$(APPS))
 
 $(INITRD_TAR): $(COPY)

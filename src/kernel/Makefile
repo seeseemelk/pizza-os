@@ -1,5 +1,5 @@
 include $(BASEMAKE)
-include $(PKGDIR)/pizzaos/Makefile.include
+include $(PKGDIR)/pizzaos/include.mk
 
 PIZZABUILD := $(BUILDDIR)/pizzaos
 
@@ -23,12 +23,12 @@ $(PIZZAOS_TEST_ELF): $(OBJ_TEST) linker.ld
 $(PIZZABUILD)/%.cpp.o: %.cpp
 	$(STATUS_KCXX)
 	$(MKDIR)
-	$(CXX) $(CXXFLAGS_KERNEL) -MMD -MP -I. -I$(PIZZAOS_INCLUDE) -c -o $@ $<
+	$(CXX) $(CXXFLAGS_KERNEL) -MMD -MP -I. $(PIZZAOS_CFLAGS) -c -o $@ $<
 
 $(PIZZABUILD)/%.cpp.test.o: %.cpp
 	$(STATUS_KCXX)
 	$(MKDIR)
-	$(CXX) $(CXXFLAGS_KERNEL) -MMD -MP -I. -I$(PIZZAOS_INCLUDE) -DTESTING=1 -c -o $@ $<
+	$(CXX) $(CXXFLAGS_KERNEL) -MMD -MP -I. $(PIZZAOS_CFLAGS) -DTESTING=1 -c -o $@ $<
 	
 $(PIZZABUILD)/%.asm.o: %.asm
 	$(STATUS_KASM)

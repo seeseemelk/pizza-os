@@ -48,6 +48,8 @@ export USER_LIBCXX := $(LIBCXX) $(LIBKCXX)
 SHELL = /bin/bash
 .SHELLFLAGS = -o pipefail -c
 
+APPS = mcp
+
 # Useful macros
 export BASEMAKE := $(abspath Makefile.base)
 include $(BASEMAKE)
@@ -66,7 +68,7 @@ test_verbose: build_test_progress
 	./tools/test_runner.lua -v 2>&1
 
 apps: _always
-	+BUILDDIR=$(BUILDDIR)/pkg $(MAKE) -C src/pkg all
+	$(MAKE) BUILDDIR=$(BUILDDIR)/pkg -C src/pkg $(APPS:%=pkg_%)
 
 build_all: pizzaos.iso
 	echo "Build finished"
@@ -91,15 +93,13 @@ build_test_progress:
 #	+BUILDDIR=$(BUILDDIR)/libcxx $(MAKE) -C src/stdlib/libcxx/kernel $(LIBKCXX)
 
 $(PIZZAOS_ELF): #libkc libkcxx crt_obj
-	+$(MAKE) -C src/kernel $(PIZZAOS_ELF)
+	$(MAKE) -C src/kernel $(PIZZAOS_ELF)
 
 $(PIZZAOS_TEST_ELF): #libkc libkcxx crt_obj
-	+$(MAKE) -C src/kernel $(PIZZAOS_TEST_ELF)
+	$(MAKE) -C src/kernel $(PIZZAOS_TEST_ELF)
 	
-initrd: apps
-
-$(INITRD_TAR): initrd apps
-	+$(MAKE) -C src/initrd $(INITRD_TAR)
+$(INITRD_TAR): apps
+	$(MAKE) APPS=$(APPS) -C src/initrd $(INITRD_TAR)
 
 pizzaos.iso: $(PIZZAOS_ELF) $(INITRD_TAR) isodir/boot/grub/grub.cfg
 	@$(STATUS) GENISO $@

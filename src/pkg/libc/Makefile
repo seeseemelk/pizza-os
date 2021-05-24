@@ -1,5 +1,5 @@
 include $(BASEMAKE)
-include Makefile.include
+include include.mk
 
 SRC = $(patsubst ./%, %, $(shell find . -name '*.c' -print) $(shell find . -name '*.asm' -print))
 OBJ = $(SRC:%=$(BUILDDIR)/%.o)
@@ -16,7 +16,7 @@ $(LIBC): $(OBJ) $(wildcard $(USER_COMMON)) $(wildcard $(USER_LIBC)) \
 $(BUILDDIR)/%.c.o: %.c
 	$(STATUS_CC)
 	$(MKDIR)
-	$(CC) $(CFLAGS_USER) -MMD -c -o $@ $<
+	$(CC) $(CFLAGS_USER) $(LIBC_CFLAGS) -MMD -c -o $@ $<
 
 $(BUILDDIR)/%.asm.o: %.asm
 	$(STATUS_CC)

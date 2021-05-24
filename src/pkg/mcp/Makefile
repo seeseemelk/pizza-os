@@ -1,7 +1,7 @@
 include $(BASEMAKE)
-include $(PKGDIR)/mcp/Makefile.include
+include $(PKGDIR)/mcp/include.mk
 
-$(MCP): $(BUILDDIR)/main.o $(LIBS)
+$(MCP): $(BUILDDIR)/main.o $(LIBC)
 	$(STATUS_LD)
 	$(MKDIR)
 	$(LD) $(LDFLAGS_USER) -o $@ $<
@@ -9,4 +9,4 @@ $(MCP): $(BUILDDIR)/main.o $(LIBS)
 $(BUILDDIR)/main.o: main.c
 	$(STATUS_CC)
 	$(MKDIR)
-	$(CC) $(CFLAGS_USER) -MMD -c -o $@ $<
+	$(CC) $(CFLAGS_USER) $(LIBC_CFLAGS) -MMD -c -o $@ $<

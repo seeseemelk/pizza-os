@@ -1,0 +1,2 @@
+PIZZAOS_LIBS :=
+PIZZAOS_CFLAGS := -I$(PKGDIR)/pizzaos/include

@@ -1,4 +1,0 @@
-LIBC := $(PKGBUILDDIR)/libc/libc.a
-LIBC_INCLUDE := $(PKGDIR)/libc/include
-
-$(LIBC):
