@@ -30,12 +30,6 @@ export BUILDDIR := $(abspath build)
 export PKGDIR := $(abspath src/pkg)
 
 # Libraries
-#export CRTI := $(BUILDDIR)/libc/crt/crti.o
-#export CRTN := $(BUILDDIR)/libc/crt/crtn.o
-#export LIBC := $(BUILDDIR)/libc/libc.a
-#export LIBKC := $(BUILDDIR)/libc/libkc.a
-#export LIBCXX := $(BUILDDIR)libcxx/libcxx.a
-#export LIBKCXX := $(BUILDDIR)/libcxx/libkcxx.a
 export PIZZAOS_ELF := $(BUILDDIR)/pizzaos.elf
 export PIZZAOS_TEST_ELF := $(BUILDDIR)/pizzaos.test.elf
 export INITRD_TAR := $(BUILDDIR)/initrd.tar
@@ -79,18 +73,6 @@ build_test_progress:
 	@mkdir -p $(BUILDDIR)
 	@$(MAKE) -n build_test > $(BUILDDIR)/progress.txt
 	@$(MAKE) build_test 2>&1 | tools/progress_make.lua $(BUILDDIR)/progress.txt `tput cols`
-
-#crt_obj:
-#	+BUILDDIR=$(BUILDDIR)/libc $(MAKE) -C src/stdlib/libc/crt all
-#
-#libkc: crt_obj
-#	+BUILDDIR=$(BUILDDIR)/libc $(MAKE) -C src/stdlib/libc/kernel $(LIBKC)
-#
-#libc: libkc
-#	+BUILDDIR=$(BUILDDIR)/libc $(MAKE) -C src/stdlib/libc/user $(LIBC)
-#
-#libkcxx: libkc
-#	+BUILDDIR=$(BUILDDIR)/libcxx $(MAKE) -C src/stdlib/libcxx/kernel $(LIBKCXX)
 
 $(PIZZAOS_ELF): #libkc libkcxx crt_obj
 	$(MAKE) -C src/kernel $(PIZZAOS_ELF)
