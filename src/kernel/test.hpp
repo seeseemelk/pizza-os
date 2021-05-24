@@ -107,9 +107,9 @@ namespace Test
 	__attribute__((constructor)) static void __TESTING_MAKE_NAME2(_setupUnitTest_, __LINE__)() \
 	{ \
 		static Test::UnitTestNode node = { \
-				.current = __TESTING_MAKE_NAME2(_unitTest_, __LINE__), \
-				.next = Test::groups[Test::Group::GROUP], \
-				.name = NAME \
+				/*.current =*/ __TESTING_MAKE_NAME2(_unitTest_, __LINE__), \
+				/*.next =*/ Test::groups[Test::Group::GROUP], \
+				/*.name =*/ NAME \
 		}; \
 		Test::groups[Test::Group::GROUP] = &node; \
 		/* The following line is to prevent eclipse from complaining about an unused function*/ \

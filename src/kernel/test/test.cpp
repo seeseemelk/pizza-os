@@ -9,16 +9,16 @@ using namespace Test;
 UnitTestNode* Test::groups[COUNT] = {0};
 
 static const char* group_names[] = {
-		[PRE_CPU] = "Pre-CPU",
-		[PRE_PMEM] = "Pre-PhysMem",
-		[PRE_PAGING] = "Pre-Paging",
-		[PRE_ALLOC] = "Pre-Kernel::Alloc",
-		[PRE_INT] = "Pre-Interrupts",
-		[PRE_PROC] = "Pre-Proc",
-		[PRE_VFS] = "Pre-VFS",
-		[PRE_RAMDISK] = "Pre-RAMDISK",
-		[PRE_SCHEDULER] = "Pre-Scheduler",
-		[OTHER] = "Other"
+		/*[PRE_CPU] =*/ "Pre-CPU",
+		/*[PRE_PMEM] =*/ "Pre-PhysMem",
+		/*[PRE_PAGING] =*/ "Pre-Paging",
+		/*[PRE_ALLOC] =*/ "Pre-Kernel::Alloc",
+		/*[PRE_INT] =*/ "Pre-Interrupts",
+		/*[PRE_PROC] =*/ "Pre-Proc",
+		/*[PRE_VFS] =*/ "Pre-VFS",
+		/*[PRE_RAMDISK] =*/ "Pre-RAMDISK",
+		/*[PRE_SCHEDULER] =*/ "Pre-Scheduler",
+		/*[OTHER] =*/ "Other"
 };
 
 static size_t count_tests_in_group(size_t group)
